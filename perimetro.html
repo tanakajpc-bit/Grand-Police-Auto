@@ -3385,7 +3385,7 @@ const focusFirst = (...sels) => { for (const q of sels) { const el = $app.queryS
 function setPhase(p) { G.phase = p; saveGame(); render(); }
 
 ACT.diff = d => { UI.diffSel = d.v; render(); };
-ACT.start = () => { newGame(UI.diffSel, { noLimit: UI.noLimit }); UI.sel = null; UI.tab = 'tatica'; UI.post = 'score'; UI.emptyConfirm = false; setPhase('briefing'); };
+ACT.start = () => { newGame(UI.diffSel, { noLimit: UI.noLimit }); UI.sel = null; UI.tab = 'tatica'; UI.lvl = 1; UI.post = 'score'; UI.emptyConfirm = false; setPhase('briefing'); };
 ACT.continue = () => { const s = loadSave(); if (!s) { render(); return; } G = s; UI.timerRound = -1; if (G.stage === 'resolving') G.stage = 'result'; render(); };
 ACT.howto = () => { UI.tutor = true; render(); };
 ACT.closehowto = () => { UI.tutor = false; render(); const b = $app.querySelector('[data-act=howto]'); if (b) b.focus({ preventScroll: true }); };
@@ -3447,7 +3447,7 @@ ACT.tosiege = () => {
   render();
 };
 
-ACT.takepanel = () => { G.stage = 'panel'; UI.tab = 'tatica'; UI.ivConfirm = false; UI.pickZone = null; saveGame(); render(); };
+ACT.takepanel = () => { G.stage = 'panel'; UI.tab = 'tatica'; UI.lvl = 1; UI.ivConfirm = false; UI.pickZone = null; saveGame(); render(); };
 /* Abas de decisão. Vindo de um alerta ou do gargalo, o foco e a rolagem acompanham a aba aberta. */
 ACT.tab = (d, el) => {
   UI.tab = d.t; UI.tabAnim = true; render();
