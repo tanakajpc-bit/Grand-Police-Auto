@@ -32,7 +32,7 @@ function newGame(diffKey, opts = {}) {
   const route = wpick(routes, wf);
   G = {
     ver: 2, diff: diffKey, noLimit: !!opts.noLimit, phase: 'briefing', stage: null, round: 0,
-    credits: 1000, spent: { rec: 0, equip: 0, intel: 0, ops: 0 },
+    credits: 1000, spent: { rec: 0, equip: 0, intel: 0, ops: 0, plantao: 0 }, deficit: 0, tocLog: [], spendLog: [], creditsHist: [],
     team: [], gear: [], az: {}, gz: {}, fat: {}, transit: {}, away: {}, camAdj: { plus: 'tat', minus: 'com' },
     profile: prof, agit: PROFILES[prof].start + (diffKey === 'caotico' ? 5 : diffKey === 'protocolar' ? -5 : 0),
     routes, route, routeNow: route, assail: ri(D.assail[0], D.assail[1]), accomplice: rnd() < .3,
@@ -69,6 +69,10 @@ function loadSave() {
 /* Saves da versão anterior (sem a camada narrativa) ganham os campos novos sem perder a partida. */
 function migrateSave(s) {
   s.K.at = s.K.at || {}; s.hPref = s.hPref || {}; s.quietRound = s.quietRound || 0;
+  /* L1.3: economia e restrições */
+  s.spent = Object.assign({ rec: 0, equip: 0, intel: 0, ops: 0, plantao: 0 }, s.spent || {});
+  s.deficit = s.deficit || 0; s.tocLog = s.tocLog || []; s.spendLog = s.spendLog || []; s.creditsHist = s.creditsHist || [];
+  Object.keys(s.transit || {}).forEach(id => { const t = s.transit[id]; s.transit[id] = t === true ? 2 : t === false || t == null ? 0 : +t || 0; });
   if (!Array.isArray(s.hl) || s.hl.length !== HOSTAGE_LIST.length) { s.hl = HOSTAGE_LIST.map(h => ({ id: h.id, in: true, st: 'ok' })); const g = G; G = s; syncHL(null); G = g; }
   return s;
 }
@@ -105,7 +109,7 @@ function ff(id) {
 }
 function agentEff(id) {
   let e = stat(id, 'tat') * fp(id) * ff(id);
-  if (G.transit[id]) e *= .5;
+  const tr = +G.transit[id] || 0; if (tr >= 2) e *= .5; else if (tr === 1) e *= .75;   // em trânsito: 50% na rodada da ordem, 75% na seguinte (reconhecer o terreno)
   if (G.fatCrit && (G.fat[id] || 0) >= 2 && id !== 'marcos') e *= .85;
   return e;
 }
@@ -113,6 +117,16 @@ const isAway = id => (G.away[id] || 0) > 0;
 const avail = () => G.team.filter(id => !isAway(id));
 const agentsIn = z => G.team.filter(id => G.az[id] === z && !isAway(id));
 const deployed = () => G.team.filter(id => G.az[id] && G.az[id] !== 'reserva' && !isAway(id));
+
+/* ---------------- Economia (L1.3) ---------------- */
+/* Custo de plantão da rodada: base do posto de comando + cada agente em campo (reserva e reconvocados não custam). */
+const plantaoCost = (n = deployed().length) => Math.round(D_().ops * (PLANTAO_BASE + PLANTAO_AGENTE * n));
+const apoioCost = (queued = G.queue.filter(q => q.kind === 'apoio').length) => APOIO_PRECOS[Math.min(G.supportUsed + queued, APOIO_PRECOS.length - 1)];
+const horasCost = () => HORAS_BASE + HORAS_AGENTE * Math.max(1, deployed().length);
+/* Quantas rodadas a reserva atual sustenta só de plantão (sem investigar, sem apoio, sem nada) */
+const runway = () => { const c = plantaoCost(); return c > 0 ? G.credits / c : 99; };
+/* Quanto o plantão ainda vai custar até o fim, se nada mudar */
+const burnToEnd = () => plantaoCost() * Math.max(0, MAX_ROUNDS - Math.max(G.round, 0));
 
 /* ---------------- Cobertura ---------------- */
 const gearIn = z => G.gear.filter(e => G.gz[e] === z);
@@ -398,18 +412,22 @@ function revealHint() {
   G.hints.push({ r: G.round, t });
   return t;
 }
-/* Restrição dominante (Teoria das Restrições) */
-function tocConstraint() {
-  const r = G.round, d = deployed();
+/* Restrição dominante (Teoria das Restrições).
+   Só usa o que o comandante pode saber: zonas ainda candidatas (não descartadas), cobertura, equipe, fadiga e tempo. */
+function tocScores() {
+  const r = Math.max(1, G.round), d = deployed(), K = G.K;
   const info = (1 - infoFrac()) * (r <= 3 ? 1.25 : r <= 5 ? .9 : .5);
-  const uncovered = G.routes.filter(z => zoneCoverage(z) < ADEQ).length / 4;
+  const cands = K.route ? [K.route] : ZONES.map(z => z.id).filter(z => !K.cleared.includes(z) && K.zrev[z] !== false);
+  const uncovered = cands.length ? cands.filter(z => zoneCoverage(z) < ADEQ).length / cands.length : 0;
   const pers = (uncovered * .9 + (G.team.length - avail().length) * .15) * (r >= 3 && r <= 6 ? 1.2 : .85);
   const fatLoss = d.length ? d.reduce((s, id) => s + (1 - ff(id)), 0) / d.length : 0;
   const tempo = (fatLoss * 2 + (r - 1) / 7) * (r >= 6 ? 1.3 : .7);
-  const m = Math.max(info, pers, tempo);
-  if (m === info) return { k: 'info', label: 'Informação', why: 'Ainda há variáveis ocultas demais. Cada decisão tática é uma aposta no escuro.' };
-  if (m === pers) return { k: 'pessoal', label: 'Pessoal tático', why: 'Há rotas candidatas sem cobertura adequada. Mais informação não vira cobertura sem gente.' };
-  return { k: 'tempo', label: 'Tempo e fadiga', why: 'O relógio e o cansaço da equipe viraram o elo mais fraco: rodízio e prazo decidem agora.' };
+  return { info, pessoal: pers, tempo };
+}
+function tocConstraint() {
+  const sc = tocScores(), ks = ['info', 'pessoal', 'tempo'], k = ks.reduce((a, b) => sc[b] > sc[a] ? b : a, 'info');
+  const pct = Object.fromEntries(ks.map(x => [x, clamp(Math.round(sc[x] / 1.25 * 100), 0, 100)]));
+  return { k, label: TOCS[k].nome, why: TOCS[k].por, scores: sc, pct };
 }
 
 /* ---------------- Inteligência ---------------- */
@@ -470,7 +488,7 @@ function phase1Intel(id) {
   const r = resolveIntel(id, true); G.p1intel[id] = r; return r;
 }
 function confirmPerimeter() {
-  G.team.forEach(id => { if (!G.az[id]) G.az[id] = 'reserva'; G.fat[id] = 0; G.transit[id] = false; G.away[id] = 0; });
+  G.team.forEach(id => { if (!G.az[id]) G.az[id] = 'reserva'; G.fat[id] = 0; G.transit[id] = 0; G.away[id] = 0; });
   G.gear.forEach(e => { if (!G.gz[e]) G.gz[e] = 'reserva'; });
   const log = [];
   if (G.gz.drone && G.gz.drone !== 'reserva') { const z = G.gz.drone; G.K.zrev[z] = G.routes.includes(z); log.push(`Drone sobre ${ZONE[z].nome}: ${G.K.zrev[z] ? 'zona CANDIDATA a rota de fuga' : 'zona livre de movimentação suspeita'}.`); }
@@ -516,7 +534,8 @@ function startRound() {
   G.pressure = calcPressure();
   G.stats.peakPressure = Math.max(G.stats.peakPressure, G.pressure);
   G.stats.pressSum += G.pressure; G.stats.pressN++;
-  const up = { r: G.round, time: fmtTime(G.round), radio: [], intel: [], reports: [], hint: null };
+  const toc = tocConstraint(); G.tocLog[G.round] = toc.k; G.creditsHist[G.round] = G.credits;
+  const up = { r: G.round, time: fmtTime(G.round), radio: [], intel: [], reports: [], hint: null, toc: toc.k, tocPrev: G.tocLog[G.round - 1] || null };
   G.pendingIntel.filter(o => o.due <= G.round).forEach(o => up.intel.push(resolveIntel(o.id, false)));
   G.pendingIntel = G.pendingIntel.filter(o => o.due > G.round);
   up.reports = genReports();
@@ -542,6 +561,7 @@ function addDecision(d) {
   if (d.kind === 'intel' && (G.queue.some(q => q.kind === 'intel' && q.p.id === d.p.id) || G.pendingIntel.some(o => o.id === d.p.id))) return { ok: false, msg: 'Essa investigação já está em andamento.' };
   if (d.kind === 'com' && G.queue.some(q => q.kind === 'com' && q.p.cid === d.p.cid)) return { ok: false, msg: 'Essa ação de comunicação já está no plano.' };
   if (d.kind === 'repos' && G.queue.some(q => q.kind === 'repos' && q.p.agent === d.p.agent)) return { ok: false, msg: 'Esse agente já tem uma ordem de reposicionamento.' };
+  if (d.kind === 'apoio' && G.supportUsed + G.queue.filter(q => q.kind === 'apoio').length >= APOIO_PRECOS.length) return { ok: false, msg: 'O limite de apoios externos já foi usado (3 por operação).' };
   if (slotsLeft() < d.slots) return { ok: false, msg: 'Sem decisões disponíveis nesta rodada. Remova uma ação do plano.' };
   if (G.credits < queueCost(d)) return { ok: false, msg: 'Créditos insuficientes para essa ação.' };
   G.credits -= queueCost(d); G.queue.push(d);
@@ -550,8 +570,11 @@ function addDecision(d) {
 function removeDecision(id) {
   const i = G.queue.findIndex(q => q.id === id); if (i < 0) return;
   G.credits += queueCost(G.queue[i]); G.queue.splice(i, 1);
+  let k = G.supportUsed;   // os apoios que sobram sobem ou descem na tabela de preços
+  G.queue.filter(q => q.kind === 'apoio').forEach(q => { const c = APOIO_PRECOS[Math.min(k++, APOIO_PRECOS.length - 1)]; G.credits += q.cost - c; q.cost = c; });
 }
 
+const SPEND_TOC = { intel: 'info', pausa: 'info', repos: 'pessoal', apoio: 'pessoal', horas: 'tempo' };
 const L = (R, tone, ic, text) => R.lines.push({ tone, ic, text, sec: R.sec || 'dec' });
 function snap() {
   trackKnown();
@@ -618,6 +641,10 @@ function resolveDecisions() {
   q.forEach(d => { if (d.cost) { if (d.front === 'intel') G.spent.intel += d.cost; else G.spent.ops += d.cost; } });
   G.attended = {};
   G.commMedia = 0;
+  q.forEach(d => {   // gasto alinhado ao gargalo (Teoria das Restrições): para onde foi cada decisão?
+    const t = SPEND_TOC[d.kind] || (d.kind === 'com' && ['gerente', 'acolhe'].includes(d.p.cid) ? 'info' : null);
+    if (t) G.spendLog.push({ r: G.round, kind: d.kind, cost: d.cost || 0, toc: G.tocLog[G.round] || null, hit: t === G.tocLog[G.round], target: t });
+  });
   if (q.some(d => d.kind === 'interv')) {
     R.interv = true; R.skipEvent = true; G.stats.intervs++;
     L(R, 'warn', 'shield', 'Intervenção autorizada. Todas as equipes recebem o sinal. Nenhuma outra decisão será executada nesta rodada.');
@@ -627,12 +654,15 @@ function resolveDecisions() {
   q.filter(d => d.kind === 'repos').forEach(d => {
     const id = d.p.agent, z = d.p.zone; if (!G.team.includes(id) || G.az[id] === z) return;
     const from = G.az[id]; G.az[id] = z; G.stats.repos++;
-    if (z !== 'reserva' && !hasGear('viatura') && id !== 'lucas') { G.transit[id] = true; L(R, 'warn', 'swap', `${agentById(id).nome} sai de ${ZNAME(from)} para ${ZNAME(z)}. Em trânsito, opera com 50% de eficiência nesta rodada.`); }
+    if (z !== 'reserva' && !hasGear('viatura') && id !== 'lucas') {
+      G.transit[id] = 2; G.fat[id] = (G.fat[id] || 0) + .5;
+      L(R, 'warn', 'swap', `${agentById(id).nome} sai de ${ZNAME(from)} para ${ZNAME(z)}. Em trânsito: 50% de eficiência agora, 75% na próxima rodada, e o deslocamento cansa. ${ZNAME(from)} fica sem esse agente imediatamente.`);
+    }
     else L(R, 'info', 'swap', `${agentById(id).nome} reposicionado: ${ZNAME(from)} → ${ZNAME(z)}${z === 'reserva' ? ' (descansa e reinicia a fadiga)' : ' sem perda de eficiência'}.`);
   });
   q.filter(d => d.kind === 'apoio').forEach(d => {
     G.support[d.p.zone] = { v: 25, left: 2 }; G.supportUsed++; G.stats.apoio++;
-    L(R, 'info', 'support', `Apoio externo mobilizado em ${ZNAME(d.p.zone)}: +25 de cobertura por 2 rodadas (custo ${d.cost} créditos).`);
+    L(R, 'info', 'support', `Apoio externo mobilizado em ${ZNAME(d.p.zone)}: +25 de cobertura por 2 rodadas (custo ${d.cost} créditos${G.supportUsed < APOIO_PRECOS.length ? `; o próximo custa ${apoioCost(0)}` : ''}).`);
   });
   q.filter(d => d.kind === 'horas').forEach(() => {
     G.fatCrit = false; G.stats.horas++; deployed().forEach(id => G.fat[id] = Math.max(0, (G.fat[id] || 0) - 2));
@@ -663,6 +693,14 @@ function resolveDecisions() {
   G.vault = clamp(G.vault + vdelta, 0, 100); G.lastVaultDelta = vdelta;
   if (G.K.vault) L(R, vdelta > 6 ? 'warn' : 'info', 'bank', `Cofre: +${vdelta.toFixed(1)} pontos${nEnt ? ` (pressão interna de ${nEnt} agente${nEnt > 1 ? 's' : ''} na Entrada)` : ''} → ${Math.round(G.vault)}%.`);
   else L(R, vdelta > 6 ? 'warn' : 'info', 'bank', vdelta > 6 ? 'Há sinais de que o trabalho no cofre avançou depressa, mas você não sabe medir quanto.' : 'Sem indícios claros de avanço no cofre, mas sem leitura direta dele.');
+  // plantão: o posto de comando paga a operação toda rodada (estoque vira fluxo)
+  const pcost = plantaoCost(), pn = deployed().length, ppaid = Math.min(pcost, Math.max(0, G.credits));
+  G.credits -= ppaid; G.spent.plantao += ppaid; R.plantao = { cost: pcost, paid: ppaid, n: pn };
+  if (ppaid >= pcost) L(R, G.credits < pcost * 2 ? 'warn' : 'info', 'coin', `Custo de plantão: −${pcost} créditos (${pn} ${pn === 1 ? 'agente' : 'agentes'} em campo). Reserva: ${Math.round(G.credits)}${G.credits < pcost * 2 ? ', menos de duas rodadas de plantão' : ''}.`);
+  else {
+    G.deficit++; G.stress += 3; stake('banco', -5); why(R, 'banco', -5, 'plantão no vermelho');
+    L(R, 'bad', 'coin', `Verba esgotada: o plantão custava ${pcost} e só havia ${ppaid}. A operação segue no vermelho: a pressão sobre a equipe sobe (+3) e o banco, que cobre a diferença, perde confiança (−5).`);
+  }
   // mídia: 8 + rodada×2 (escalados pela dificuldade) + comunicado
   const mgain = (8 + G.round * 2) * D.media + G.commMedia - (hasGear('jammer') ? 2 : 0) - (G.team.includes('fernanda') ? 0 : 0);
   addMedia(mgain);
@@ -724,7 +762,7 @@ function stakePassives(R) {
   const lost = STK_KEYS.filter(k => G.stk[k].sat <= 15 && !G.stk[k].lost);
   lost.forEach(k => {
     G.stk[k].lost = true;
-    if (k === 'banco') { G.credits = Math.max(0, G.credits - 60); L(R, 'bad', 'bank', 'O banco perdeu a confiança: a diretoria aciona o seguro e corta 60 créditos da verba operacional.'); }
+    if (k === 'banco') { const cut = Math.min(60, Math.max(0, G.credits)); G.credits -= cut; G.spent.corte = (G.spent.corte || 0) + cut; L(R, 'bad', 'bank', 'O banco perdeu a confiança: a diretoria aciona o seguro e corta 60 créditos da verba operacional.'); }
     if (k === 'imprensa') L(R, 'bad', 'mic', 'A imprensa rompeu com o comando: a cobertura passa a ser hostil e a pressão da mídia ganha +8 por rodada.');
     if (k === 'prefeito') L(R, 'bad', 'mayor', 'O prefeito perdeu a paciência. Se a crise não acabar até o fim desta rodada a partir da sexta, ele ordenará a intervenção.');
     if (k === 'familias') L(R, 'bad', 'family', 'As famílias rompem o isolamento em protesto. A pressão sobre a equipe sobe.');
@@ -788,8 +826,8 @@ const EVENT_FX = {
       if (rnd() < p) { const H = G.hostages, n = Math.min(3, H.inside - H.dead - H.hurt); H.inside -= n; H.freed += n; addAgit(-4); stake('familias', 10); L(R, 'good', 'swap', `A contraproposta emplaca: ${n} reféns saem sem que o veículo seja entregue.`); }
       else { addAgit(6); stake('familias', -4); L(R, 'bad', 'swap', 'A contraproposta é rejeitada com raiva. Agitação +6.'); } } }] },
   fadiga:    { elig: g => g.round >= 3, choices: [
-    { label: 'Pagar horas extras (60 créditos)', hint: 'Recupera o fôlego da equipe.', cost: 60, run: R => {
-      G.credits -= 60; G.spent.ops += 60; deployed().forEach(id => G.fat[id] = Math.max(0, (G.fat[id] || 0) - 1));
+    { label: 'Pagar horas extras', hint: 'Recupera o fôlego da equipe. O custo cresce com o efetivo em campo.', get cost() { return horasCost(); }, run: R => {
+      const hc = horasCost(); G.credits -= hc; G.spent.ops += hc; deployed().forEach(id => G.fat[id] = Math.max(0, (G.fat[id] || 0) - 1));
       L(R, 'info', 'tired', 'Horas extras autorizadas: fadiga −1 rodada para todos em campo e nenhuma perda adicional.'); } },
     { label: 'Seguir sem rodízio', hint: '−15% de eficiência de quem passar de 2 rodadas sem descanso.', run: R => {
       G.fatCrit = true; L(R, 'bad', 'tired', 'Fadiga crítica: quem passar de 2 rodadas sem descanso perde 15% de eficiência até que haja rodízio ou horas extras.'); } }] },
@@ -891,7 +929,7 @@ function finishRound() {
     const z = G.az[id];
     if (z === 'reserva') { if (getNegotiator() === id && R.decs.some(d => d.kind === 'nego')) G.fat[id] = (G.fat[id] || 0) + .5; else G.fat[id] = 0; }
     else G.fat[id] = (G.fat[id] || 0) + 1;
-    G.transit[id] = false;
+    G.transit[id] = Math.max(0, (+G.transit[id] || 0) - 1);
     G.stats.minFF = Math.min(G.stats.minFF, ff(id));
   });
   Object.keys(G.support).forEach(z => { if (G.support[z].left > 0) G.support[z].left--; });

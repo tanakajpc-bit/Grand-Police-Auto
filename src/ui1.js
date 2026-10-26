@@ -113,7 +113,7 @@ function mapSVG(o = {}) {
       <text x="${z.x + 9}" y="${z.y + 33}" fill="${stroke}" font-size="10.5" font-weight="600">${covSym(cov)} ${covTxt(cov)}</text>
       ${short ? '' : `<text x="${z.x + z.w - 9}" y="${z.y + 34}" text-anchor="end" fill="${stroke}" font-size="13" font-weight="700" font-family="IBM Plex Mono,monospace">${cov}%</text>`}
       ${mark ? `<text x="${z.x + 9}" y="${z.y + 48}" fill="#cfe0ff" font-size="10.5" font-weight="600">${mark}</text>` : ''}
-      ${ags.map((id, i) => { const [cx, cy] = agPos(i); return `<g><circle cx="${cx}" cy="${cy}" r="9" fill="${G.transit[id] ? '#3b4f6e' : '#27456d'}" stroke="${G.transit[id] ? '#f6a623' : '#7fb4ee'}" stroke-width="1.5" ${G.transit[id] ? 'stroke-dasharray="3 2"' : ''}/><text x="${cx}" y="${cy + 3.5}" text-anchor="middle" fill="#fff" font-size="9" font-weight="700">${initials(agentById(id).nome)}</text></g>`; }).join('')}
+      ${ags.map((id, i) => { const [cx, cy] = agPos(i); return `<g><circle cx="${cx}" cy="${cy}" r="9" fill="${+G.transit[id] ? '#3b4f6e' : '#27456d'}" stroke="${+G.transit[id] ? '#f6a623' : '#7fb4ee'}" stroke-width="1.5" ${+G.transit[id] ? 'stroke-dasharray="3 2"' : ''}/><text x="${cx}" y="${cy + 3.5}" text-anchor="middle" fill="#fff" font-size="9" font-weight="700">${initials(agentById(id).nome)}</text></g>`; }).join('')}
       ${away.map((id, i) => `<text x="${z.x + z.w - 10}" y="${z.y + z.h - 8 - i * 12}" text-anchor="end" fill="#ff9aa7" font-size="9.5">✕ ${initials(agentById(id).nome)} ausente</text>`).join('')}
       ${gearIn(z.id).map((e, i) => `<g><rect x="${z.x + z.w - 24 - i * 20}" y="${z.y + z.h - 24}" width="16" height="16" rx="3" fill="#0d1523" stroke="#4da6ff"/><text x="${z.x + z.w - 16 - i * 20}" y="${z.y + z.h - 12}" text-anchor="middle" fill="#4da6ff" font-size="10" font-weight="700">${EQ[e].nome[0]}</text></g>`).join('')}
     </g>`;
@@ -170,11 +170,11 @@ function renderMenu() {
 function tutorModal() {
   return `<div class="modalback" role="dialog" aria-modal="true" aria-label="Como funciona"><div class="tutor">
     <h3>Como funciona o PERÍMETRO</h3>
-    <p class="muted"><b>1. Recrute</b> uma equipe com 1.000 créditos. O que sobrar é sua reserva para investigações, apoio externo e horas extras.</p>
-    <p class="muted"><b>2. Posicione</b> agentes e equipamentos em 7 zonas. Quatro delas são rotas de fuga possíveis, mas você não sabe quais. Os recursos só cobrem bem cerca de 60% das zonas: é preciso apostar, ou investir em inteligência.</p>
+    <p class="muted"><b>1. Recrute</b> uma equipe com 1.000 créditos. O que sobrar é sua reserva para investigações, apoio externo e horas extras, e também paga o <b>plantão</b>: toda rodada, cada agente em campo custa verba. Sem reserva, a operação entra no vermelho.</p>
+    <p class="muted"><b>2. Posicione</b> agentes e equipamentos em 7 zonas. Quatro delas são rotas de fuga possíveis, mas você não sabe quais. Os recursos só cobrem bem cerca de 60% das zonas: é preciso apostar, ou investir em inteligência. Mudar alguém de zona tem custo: ele rende menos por duas rodadas.</p>
     <p class="muted"><b>3. Comande o cerco</b> por 8 rodadas. Em cada uma você recebe informações parciais (Percepção), lê indicadores (Compreensão) e vê tendências (Projeção). Então toma 2 ou 3 decisões em quatro frentes: <b>Tática, Negociação, Inteligência e Comunicação</b>.</p>
     <p class="muted"><b>4. A crise termina</b> por rendição negociada, intervenção, fuga ou prazo esgotado. A nota combina vidas (40%), prisões (20%), valores (15%), eficiência de custo (10%) e confiança pública (15%).</p>
-    <p class="muted">Dica: a negociação sobe uma escada de 5 degraus, um por vez. Pular etapas reduz pela metade a chance de avançar.</p>
+    <p class="muted">Dica: a negociação sobe uma escada de 5 degraus, um por vez. Pular etapas reduz pela metade a chance de avançar. O painel mostra o <b>gargalo</b> da operação: ele muda de informação para pessoal e depois para tempo, e gastar fora dele rende pouco.</p>
     <div class="row"><button class="btn primary" data-act="closehowto">Entendi</button></div></div></div>`;
 }
 
@@ -229,9 +229,11 @@ function renderRecruit() {
   }).join('');
   const gear = EQUIPMENT_HTML();
   const reserve = G.credits;
-  const warns = [];
+  const warns = [], F = budgetForecast(), cap = capacityPreview();
   if (G.team.length && !G.team.some(id => stat(id, 'neg') >= 7)) warns.push('Nenhum negociador forte (7+): a escada de negociação será lenta.');
-  if (reserve < 150) warns.push('Reserva baixa: sem créditos você não investiga, não paga apoio externo nem horas extras.');
+  if (G.team.length && F.free < 0) warns.push(`A reserva não paga o plantão até o fim (faltam ~${Math.round(-F.free)}). Haverá rodadas no vermelho: o banco perde 5 e a pressão sobe 3 em cada uma.`);
+  else if (G.team.length && F.free < 60) warns.push('Quase nada sobra depois do plantão: nenhuma investigação, nenhum apoio externo, nenhuma hora extra.');
+  if (G.team.length && cap.adq <= 1) warns.push(`Espalhada pelo mapa, esta equipe cobre bem só ${cap.adq} de 7 zonas. Você vai concentrar agentes e apostar o resto no escuro.`);
   const cam = G.team.includes('camila') ? `<div class="card flat"><h3>Camila Araújo · Versátil</h3><div class="row" style="gap:8px">
     <label class="field">+1 em<select data-chg="camplus" id="camplus">${Object.keys(ATTR).map(k => `<option value="${k}" ${G.camAdj.plus === k ? 'selected' : ''}>${ATTR[k]}</option>`).join('')}</select></label>
     <label class="field">−1 em<select data-chg="camminus" id="camminus">${Object.keys(ATTR).map(k => `<option value="${k}" ${G.camAdj.minus === k ? 'selected' : ''}>${ATTR[k]}</option>`).join('')}</select></label></div></div>` : '';
@@ -243,8 +245,14 @@ function renderRecruit() {
         <div><div class="eyebrow">Catálogo de equipamentos</div><div class="gear" style="margin-top:8px;grid-template-columns:repeat(auto-fill,minmax(300px,1fr))">${gear}</div></div>
       </div>
       <aside class="side">
-        <div class="card"><h3>Orçamento</h3><div class="credits num">${fmt(G.credits)}</div><p class="muted" style="font-size:12.5px;margin-top:6px">Reserva operacional. Cada crédito gasto agora é um crédito a menos para investigar, pedir apoio externo ou pagar horas extras.</p>
-          <div style="margin-top:10px">${meter(G.credits / 10, G.credits < 150 ? 'r' : G.credits < 350 ? 'a' : 'g')}</div></div>
+        <div class="card"><h3>Orçamento</h3><div class="credits num">${fmt(G.credits)}</div><p class="muted" style="font-size:12.5px;margin-top:6px">Reserva operacional. Cada crédito gasto agora é um crédito a menos para investigar, pedir apoio externo ou pagar o plantão de cada rodada.</p>
+          <div class="stack" style="margin-top:10px" role="img" aria-label="Equipe ${G.spent.rec}, equipamento ${G.spent.equip}, reserva ${G.credits}"><i style="width:${G.spent.rec / 10}%;background:var(--blue)"></i><i style="width:${G.spent.equip / 10}%;background:var(--violet)"></i><i style="width:${G.credits / 10}%;background:${G.credits < 150 ? 'var(--red)' : G.credits < 350 ? 'var(--amber)' : 'var(--green)'}"></i></div>
+          <div class="stackleg"><span><i style="background:var(--blue)"></i>Equipe <b class="mono">${G.spent.rec}</b></span><span><i style="background:var(--violet)"></i>Equipamento <b class="mono">${G.spent.equip}</b></span><span><i style="background:${G.credits < 150 ? 'var(--red)' : G.credits < 350 ? 'var(--amber)' : 'var(--green)'}"></i>Reserva <b class="mono">${fmt(G.credits)}</b></span></div></div>
+        ${G.team.length ? `<div class="card"><h3>O que a reserva precisa pagar</h3>
+          <div class="fc"><span>Plantão previsto</span><b class="mono">~${F.per}/rodada</b><small>${F.nField} ${F.nField === 1 ? 'agente' : 'agentes'} em campo. Reserva e reconvocados não custam.</small></div>
+          <div class="fc"><span>Nas 8 rodadas</span><b class="mono">~${F.total}</b><small>vezes ${D_().ops.toString().replace('.', ',')} da dificuldade ${D_().nome}.</small></div>
+          <div class="fc ${F.free < 0 ? 'bad' : F.free < 60 ? 'warn' : 'ok'}"><span>Sobra para decidir</span><b class="mono">${F.free < 0 ? '−' + Math.round(-F.free) : Math.round(F.free)}</b><small>${F.free <= 0 ? 'nada para investigar, apoiar ou pagar horas extras' : `≈ ${F.intels} investigações ou ${F.apoios} apoio${F.apoios === 1 ? '' : 's'} externo${F.apoios === 1 ? '' : 's'}`}</small></div>
+          <div class="fc ${cap.adq >= 3 ? 'ok' : cap.adq === 2 ? 'warn' : 'bad'}"><span>Capacidade de cobertura</span><b class="mono">${cap.adq} / 7 zonas</b><small>adequadas (≥60%) se os agentes forem espalhados. Concentrar agentes cobre melhor menos zonas.</small></div></div>` : ''}
         <div class="card"><h3>Equipe (${G.team.length})</h3>${teamSummary()}
           <div style="margin-top:10px">${G.team.map(id => `<div class="mini"><span>${shortName(agentById(id).nome)}</span><span class="mono">${agentById(id).custo}</span></div>`).join('')}${G.gear.map(id => `<div class="mini"><span>${EQ[id].nome}</span><span class="mono">${EQ[id].custo}</span></div>`).join('')}</div>
           ${warns.map(w => `<div class="insight warn" style="margin-top:8px">${icon('alert', '', 1.8)}<span>${w}</span></div>`).join('')}</div>
@@ -285,6 +293,7 @@ function renderPerimeter() {
   return `<div class="screen">
     <div class="hud"><div class="hudrow"><span class="brand">PERÍMETRO</span><span class="pill">Fase 1 · Posicionamento</span><span class="spacer"></span>
       <div class="stat"><small>Zonas adequadas</small><b style="color:var(--${adq >= 4 ? 'green' : adq >= 3 ? 'amber' : 'red'})">${adq} / 7</b></div>
+      <div class="stat"><small>Plantão previsto</small><b>−${plantaoCost()}/rod.</b></div>
       <div class="stat"><small>Créditos</small><b style="color:var(--amber)">${fmt(G.credits)}</b></div></div></div>
     <div class="perim">
       <div class="grid">

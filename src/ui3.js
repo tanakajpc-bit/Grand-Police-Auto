@@ -99,7 +99,7 @@ function scoreHTML() {
     { k: 'Vidas', v: S.vidas, w: .40, why: `${H.dead} mortos e ${H.hurt} feridos entre ${HOSTAGES} reféns (cada morte pesa 2, cada ferido 0,5).` },
     { k: 'Prisões', v: S.captura, w: .20, why: `${outName(E)}: ${Math.round(S.captura * 100)}% dos responsáveis presos.` },
     { k: 'Valores', v: S.valores, w: .15, why: `Cofre em ${Math.round(G.vault)}% no desfecho; fator de perda do desfecho ${E.lootF}.` },
-    { k: 'Eficiência', v: S.eficiencia, w: .10, why: `${fmt(G.credits)} créditos sobraram e a crise durou ${G.round} rodadas.` },
+    { k: 'Eficiência', v: S.eficiencia, w: .10, why: `${fmt(G.credits)} créditos sobraram e a crise durou ${G.round} rodadas. O plantão custou ${fmt(G.spent.plantao)} no total${G.deficit ? ` e ${G.deficit} ${plural(G.deficit, 'rodada', 'rodadas')} ficaram no vermelho` : ''}.` },
     { k: 'Confiança', v: S.confianca, w: .15, why: `Média ponderada dos stakeholders: ${STK_KEYS.map(k => `${STK[k].nome} ${Math.round(G.stk[k].sat)}`).join(' · ')}.` }
   ];
   return `<div class="scorehead"><div style="text-align:center">${radarSVG(dims)}</div>
@@ -203,6 +203,38 @@ function replayHTML() {
   return `<div class="timeline">${nodes}</div>${d}<div class="card" style="margin-top:14px"><h3>Curvas da operação (dados reais, sem névoa)</h3>${chartSVG()}</div>`;
 }
 
+/* ---------- Debrief: dinheiro e gargalos (L1.3) ---------- */
+function tocRuns() {
+  const runs = [];
+  for (let r = 1; r <= G.round; r++) { const k = G.tocLog[r]; if (!k) continue; const l = runs[runs.length - 1]; if (l && l.k === k) l.to = r; else runs.push({ k, from: r, to: r }); }
+  return runs;
+}
+const runTxt = runs => runs.map(x => `${TOCS[x.k].nome} (${x.from === x.to ? 'R' + x.from : 'R' + x.from + '–R' + x.to})`).join(' → ');
+function tocAlign() {
+  const L = G.spendLog, n = L.length, hit = L.filter(x => x.hit).length, cost = L.reduce((s, x) => s + x.cost, 0), costHit = L.filter(x => x.hit).reduce((s, x) => s + x.cost, 0);
+  return { n, hit, cost, costHit, pct: n ? Math.round(hit / n * 100) : 0 };
+}
+function econHTML() {
+  const cats = spendBreakdown(), tot = cats.reduce((a, c) => a + c.v, 0) || 1, sp = G.spent, runs = tocRuns(), al = tocAlign();
+  const decis = sp.ops + sp.intel;
+  const verdict = !al.n ? 'Você não fez ordens de informação, pessoal ou tempo: a restrição passou sem que você a atacasse.'
+    : al.pct >= 60 ? `${al.hit} de ${al.n} ordens de recurso foram direto no elo mais fraco do momento (${al.costHit} de ${al.cost} créditos). Você subordinou o gasto à restrição.`
+    : al.pct >= 30 ? `${al.hit} de ${al.n} ordens miraram o gargalo do momento. O restante foi para pontos que já não eram o elo mais fraco.`
+    : `Só ${al.hit} de ${al.n} ordens miraram o gargalo do momento. Muito esforço foi para onde a corrente já era forte.`;
+  return `<div class="card econ"><h3>Dinheiro e gargalos: o que a operação custou</h3>
+    <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:20px">
+      <div><div class="eyebrow">Para onde foram os 1.000 créditos</div>
+        <div class="stack" style="margin-top:8px" role="img" aria-label="Distribuição dos gastos">${cats.filter(c => c.v > 0).map(c => `<i style="width:${c.v / tot * 100}%;background:${c.c}" title="${c.k}: ${Math.round(c.v)}"></i>`).join('')}</div>
+        <div class="stackleg">${cats.filter(c => c.v > 0).map(c => `<span><i style="background:${c.c}"></i>${c.k} <b class="mono">${Math.round(c.v)}</b></span>`).join('')}</div>
+        <div class="kv" style="margin-top:12px"><div><small>Plantão pago</small><b>${fmt(sp.plantao)}</b></div><div><small>Decisões pagas</small><b>${fmt(decis)}</b></div><div><small>Rodadas no vermelho</small><b>${G.deficit}</b></div><div><small>Reserva final</small><b>${fmt(G.credits)}</b></div></div>
+        <p class="muted" style="font-size:13px;margin-top:10px">${G.deficit ? `A verba acabou antes do fim: ${G.deficit} ${plural(G.deficit, 'rodada', 'rodadas')} no vermelho custaram confiança do banco e pressão sobre a equipe.` : G.credits < 60 ? 'Você terminou sem margem. Qualquer evento a mais teria posto a operação no vermelho.' : sp.plantao > decis ? 'O plantão consumiu mais do que todas as suas decisões: o custo fixo de manter gente em campo pesou mais que a inteligência e o apoio.' : 'Você gastou mais em decisões do que em manter a máquina funcionando, e sobrou margem.'}</p></div>
+      <div><div class="eyebrow">Gargalo por rodada</div>
+        <div class="runs">${runs.map(x => `<span class="run ${TOCS[x.k].cor}"><b>${TOCS[x.k].nome}</b> · ${x.from === x.to ? 'R' + x.from : 'R' + x.from + '–R' + x.to}</span>`).join('') || '<span class="faint">Sem dados.</span>'}</div>
+        <p class="muted" style="font-size:13px">${runs.length >= 3 ? 'A restrição migrou como a teoria prevê: informação, pessoal e depois tempo.' : runs.length === 2 ? 'A restrição migrou uma vez. Quem elevou o primeiro elo viu o próximo aparecer.' : 'O mesmo elo ficou no controle o tempo todo: ele nunca foi elevado, ou a operação acabou cedo.'}</p>
+        <p class="serif" style="font-size:15.5px;line-height:1.5;margin-top:8px">${verdict}</p></div>
+    </div></div>`;
+}
+
 /* ---------- Debrief ---------- */
 function debriefHTML() {
   const S = G.score, st = G.stats, H = G.hostages, toc = tocConstraint();
@@ -213,7 +245,7 @@ function debriefHTML() {
   const weakest = dimsArr[0][0];
   const next = { vidas: 'abrir a negociação já na rodada 1 e manter a escada em ordem; o líder é o seu maior fator de risco', captura: 'cobrir mais as rotas candidatas (ou investir em rota) e conter o cofre com a pressão da Entrada', valores: 'reduzir o ritmo do cofre com agentes na Entrada ou fechar a rota antes que ele abra', 'eficiência': 'cortar gastos sem retorno (apoio externo e investigações redundantes) e encerrar a crise mais cedo', confiança: 'falar com os stakeholders mais cedo e com mais regularidade, em especial o prefeito antes da rodada 6' }[weakest];
   const C = [
-    { n: 'Teoria das Restrições', ref: 'Goldratt & Cox (1984)', you: `A restrição ao final era ${toc.label.toLowerCase()}. Você terminou com ${adequateCount()} de 7 zonas adequadas, e a rota real (${ZONE[G.route].nome}) tinha ${st.initCov[G.route] || 0}% de cobertura no início.`, les: 'Melhorias fora da restrição não mudam o resultado do sistema. Aqui, o gargalo migra: informação (início), pessoal (meio), tempo e fadiga (fim). Reforçar uma zona que não era rota foi orçamento parado.' },
+    { n: 'Teoria das Restrições', ref: 'Goldratt & Cox (1984)', you: `${tocRuns().length ? 'Gargalo por rodada: ' + runTxt(tocRuns()) + '. ' : ''}${tocAlign().n ? `${tocAlign().hit} de ${tocAlign().n} ordens de recurso miraram o gargalo do momento. ` : ''}Você terminou com ${adequateCount()} de 7 zonas adequadas, e a rota real (${ZONE[G.route].nome}) tinha ${st.initCov[G.route] || 0}% de cobertura no início.`, les: 'Melhorias fora da restrição não mudam o resultado do sistema. Os cinco passos de foco: identificar o elo mais fraco, explorá-lo, subordinar o resto a ele, elevá-lo e repetir, porque o gargalo migra. Aqui: informação (início), pessoal (meio), tempo e fadiga (fim). Reforçar uma zona que não era rota foi orçamento parado.' },
     { n: 'Racionalidade limitada e valor da informação', ref: 'Simon (1955); Howard (1966)', you: `Você gastou ${fmt(G.spent.intel)} créditos em inteligência (${st.intel} investigações) e terminou sabendo ${knownCount()} de 6 variáveis ocultas${miss.length ? `. Ficaram ocultas: ${miss.join(', ')}.` : '.'}`, les: 'Uma informação vale a diferença entre o resultado esperado de decidir com ela e sem ela. Ninguém otimiza: todos satisfazem. A pergunta é quanto saber antes de agir.' },
     { n: 'Consciência situacional e decisão naturalística', ref: 'Endsley (1995); Klein (1998)', you: `Você teve ${st.reports || 0} relatos de campo, dos quais ${st.noise || 0} eram ruído de baixa confiança. Usou a Pausa de Comando ${st.pausas} vez${st.pausas === 1 ? '' : 'es'}.`, les: 'Perceber, compreender e projetar são três coisas diferentes. Dado bruto sem interpretação engana; interpretação sem projeção chega tarde. Veteranos reconhecem padrões, mas padrão reconhecido sem checagem também erra.' },
     { n: 'Negociação baseada em interesses e em crise', ref: 'Fisher, Ury & Patton (2011); Vecchi et al. (2005); Voss & Raz (2016)', you: `Degrau máximo: ${G.nego.maxStep}/5 em ${G.nego.tries} rodadas de negociação. Etapas puladas: ${G.nego.skips}. Pressões: ${st.press || 0}. Cobertura média das rotas (seu BATNA): ${Math.round(avgRouteCov())}%.`, les: 'A escada de cinco degraus funciona em ordem. Pular etapa reduz pela metade a chance de avançar. Fechar rotas fortalece o seu BATNA e enfraquece o do líder: o perímetro altera a negociação.' },
@@ -232,7 +264,7 @@ function debriefHTML() {
   ];
   const qs = ['Qual era a restrição da sua operação em cada fase? Você percebeu quando ela mudou?', 'Quanto você investiu em informação antes de agir? Esse investimento se pagou?', 'Em que momento a negociação avançou ou regrediu? O que você fez para isso acontecer?', 'Houve algum momento em que você insistiu num plano que já não funcionava? Por quê?', 'Se os pesos do placar fossem outros, você teria agido de outra forma?'];
   const bridge = [['Reféns', 'Clientes, dados de clientes ou colaboradores afetados por uma crise'], ['Assaltantes', 'Um ataque de ransomware, um concorrente agressivo ou uma crise reputacional'], ['Cofre', 'Caixa, ativos estratégicos ou propriedade intelectual'], ['Perímetro e rotas de fuga', 'Controles internos e vulnerabilidades operacionais'], ['Negociação com o líder', 'Negociação com contrapartes hostis: sindicatos, credores, atacantes'], ['Imprensa e prefeito', 'Mídia, redes sociais, conselho de administração e reguladores'], ['Agências parceiras', 'Fornecedores, parceiros e áreas fora da sua hierarquia'], ['Fadiga da equipe', 'Burnout em equipes de resposta a incidentes']];
-  return `<div class="grid" style="gap:16px"><div><div class="eyebrow">Ciclo de Kolb</div><div class="kolb" style="margin-top:8px">${kolb.map(([a, b]) => `<div class="concept"><h4>${a}</h4><p class="les">${b}</p></div>`).join('')}</div></div>
+  return `<div class="grid" style="gap:16px">${econHTML()}<div><div class="eyebrow">Ciclo de Kolb</div><div class="kolb" style="margin-top:8px">${kolb.map(([a, b]) => `<div class="concept"><h4>${a}</h4><p class="les">${b}</p></div>`).join('')}</div></div>
     <div><div class="eyebrow">Suas decisões e os conceitos</div><div class="grid" style="gap:12px;margin-top:8px;grid-template-columns:repeat(auto-fit,minmax(340px,1fr))">${C.map(c => `<div class="concept"><h4>${c.n}</h4><span class="ref">${c.ref}</span><div class="you">${c.you}</div><p class="les">${c.les}</p></div>`).join('')}</div></div>
     <div class="card"><h3>Perguntas para a reflexão</h3><ul style="margin:0;padding-left:18px;display:grid;gap:6px">${qs.map(q => `<li>${q}</li>`).join('')}</ul></div>
     <div class="card"><h3>Da simulação para a gestão de crises corporativas</h3><div class="scroll-x"><table class="table"><thead><tr><th>Na simulação</th><th>Na empresa</th></tr></thead><tbody>${bridge.map(([a, b]) => `<tr><td><b>${a}</b></td><td>${b}</td></tr>`).join('')}</tbody></table></div></div></div>`;
@@ -319,9 +351,9 @@ ACT.addrepos = () => {
 };
 CHG.repoagent = v => { UI.repoAgent = v; }; CHG.repozone = v => { UI.repoZone = v; }; CHG.apoiozone = v => { UI.apoioZone = v; };
 CHG.negotiator = v => { G.nego.negotiator = v; saveGame(); render(); };
-ACT.addapoio = () => { if (!UI.apoioZone) { warn('Escolha a zona do apoio externo.'); return; } addD({ front: 'tatica', kind: 'apoio', p: { zone: UI.apoioZone }, label: `Apoio externo em ${ZNAME(UI.apoioZone)}`, slots: 1, cost: 90 }); };
+ACT.addapoio = () => { if (!UI.apoioZone) { warn('Escolha a zona do apoio externo.'); return; } addD({ front: 'tatica', kind: 'apoio', p: { zone: UI.apoioZone }, label: `Apoio externo em ${ZNAME(UI.apoioZone)}`, slots: 1, cost: apoioCost() }); };
 ACT.addpausa = () => addD({ front: 'tatica', kind: 'pausa', p: {}, label: 'Pausa de Comando', slots: 1 });
-ACT.addhoras = () => addD({ front: 'tatica', kind: 'horas', p: {}, label: 'Horas extras', slots: 1, cost: 60 });
+ACT.addhoras = () => addD({ front: 'tatica', kind: 'horas', p: {}, label: 'Horas extras', slots: 1, cost: horasCost() });
 ACT.iv = () => { UI.ivConfirm = true; render(); };
 ACT.ivno = () => { UI.ivConfirm = false; render(); };
 ACT.ivyes = () => { UI.ivConfirm = false; addD({ front: 'tatica', kind: 'interv', p: {}, label: 'INTERVENÇÃO', slots: D_().slots }); };
