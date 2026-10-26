@@ -85,13 +85,20 @@ function planPreview() {
   return rows;
 }
 
+/* ---------- Ultimato final (rodada 8): o que o comandante consegue estimar hoje ----------
+   A faixa usa a mesma incerteza da intervenção: quanto menos se sabe, mais larga. */
+function ultimatumView() {
+  const p = ultimatumProb(), pf = intervProb(-.10), band = Math.max(.05, ivBand());
+  return { p, pf, cede: pctRange(p, band), forca: pctRange(pf, band), tone: p >= .5 ? 'good' : p >= .25 ? 'warn' : 'bad' };
+}
+
 /* ---------- Alertas priorizados: o que olhar primeiro ---------- */
 function siegeAlerts() {
   const out = [], K = G.K, r = G.round, left = MAX_ROUNDS - r, pa = perceivedAgit(), D = D_();
   const add = (sev, ic, title, text, tab, label) => out.push({ sev, ic, title, text, tab, label });
   if (!G.nego.contact && r >= 2) add(2, 'phone', 'Sem canal com o líder', `Há ${r - 1} rodada${r > 2 ? 's' : ''} ninguém fala com ele: você não mede a agitação nem sabe quem ele é.`, 'nego', 'Abrir negociação');
   if ((pa.exact && G.agit >= 70) || (!pa.exact && pa.v >= 70)) add(3, 'alert', pa.exact ? `Agitação ${Math.round(G.agit)}` : 'Agitação crítica', G.agit > 80 ? `Acima de 80 há ${Math.round((G.agit - 80) * 2 * D.desp)}% de risco por rodada de ação desesperada.` : 'Perto de 80 o líder pode agir por desespero. Pressão e movimentos bruscos pioram.', 'nego', 'Acalmar');
-  if (G.credits < plantaoCost()) add(3, 'coin', 'Verba abaixo do plantão', `Reserva ${Math.round(G.credits)} para um plantão de ${plantaoCost()}. No vermelho, o banco perde 5 e a pressão sobe 3 por rodada.`, 'tatica', 'Mandar gente à reserva');
+  if (G.credits < plantaoCost()) add(3, 'coin', 'Verba abaixo do plantão', `Reserva ${Math.round(G.credits)} para um plantão de ${plantaoCost()}. No vermelho, o banco perde 5 por rodada e, nas três primeiras, a pressão da equipe sobe 3.`, 'tatica', 'Mandar gente à reserva');
   else if (left > 0 && runway() < left) add(2, 'coin', 'A verba não vai até o fim', `Sustenta ${runway().toFixed(1).replace('.', ',')} de ${left} rodadas de plantão (falta ~${Math.round(burnToEnd() - G.credits)}). Cada ordem paga encurta mais.`, 'tatica', 'Rever efetivo');
   if (K.route && zoneCoverage(K.route) < ADEQ) add(3, 'road', `Rota provável descoberta`, `${ZONE[K.route].nome} está com ${zoneCoverage(K.route)}% de cobertura. Se o cofre ceder, é por ali que eles saem.`, 'tatica', 'Reforçar a zona');
   if (K.vault) { const e = vaultEtaN(); if (e <= 2) add(3, 'bank', 'Cofre perto de ceder', e <= 0 ? 'O cofre está a ponto de abrir.' : `Abre em ${e} rodada${e > 1 ? 's' : ''}. Agentes na Entrada seguram o ritmo, mas irritam o líder.`, 'tatica', 'Pressionar a Entrada'); else if (e <= 4) add(2, 'bank', `Cofre abre em ${e} rodadas`, 'Hoje ainda dá tempo de segurar o ritmo ou fechar a rota.', 'tatica', 'Ver a Entrada'); }
@@ -105,9 +112,11 @@ function siegeAlerts() {
   if (G.pressure > 75) add(2, 'bolt', 'Equipe sobrecarregada', `Pressão ${G.pressure}: acima da zona ótima (≈50) a eficiência cai. A Pausa de Comando reduz 10.`, 'tatica', 'Subir à sacada');
   if (G.deadlineLeft > 0) add(3, 'clock', 'Noticiário das 20h', `Faltam ${G.deadlineLeft} rodada${G.deadlineLeft > 1 ? 's' : ''}. Se não houver desfecho, o prefeito perde 15 pontos.`, 'com', 'Falar com o prefeito');
   else if (r === 5) add(1, 'mayor', 'Prefeito em urgência na rodada 6', 'Perdas de confiança dele passam a ser maiores. Comunicar agora é mais barato que depois.', 'com', 'Antecipar');
-  if (r === MAX_ROUNDS) add(3, 'clock', 'Última rodada', 'Depois desta vem o ultimato final. O que não for resolvido agora será decidido por ele.', 'nego', 'Fechar a negociação');
+  if (r === MAX_ROUNDS) { const u = ultimatumView(); add(3, 'clock', 'Última rodada', `Depois desta vem o ultimato final. Como está, o líder cede com ${u.cede} de chance; se não ceder, a entrada é forçada (${u.forca} de sucesso). O que você mexer agora ainda conta.`, 'nego', 'Fechar a negociação'); }
+  else if (r >= MAX_ROUNDS - 2) { const u = ultimatumView(); add(1, 'clock', `Ultimato em ${left} rodada${left > 1 ? 's' : ''}`,`Se a crise chegasse ao ultimato como está, o líder cederia com ${u.cede} de chance. Degraus a mais, rotas fechadas e agitação baixa aumentam essa chance.`, 'nego', 'Subir a escada'); }
   if (G.nego.step === 5) add(1, 'check', 'Degrau 5 alcançado', `A rendição ocorre se a agitação cair abaixo de ${D.ret}${G.K.profile && G.nego.contact ? ` (hoje ${Math.round(G.agit)})` : ''}. Mantenha a pressão baixa.`, 'nego', 'Seguir negociando');
   const u = G.update; if (u && u.r === r && u.tocPrev && u.tocPrev !== u.toc) add(1, TOCS[u.toc].ic, `A restrição mudou: ${TOCS[u.toc].nome}`, `Antes era ${TOCS[u.tocPrev].nome.toLowerCase()}. ${TOCS[u.toc].elevar}`, TOCS[u.toc].tab, 'Elevar a restrição');
+  const last = out.findIndex(a => a.title === 'Última rodada'); if (last > 0) out.unshift(out.splice(last, 1)[0]);   // a última rodada é o alerta mais urgente: fica no topo entre os críticos
   return out.sort((a, b) => b.sev - a.sev);
 }
 
@@ -119,6 +128,6 @@ function milestones() {
   if (G.deadlineLeft > 0) out.push({ r: r + G.deadlineLeft, t: 'Jornal das 20h', tone: 'red' });
   if (G.nego.contact && G.nego.step < 5) { const pc = negoParts(G.nego.step).p, n = Math.ceil((5 - G.nego.step) / Math.max(.05, pc)); out.push({ r: r + n, t: 'Degrau 5 (se negociar todo turno)', tone: 'blue' }); }
   const bk = burnToEnd(); if (G.credits < bk && plantaoCost() > 0) out.push({ r: r + Math.floor(runway()), t: 'A verba acaba', tone: 'red' });
-  out.push({ r: MAX_ROUNDS, t: 'Ultimato final', tone: 'red' });
+  { const u = ultimatumView(); out.push({ r: MAX_ROUNDS, t: `Ultimato final (cede com ${u.cede})`, tone: 'red' }); }
   return out.filter(m => m.r <= MAX_ROUNDS + 2).sort((a, b) => a.r - b.r);
 }

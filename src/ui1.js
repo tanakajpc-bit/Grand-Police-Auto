@@ -158,7 +158,7 @@ function renderMenu() {
     <button class="diffcard" role="radio" data-act="diff" data-v="${k}" aria-checked="${UI.diffSel === k}" tabindex="${UI.diffSel === k ? 0 : -1}">
       <span class="dot" aria-hidden="true"></span>
       <span><b class="dname">${d.nome}</b><span class="dblurb">${d.blurb}</span></span>
-      <span class="dparams">${d.slots} decisões<br>${d.timer}s/rodada<br>eventos ${Math.round(d.evChance * 100)}%</span>
+      <span class="dparams">${d.slots} decisões<br>${d.timer}s/rodada<br>eventos ${Math.round(d.evChance * 100)}%<br>${d.ops === 1 ? 'plantão padrão' : 'plantão ' + (d.ops < 1 ? '−' : '+') + Math.round(Math.abs(1 - d.ops) * 100) + '%'}</span>
     </button>`).join('');
   return `<div class="screen menu">
     <div class="sky">${skyline()}<i class="siren r"></i><i class="siren b"></i><i class="siren r2"></i><i class="siren b2"></i>
@@ -188,7 +188,7 @@ function tutorModal() {
     <p class="muted"><b>1. Recrute</b> uma equipe com 1.000 créditos. O que sobrar é sua reserva para investigações, apoio externo e horas extras, e também paga o <b>plantão</b>: toda rodada, cada agente em campo custa verba. Sem reserva, a operação entra no vermelho.</p>
     <p class="muted"><b>2. Posicione</b> agentes e equipamentos em 7 zonas. Quatro delas são rotas de fuga possíveis, mas você não sabe quais. Os recursos só cobrem bem cerca de 60% das zonas: é preciso apostar, ou investir em inteligência. Mudar alguém de zona tem custo: ele rende menos por duas rodadas.</p>
     <p class="muted"><b>3. Comande o cerco</b> por 8 rodadas. Em cada uma você recebe informações parciais (Percepção), lê indicadores (Compreensão) e vê tendências (Projeção). Então toma 2 ou 3 decisões em quatro frentes: <b>Tática, Negociação, Inteligência e Comunicação</b>.</p>
-    <p class="muted"><b>4. A crise termina</b> por rendição negociada, intervenção, fuga ou prazo esgotado. A nota combina vidas (40%), prisões (20%), valores (15%), eficiência de custo (10%) e confiança pública (15%).</p>
+    <p class="muted"><b>4. A crise termina</b> por rendição negociada, intervenção, fuga ou prazo esgotado: ao fim da rodada 8, o líder escolhe entre ceder e forçar a mão. A nota combina vidas (40%), prisões (20%), valores (15%), eficiência de custo (10%) e confiança pública (15%). Mortes e intervenção fracassada põem um teto na nota, e entrar com menos de 50% de chance é aposta: se der certo, o máximo é A.</p>
     <p class="muted">Dica: a negociação sobe uma escada de 5 degraus, um por vez. Pular etapas reduz pela metade a chance de avançar. O painel mostra o <b>gargalo</b> da operação: ele muda de informação para pessoal e depois para tempo, e gastar fora dele rende pouco.</p>
     <div class="row"><button class="btn primary" data-act="closehowto">Entendi</button><span class="faint" style="font-size:12px">Esc também fecha</span></div></div></div>`;
 }

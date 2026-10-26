@@ -31,6 +31,10 @@ const ADEQ = 60;                  // cobertura "adequada"
 const PLANTAO_BASE = 4, PLANTAO_AGENTE = 2;
 const APOIO_PRECOS = [90, 110, 135];
 const HORAS_BASE = 20, HORAS_AGENTE = 8;
+const CREDITOS_INICIAIS = 1000;
+const BATNA_PESO = .10;           // quanto a cobertura das rotas (o BATNA da força-tarefa) ajuda a negociação: de 0 a +10 pontos de chance
+const APOSTA_P = .5;               // entrada voluntária com chance de sucesso abaixo disto é aposta: o sucesso não passa da nota A
+const DEFICIT_STRESS_ROUNDS = 3;   // só as três primeiras rodadas no vermelho aumentam a pressão da equipe (+3 cada); depois o custo é só de confiança do banco
 
 /* ---------- ÍCONES (SVG inline minimalistas, stroke) ---------- */
 const IC = {
@@ -153,13 +157,13 @@ const PROFILES = {
 
 /* ---------- DIFICULDADE ---------- */
 const DIFF = {
-  protocolar: { nome:'Protocolar', slots:3, ops:.7, timer:150, resist:1.45, ivp:-.10, agit:-1, evChance:.35, media:.85, vault:.85, stk:65, desp:.8, pbase:25, intel:.00, fat:.9,  lethal:.7, ret:55, hostile:0, assail:[2,3],
-    blurb:'Para aprender a mecânica. Mais tempo, líder mais receptivo, eventos raros.' },
-  complexo:   { nome:'Complexo',   slots:3, ops:1,  timer:100, resist:1.55, ivp:-.13, agit:0,  evChance:.55, media:1.0,  vault:1.0,  stk:58, desp:1.0, pbase:30, intel:.00, fat:1.0, lethal:1.0, ret:45, hostile:0, assail:[2,4],
-    blurb:'O equilíbrio do documento. Tempo apertado, eventos frequentes.' },
-  caotico:    { nome:'Caótico',    slots:2, ops:1.3,timer:65,  resist:1.60, ivp:-.19, agit:2,  evChance:.80, media:1.2,  vault:1.2,  stk:58, desp:1.25,pbase:38, intel:-.10,fat:1.25,lethal:1.3, ret:46, hostile:1, assail:[3,4],
+  protocolar: { nome:'Protocolar', slots:3, ops:.7, timer:150, lev:.30, dist:.24, ivp:-.03, agit:-1, evChance:.35, media:.85, vault:.85, stk:65, desp:.8, pbase:25, intel:.00, fat:.9,  lethal:.7, ret:55, hostile:0, assail:[2,3],
+    blurb:'Para aprender a mecânica: bastante tempo, líder receptivo, eventos raros e plantão mais barato.' },
+  complexo:   { nome:'Complexo',   slots:3, ops:1,  timer:100, lev:.32, dist:.305, ivp:-.10, agit:0,  evChance:.55, media:1.0,  vault:1.0,  stk:58, desp:1.0, pbase:30, intel:.00, fat:1.0, lethal:1.0, ret:45, hostile:0, assail:[2,4],
+    blurb:'O equilíbrio do documento: tempo apertado, líder reservado e eventos frequentes.' },
+  caotico:    { nome:'Caótico',    slots:2, ops:1.3,timer:65,  lev:.275, dist:.36, ivp:-.17, agit:2,  evChance:.80, media:1.2,  vault:1.2,  stk:58, desp:1.25,pbase:38, intel:-.10,fat:1.25,lethal:1.3, ret:46, hostile:1, assail:[3,4],
     ncalm:1.3, negoFloor:.7, adaptAt:50, adaptMin:.4, violent:.75,
-    blurb:'Só duas decisões por rodada, pouco tempo, informação mais cara e eventos quase toda rodada.' }
+    blurb:'Só duas decisões por rodada, pouco tempo, líder hostil, investigações menos confiáveis, plantão mais caro e eventos quase toda rodada.' }
 };
 
 /* ---------- INTELIGÊNCIA ---------- */

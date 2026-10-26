@@ -32,7 +32,7 @@ function newGame(diffKey, opts = {}) {
   const route = wpick(routes, wf);
   G = {
     ver: 2, diff: diffKey, noLimit: !!opts.noLimit, phase: 'briefing', stage: null, round: 0,
-    credits: 1000, spent: { rec: 0, equip: 0, intel: 0, ops: 0, plantao: 0 }, deficit: 0, tocLog: [], spendLog: [], creditsHist: [],
+    credits: CREDITOS_INICIAIS, spent: { rec: 0, equip: 0, intel: 0, ops: 0, plantao: 0 }, deficit: 0, tocLog: [], spendLog: [], creditsHist: [],
     team: [], gear: [], az: {}, gz: {}, fat: {}, transit: {}, away: {}, camAdj: { plus: 'tat', minus: 'com' },
     profile: prof, agit: PROFILES[prof].start + (diffKey === 'caotico' ? 5 : diffKey === 'protocolar' ? -5 : 0),
     routes, route, routeNow: route, assail: ri(D.assail[0], D.assail[1]), accomplice: rnd() < .3,
@@ -170,16 +170,16 @@ function negoParts(tech) {
   const compat = tech === d, skip = tech > d;
   const kind = POSTURES[tech - 1].kind;
   const parts = {
-    base: .15 * skill,
+    base: .15 * skill * D.lev,   // habilidade do negociador, atenuada pela resistência do líder (lev)
     postura: compat ? .20 : skip ? -.25 : 0,
     rapport: .05 * d,
     negofone: hasGear('negofone') ? .10 : 0,
     traco: (id === 'paulo' && tech <= 3 ? .10 : 0) + (id === 'andre' ? -.12 : 0),
     perfil: (P.mult[kind] - 1) * .15,
     info: G.K.profile ? .06 : 0,
-    batna: .10 * avgRouteCov() / 100,
+    batna: BATNA_PESO * avgRouteCov() / 100,
     agitacao: -Math.max(0, G.agit - 50) * .006,
-    lider: -D.resist
+    lider: -D.dist               // desconfiança de base do líder
   };
   let raw = Object.values(parts).reduce((a, b) => a + b, 0);
   if (skip) raw *= .5;
@@ -217,7 +217,7 @@ function blindParts() {
 }
 function intervProb(extra = 0) {
   const blind = blindParts().reduce((s, b) => s + b.v, 0);
-  const pr = .12 + .45 * intervPower() / 100 + .33 * infoFrac() + blind - .30 * G.agit / 100 + (G.powerCut > 0 ? .04 : 0) + (D_().ivp || 0) + extra;
+  const pr = .24 + .45 * intervPower() / 100 + .33 * infoFrac() + blind - .30 * G.agit / 100 + (G.powerCut > 0 ? .04 : 0) + (D_().ivp || 0) + extra;
   return clamp(pr, .05, .95);
 }
 const hostagesLeft = () => G.hostages.inside;
@@ -281,11 +281,10 @@ function doIntervention(forced) {
   if (G.agit > 70 && variant !== 'fracasso' && rnd() < (G.agit - 70) * .01) d += 1;
   if (kit && d > 0 && rnd() < .5) { d -= 1; h += 1; }
   const H = G.hostages;
-  H.freed += H.inside - H.dead; H.inside = H.dead;
   const free = HOSTAGES - H.dead - H.hurt;
   const hh = Math.min(h, Math.max(0, free)); H.hurt += hh;
   const dd = Math.min(d, HOSTAGES - H.dead); const fromHurt = Math.min(dd, H.hurt); H.hurt -= fromHurt; H.dead += dd;
-  H.inside = H.dead; // todos saem do interior; mortos permanecem contabilizados
+  H.inside = H.dead; H.freed = HOSTAGES - H.dead; // todos saem do interior; os mortos permanecem contabilizados e só os vivos contam como libertados
   return { type: 'intervencao', variant, captured: cap, lootF: loot, P, forced: !!forced, newHurt: hh, newDead: dd };
 }
 function doSurrender() {
@@ -315,8 +314,14 @@ function doEscape(cause) {
   return { type: 'fuga', variant: 'escapou', zone: z, cov, pc, pp, adapted, cause, captured: .2, lootF: 1.0, newHurt: extraHurt };
 }
 function addHurtFree(n) { const H = G.hostages; const free = HOSTAGES - H.dead - H.hurt; n = Math.max(0, Math.min(n, free)); H.hurt += n; return n; }
+/* Ultimato final: o líder decide aceitar a última proposta ou forçar a mão. Quanto mais a escada avançou, mais baixa a agitação
+   e mais fechado o perímetro (o BATNA), maior a chance de ele ceder; do contrário, a entrada é forçada com a prontidão que existir. */
+function ultimatumProb() {
+  const d = G.nego.step;
+  return clamp(.04 + .15 * (d - 1) - G.agit / 300 + (G.K.profile ? .05 : 0) + .10 * avgRouteCov() / 100 + (G.nego.contact ? 0 : -.04), .05, .9);
+}
 function doUltimatum() {
-  const d = G.nego.step, p = clamp(.06 + .11 * (d - 1) - G.agit / 250 + (G.K.profile ? .05 : 0), .05, .9);
+  const p = ultimatumProb();
   if (rnd() < p) {
     const H = G.hostages; H.freed += H.inside - H.dead; H.inside = H.dead;
     const h = rnd() < .3 ? addHurtFree(1) : 0;
@@ -337,6 +342,8 @@ function stakeWeights() {
   return w;
 }
 function confidence() { const w = stakeWeights(); return clamp(STK_KEYS.reduce((s, k) => s + G.stk[k].sat * w[k], 0) / 100, 0, 1); }
+/* Eficiência de custo (0–1): verba que sobrou ÷ verba inicial (60%) e rapidez do desfecho (40%). O HUD projeta o mesmo valor "se acabasse agora". */
+function eficienciaCusto() { return clamp(.6 * Math.min(1, Math.max(0, G.credits) / CREDITOS_INICIAIS) + .4 * (1 - (G.round - 1) / MAX_ROUNDS * .8), 0, 1); }
 function gradeOf(s) { return s >= 90 ? 'S' : s >= 80 ? 'A' : s >= 65 ? 'B' : s >= 50 ? 'C' : s >= 35 ? 'D' : 'F'; }
 function computeScore() {
   const E = G.end, H = G.hostages;
@@ -344,14 +351,21 @@ function computeScore() {
   const vidas = clamp(1 - (H.dead * 2 + H.hurt * .5) / HOSTAGES, 0, 1);
   const captura = clamp(E.captured, 0, 1);
   const valores = clamp(1 - E.lootF * (G.vault / 100), 0, 1);
-  const eficiencia = clamp(.6 * Math.min(1, Math.max(0, G.credits) / 300) + .4 * (1 - (G.round - 1) / MAX_ROUNDS * .8), 0, 1);
+  const eficiencia = eficienciaCusto();
   const confianca = confidence();
   const raw = (vidas * .40 + captura * .20 + valores * .15 + eficiencia * .10 + confianca * .15) * 100;
-  // Tetos: vidas perdidas e uma intervenção fracassada nunca contam como boa condução (perspectiva de quem protege).
+  // Tetos (perspectiva de quem protege): vidas perdidas e intervenção fracassada nunca contam como boa condução,
+  // e acertar uma aposta (entrada voluntária com menos de 50% de chance) é sorte, não método: no máximo nota A.
   const failed = (E.type === 'intervencao' && E.variant === 'fracasso') || (E.type === 'prazo' && E.sub === 'fracasso');
-  const cap = Math.min(H.dead >= 4 ? 49 : H.dead >= 2 ? 64 : H.dead >= 1 ? 79 : 100, failed ? 49 : 100);
+  const aposta = E.type === 'intervencao' && !E.forced && E.P < APOSTA_P;
+  const tetos = [];
+  if (H.dead >= 1) tetos.push({ v: H.dead >= 4 ? 49 : H.dead >= 2 ? 64 : 79, why: 'mortes' });
+  if (failed) tetos.push({ v: 49, why: 'fracasso' });
+  if (aposta) tetos.push({ v: 89, why: 'aposta' });
+  const teto = tetos.sort((a, b) => a.v - b.v)[0] || { v: 100, why: null };
+  const cap = teto.v;
   const total = Math.min(raw, cap);
-  G.score = { vidas, captura, valores, eficiencia, confianca, raw, total, cap, capped: raw > cap, grade: gradeOf(total) };
+  G.score = { vidas, captura, valores, eficiencia, confianca, raw, total, cap, capWhy: teto.why, capped: raw > cap, grade: gradeOf(total) };
   return G.score;
 }
 
@@ -519,17 +533,6 @@ function radioLines() {
   if (!L.length) L.push({ t: '[RÁDIO] Perímetro estável. Aguardando ordens do comando.', c: '' });
   return L.slice(0, 4);
 }
-const ROUND_INTRO = [
-  '',
-  'Os primeiros minutos decidem o tom do cerco. O perímetro está montado, mas ninguém sabe ao certo quantos são, o que querem ou por onde pretendem sair. Cada informação nova vale mais do que parece.',
-  'O primeiro contato com o líder abriu uma fresta no silêncio. A imprensa já tem posição fixa no isolamento e as famílias começam a se aglomerar na esquina.',
-  'O cansaço aparece nos primeiros rostos. As escolhas do começo já cobram juros: quem investiu em informação enxerga mais, quem investiu em gente cobre mais.',
-  'Metade do tempo se foi. O sol baixa entre os prédios e as sombras alongam a Avenida Principal. O que ainda está oculto vai custar mais caro a cada hora.',
-  'Fim de tarde. A equipe está esticada e o noticiário das 20h passou a existir na cabeça de todo mundo, principalmente do prefeito.',
-  'O prefeito quer um desfecho. A cidade quer um desfecho. O líder, talvez, também. Mas desfecho é diferente de solução, e você é quem escolhe qual dos dois entrega.',
-  'A luz acabou lá fora. Uma hora para acabar. A cada rodada, os custos de insistir ficam visíveis, e os de desistir também.',
-  'Última rodada. Depois dela, os assaltantes impõem o ultimato final. O que você construiu até aqui decide quanto de margem ainda existe.'
-];
 function startRound() {
   G.round++;
   G.pressure = calcPressure();
@@ -702,8 +705,10 @@ function resolveDecisions() {
   G.credits -= ppaid; G.spent.plantao += ppaid; R.plantao = { cost: pcost, paid: ppaid, n: pn };
   if (ppaid >= pcost) L(R, G.credits < pcost * 2 ? 'warn' : 'info', 'coin', `Custo de plantão: −${pcost} créditos (${pn} ${pn === 1 ? 'agente' : 'agentes'} em campo). Reserva: ${Math.round(G.credits)}${G.credits < pcost * 2 ? ', menos de duas rodadas de plantão' : ''}.`);
   else {
-    G.deficit++; G.stress += 3; stake('banco', -5); why(R, 'banco', -5, 'plantão no vermelho');
-    L(R, 'bad', 'coin', `Verba esgotada: o plantão custava ${pcost} e só havia ${ppaid}. A operação segue no vermelho: a pressão sobre a equipe sobe (+3) e o banco, que cobre a diferença, perde confiança (−5).`);
+    G.deficit++; stake('banco', -5); why(R, 'banco', -5, 'plantão no vermelho');
+    const sob = G.deficit <= DEFICIT_STRESS_ROUNDS;   // o desgaste da equipe tem teto: o vermelho prolongado pesa na confiança do banco, não numa espiral de pressão
+    if (sob) G.stress += 3;
+    L(R, 'bad', 'coin', `Verba esgotada: o plantão custava ${pcost} e só havia ${ppaid}. A operação segue no vermelho: o banco, que cobre a diferença, perde confiança (−5)${sob ? ' e a equipe, trabalhando sem folga, sente a pressão (+3)' : '; a equipe já está no limite e a pressão não sobe mais por causa disso'}.`);
   }
   // mídia: 8 + rodada×2 (escalados pela dificuldade) + comunicado
   const mgain = (8 + G.round * 2) * D.media + G.commMedia - (hasGear('jammer') ? 2 : 0) - (G.team.includes('fernanda') ? 0 : 0);
@@ -768,7 +773,7 @@ function stakePassives(R) {
     G.stk[k].lost = true;
     if (k === 'banco') { const cut = Math.min(60, Math.max(0, G.credits)); G.credits -= cut; G.spent.corte = (G.spent.corte || 0) + cut; L(R, 'bad', 'bank', 'O banco perdeu a confiança: a diretoria aciona o seguro e corta 60 créditos da verba operacional.'); }
     if (k === 'imprensa') L(R, 'bad', 'mic', 'A imprensa rompeu com o comando: a cobertura passa a ser hostil e a pressão da mídia ganha +8 por rodada.');
-    if (k === 'prefeito') L(R, 'bad', 'mayor', 'O prefeito perdeu a paciência. Se a crise não acabar até o fim desta rodada a partir da sexta, ele ordenará a intervenção.');
+    if (k === 'prefeito') L(R, 'bad', 'mayor', 'O prefeito perdeu a paciência com o comando. Se ele continuar sem confiança a partir da rodada 6, vai ordenar a intervenção por conta própria, contra a sua recomendação técnica.');
     if (k === 'familias') L(R, 'bad', 'family', 'As famílias rompem o isolamento em protesto. A pressão sobre a equipe sobe.');
   });
   if (G.stk.imprensa.lost) addMedia(8);
@@ -850,7 +855,7 @@ const EVENT_FX = {
     { label: 'Recusar', hint: 'Sem risco, sem ganho.', run: R => { L(R, 'info', 'mask', 'Você recusa. O agente volta para a equipe de apoio.'); } }] },
   deadline:  { elig: g => (g.round === 6 || g.round === 7) && !g.deadlineFired, choices: [{ label: 'Entendido', hint: 'O tempo agora tem hora marcada', run: R => {
     G.deadlineLeft = 2; G.deadlineFired = true; stake('prefeito', -5); addMedia(10);
-    L(R, 'bad', 'clock', 'O noticiário das 20h vai ao ar em cerca de duas rodadas. O prefeito exige resolução (−5), a mídia sobe +10 e as perdas de prefeito passam a ser dobradas.'); } }] },
+    L(R, 'bad', 'clock', 'O noticiário das 20h vai ao ar em cerca de duas rodadas. O prefeito exige resolução (−5) e a mídia sobe +10. Até lá o prefeito perde mais 2 pontos por rodada, e, se não houver desfecho no horário, perde outros 15.'); } }] },
   familia:   { elig: g => g.round >= 2 && g.hl.some(h => h.id === 'yara' && h.in && h.st !== 'dead'), choices: [
     { label: 'Usar o canal para tranquilizar a refém', hint: 'Humano, mas fora do seu controle.', run: R => {
       stake('familias', 10); addAgit(4); G.K.hostages = true; const H = G.hostages;

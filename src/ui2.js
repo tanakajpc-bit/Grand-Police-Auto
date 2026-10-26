@@ -11,7 +11,7 @@ function bscValues() {
     { k: 'Vidas', v: G.K.hostages ? clamp(1 - (H.dead * 2 + H.hurt * .5) / HOSTAGES, 0, 1) * 100 : 100, unk: !G.K.hostages, cls: 'g' },
     { k: 'Prisões', v: avg, cls: 'b', unk: false },
     { k: 'Valores', v: 100 - pv.v, unk: !pv.exact, cls: 'a' },
-    { k: 'Eficiência', v: clamp(G.credits / 300 * 100, 0, 100), unk: false, cls: 'v' },
+    { k: 'Eficiência', v: eficienciaCusto() * 100, unk: false, cls: 'v' },
     { k: 'Confiança', v: confidence() * 100, unk: false, cls: 'g' }
   ];
 }
@@ -93,7 +93,7 @@ function endsleyHTML() {
   const mProj = clamp(Math.round(G.media + Array.from({ length: MAX_ROUNDS - G.round }, (_, i) => (8 + (G.round + 1 + i) * 2) * D_().media).reduce((a, b) => a + b, 0)), 0, 100);
   const best = POSTURES.map(p => negoParts(p.t).p).reduce((a, b) => Math.max(a, b), 0), pc = negoParts(G.nego.step).p;
   const roundsLeft = G.nego.step >= 5 ? 0 : Math.ceil((5 - G.nego.step) / Math.max(.05, pc));
-  const ip = intervProb(), band = .16 * (1 - infoFrac());
+  const ip = intervProb(), band = .16 * (1 - infoFrac()), ul = ultimatumView();
   const L3 = `
     <div class="grid" style="gap:8px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">
       <div><div class="eyebrow">Agitação aparente</div>${spark(agNow, '#ff5468', true)}</div>
@@ -108,6 +108,7 @@ function endsleyHTML() {
     ${ins('info', 'bank', `Cofre: previsão de abertura em ${K.vault ? etaVault() : 'prazo desconhecido (faixa ampla, só a inteligência ou a diretoria do banco precisam)'}.`)}
     ${ins('info', 'stairs', `Negociação: com a melhor postura, a chance de avançar é ${pLabel(pc)}; chegar ao degrau 5 leva cerca de ${roundsLeft || 'zero'} rodada${roundsLeft === 1 ? '' : 's'} se negociar todo turno. ${G.nego.step === 5 ? `Rendição ocorre se a agitação cair abaixo de ${D_().ret}.` : ''}`)}
     ${ins(ip > .55 ? 'good' : ip > .3 ? 'warn' : 'bad', 'shield', `Intervenção hoje: chance estimada ${pLabel(ip)} (${Math.round(clamp(ip - band, 0, 1) * 100)}–${Math.round(clamp(ip + band, 0, 1) * 100)}%). Quanto menos você sabe, mais larga é a faixa${blindParts().length ? ', e entrar sem conhecer o interior custa ' + Math.round(-blindParts().reduce((s, b) => s + b.v, 0) * 100) + ' pontos de chance' : ''}.`)}
+    ${ins(ul.tone, 'clock', `Ultimato da rodada ${MAX_ROUNDS}: se a crise chegasse lá como está, o líder cederia com chance de ${ul.cede}; se não ceder, a entrada é forçada com ${ul.forca} de sucesso. Cada degrau a mais, rota fechada e ponto de agitação a menos ajudam a cessão.`)}
     ${G.round < 6 ? ins('warn', 'mayor', `A urgência do prefeito aumenta na rodada 6 (faltam ${6 - G.round}).`) : ''}`;
   /* Os três níveis de Endsley viram abas: o mesmo conteúdo, um nível por vez (o painel tinha ~1.500 px). */
   const l2s = L2.join(''), n2 = (l2s.match(/insight (warn|bad)/g) || []).length, n3 = (L3.match(/insight (warn|bad)/g) || []).length;
@@ -256,6 +257,7 @@ function tabTatica() {
   const zoneOpts = ZONES.map(z => `<option value="${z.id}" ${UI.apoioZone === z.id ? 'selected' : ''}>${z.nome} (${zoneCoverage(z.id)}%)</option>`).join('');
   const ip = intervProb(), band = .16 * (1 - infoFrac()), blind = blindParts();
   const blindTxt = blind.length ? `<br><span style="color:var(--amber)">Às cegas: ${blind.map(b => `−${Math.round(-b.v * 100)}% porque você ${b.txt}`).join('; ')}.</span>` : '<br><span style="color:var(--green)">Você conhece o interior: sem penalidade por entrar às cegas.</span>';
+  const apostaTxt = ip < APOSTA_P ? `<br><span style="color:var(--amber)">É uma aposta: com menos de ${Math.round(APOSTA_P * 100)}% de chance, mesmo um sucesso não passa da nota A.</span>` : '';
   const apoioLeft = Math.max(0, APOIO_PRECOS.length - G.supportUsed - G.queue.filter(q => q.kind === 'apoio').length);
   const wRepos = whyNot(), wApoio = whyNot({ cost: apoioCost(), limit: apoioLeft ? null : 'Os 3 apoios externos da operação já foram usados.' });
   const pausaQ = G.queue.some(q => q.kind === 'pausa'), horasQ = G.queue.some(q => q.kind === 'horas');
@@ -270,8 +272,8 @@ function tabTatica() {
       <label class="subfield"><span>Zona do apoio</span><select id="apoioZone" data-chg="apoiozone"><option value="">escolher…</option>${zoneOpts}</select></label>
       ${opt('pause', 'Pausa de Comando', `“Subir à sacada”: ${G.team.includes('diego') ? 'duas pistas' : 'uma pista'} sobre variáveis ocultas, visão sistêmica e −10 de pressão na equipe. Consome uma decisão; a crise continua andando.`, '', 'addpausa', '', { why: whyNot({ inPlan: pausaQ }), pressed: pausaQ })}
       ${opt('tired', 'Horas extras', `Recupera 2 rodadas de fadiga em campo e encerra a Fadiga crítica. O preço cresce com o efetivo em campo (${deployed().length} ${plural(deployed().length, 'agente', 'agentes')}).`, horasCost(), 'addhoras', '', { why: whyNot({ inPlan: horasQ, cost: horasCost() }), pressed: horasQ })}
-      ${UI.ivConfirm ? `<div class="insight bad">${icon('alert', '', 1.8)}<span><b>Ordenar a intervenção agora?</b> Prontidão ${Math.round(intervPower())}%, chance estimada ${pLabel(ip)} (${Math.round(clamp(ip - band, 0, 1) * 100)}–${Math.round(clamp(ip + band, 0, 1) * 100)}%). Ocupa todas as decisões e encerra a crise nesta rodada.${blindTxt}</span></div><div class="row"><button class="btn danger" data-act="ivyes">Confirmar intervenção</button><button class="btn ghost" data-act="ivno">Cancelar <span class="faint" style="font-weight:400">(Esc)</span></button></div>` :
-        opt('shield', 'Intervenção', `Ação direta, o BATNA da força-tarefa. Prontidão ${Math.round(intervPower())}% · chance estimada <b>${pLabel(ip)}</b> (±${Math.round(band * 100)}%). Depende de inteligência, tática e agitação.${blindTxt}`, '', 'iv', '', { danger: true, pressed: ivq })}
+      ${UI.ivConfirm ? `<div class="insight bad">${icon('alert', '', 1.8)}<span><b>Ordenar a intervenção agora?</b> Prontidão ${Math.round(intervPower())}%, chance estimada ${pLabel(ip)} (${Math.round(clamp(ip - band, 0, 1) * 100)}–${Math.round(clamp(ip + band, 0, 1) * 100)}%). Ocupa todas as decisões e encerra a crise nesta rodada.${blindTxt}${apostaTxt}</span></div><div class="row"><button class="btn danger" data-act="ivyes">Confirmar intervenção</button><button class="btn ghost" data-act="ivno">Cancelar <span class="faint" style="font-weight:400">(Esc)</span></button></div>` :
+        opt('shield', 'Intervenção', `Ação direta, o BATNA da força-tarefa. Prontidão ${Math.round(intervPower())}% · chance estimada <b>${pLabel(ip)}</b> (±${Math.round(band * 100)}%). Depende de inteligência, tática e agitação.${blindTxt}${apostaTxt}`, '', 'iv', '', { danger: true, pressed: ivq })}
     </div>`;
 }
 function tabNego() {

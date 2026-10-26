@@ -38,8 +38,9 @@ function outcomeStory() {
     p.push(E.variant === 'barrada' ? `A cobertura em ${z} (${E.cov}%) fechou a porta. Quem apostou no perímetro certo vê a aposta se pagar em segundos.` : E.variant === 'perseguicao' ? `Em ${z} a cobertura era de ${E.cov}%, insuficiente para barrar a saída. A perseguição pela Avenida Principal terminou com a captura.` : `Em ${z} a cobertura era de apenas ${E.cov}%. O grupo saiu, a perseguição não alcançou ninguém e a cidade vai amanhecer com a notícia de que a crise terminou, mas os responsáveis escaparam.`);
   } else {
     tag = 'Prazo esgotado'; title = 'O ultimato é aceito';
-    p.push(`${t}. O relógio do posto de comando marca o fim do prazo. O ultimato final chega pelo telefone, e dessa vez o líder cede: cansado, sem saída, com a negociação no degrau ${G.nego.step}.`);
-    p.push('A rendição acontece sob pressão máxima, com a equipe esgotada e o noticiário ao vivo na esquina. Não foi a saída mais limpa, mas terminou sem uma ação armada.');
+    const st = G.nego.step;
+    p.push(`${t}. O relógio do posto de comando marca o fim do prazo. O ultimato final chega pelo telefone, e dessa vez o líder cede${st >= 4 ? ': o que foi construído na linha pesou, e ele já falava em “depois”, em quem recebe e por onde sai' : st >= 2 ? ': cansado, com o perímetro fechado à frente e a conversa ainda no degrau ' + st : ': sem acordo nenhum, apenas cansado e sem saída'}.`);
+    p.push(G.agit < 40 ? 'A tensão lá dentro já tinha baixado, e a entrega foi mais calma do que o prazo fazia supor. Não foi a saída mais limpa, mas terminou sem uma ação armada.' : 'A rendição acontece sob pressão máxima, com a equipe esgotada e o noticiário ao vivo na esquina. Não foi a saída mais limpa, mas terminou sem uma ação armada.');
   }
   p.push(harmSentence() + ' ' + vaultSentence());
   return { p, title, tag, cls: 'o-' + E.type };
@@ -57,10 +58,10 @@ function truthHTML() {
     ['Reféns feridos', `${H.hurt} ${plural(H.hurt, 'ferido', 'feridos')} · ${H.dead} ${plural(H.dead, 'morto', 'mortos')}`, 'hostages', '']
   ];
   const known = rows.filter(r => when(r[2])).length;
-  const cost = E.type === 'intervencao' || (E.type === 'prazo' && E.variant === 'forcado') ? `A intervenção aconteceu com ${known} de 6 variáveis conhecidas. A chance real de sucesso era de ${Math.round((E.P || 0) * 100)}%.`
+  const cost = E.type === 'intervencao' || (E.type === 'prazo' && E.variant === 'forcado') ? `A intervenção aconteceu com ${known} de 6 variáveis conhecidas. A chance real de sucesso era de ${Math.round((E.P || 0) * 100)}%${E.type === 'prazo' ? `, depois de o líder, com ${Math.round((E.p || 0) * 100)}% de chance de ceder, recusar o ultimato` : ''}.`
     : E.type === 'fuga' ? `A saída foi por ${ZONE[E.zone].nome}, com ${E.cov}% de cobertura efetiva${when('route') ? '' : ', numa rota que você nunca confirmou'}.`
     : E.type === 'rendicao' ? `A rendição veio ${when('profile') ? 'com o perfil do líder já identificado' : 'sem que você soubesse com quem falava'}: ${known} de 6 variáveis conhecidas.`
-    : `O prazo esgotou com ${known} de 6 variáveis conhecidas.`;
+    : `O prazo esgotou com ${known} de 6 variáveis conhecidas. Ao fim da rodada ${MAX_ROUNDS}, a chance real de o líder ceder era de ${Math.round((E.p || 0) * 100)}%, e ele cedeu.`;
   const sig = st.sig || 0, noise = st.noise || 0;
   return `<div class="card truth"><h3>A verdade por trás da névoa</h3>
     <div class="trows">${rows.map(([k, v, key, note]) => { const w = when(key); return `<div class="tr ${w ? 'k' : 'u'}"><span>${k}</span><b>${v}</b><small>${w ? '✓ você sabia (' + w + ')' : '✕ você nunca confirmou'}${note ? ' · ' + note : ''}</small></div>`; }).join('')}</div>
@@ -93,6 +94,11 @@ function radarSVG(vals) {
 const OUTN = { intervencao: 'Intervenção tática', rendicao: 'Rendição negociada', fuga: 'Fuga do grupo', prazo: 'Prazo esgotado' };
 const OUTV = { limpa: 'limpa', baixas: 'com baixas', parcial: 'parcial', fracasso: 'fracassada', serena: 'serena', tensa: 'tensa', barrada: 'barrada', perseguicao: 'com perseguição', escapou: 'bem-sucedida', cedeu: 'com cessão', forcado: 'forçado' };
 function outName(E) { return (OUTN[E.type] || E.type) + (E.variant && OUTV[E.variant] ? ' ' + OUTV[E.variant] : ''); }
+function capReason(S, H, E) {
+  if (S.capWhy === 'aposta') return `porque a entrada foi autorizada com ${Math.round(E.P * 100)}% de chance de sucesso. Acertar uma aposta é sorte, não método: abaixo de 50% de chance, a nota máxima é A.`;
+  if (S.capWhy === 'fracasso') return `porque a intervenção fracassou. Entrar e perder o controle da operação nunca conta como boa condução${H.dead ? ` (${H.dead} ${plural(H.dead, 'refém morto', 'reféns mortos')})` : ''}.`;
+  return `porque houve ${H.dead} ${plural(H.dead, 'refém morto', 'reféns mortos')}. Nesta simulação, vidas perdidas limitam a nota máxima.`;
+}
 function scoreHTML() {
   const S = G.score, H = G.hostages, E = G.end;
   const dims = [
@@ -104,7 +110,7 @@ function scoreHTML() {
   ];
   return `<div class="scorehead"><div style="text-align:center">${radarSVG(dims)}</div>
     <div class="grid" style="gap:10px"><div class="eyebrow">Nota final</div><h1 class="sr">Pontuação final: nota ${S.grade}, ${dec(S.total)} de 100</h1><div class="grade ${S.grade}" aria-hidden="true">${S.grade}</div><div class="bigscore" aria-hidden="true">${dec(S.total)} / 100</div>
-    ${S.capped ? `<div class="insight warn">${icon('alert', '', 1.8)}<span>Teto aplicado: a pontuação bruta (${dec(S.raw)}) foi limitada a ${S.cap} porque houve ${H.dead} ${plural(H.dead, 'refém morto', 'reféns mortos')}. Nesta simulação, vidas perdidas limitam a nota máxima.</span></div>` : ''}
+    ${S.capped ? `<div class="insight warn">${icon('alert', '', 1.8)}<span>Teto aplicado: a pontuação bruta (${dec(S.raw)}) foi limitada a ${S.cap} ${capReason(S, H, E)}</span></div>` : ''}
     <p class="muted" style="max-width:520px">${S.grade === 'S' ? 'Operação exemplar.' : S.grade === 'A' ? 'Excelente condução, com pouco a corrigir.' : S.grade === 'B' ? 'Boa condução, com trade-offs visíveis.' : S.grade === 'C' ? 'Resultado aceitável, mas com perdas evitáveis.' : S.grade === 'D' ? 'Resultado fraco: as decisões se acumularam contra você.' : 'Operação malsucedida. A falha também ensina: veja o debrief.'}</p></div></div>
     <div class="card" style="margin-top:18px"><h2 class="h3">Composição</h2>${dims.map(d => `<div class="dimrow"><div><b>${d.k}</b><small>peso ${Math.round(d.w * 100)}%</small></div><div><div class="meter tall ${d.v >= .7 ? 'g' : d.v >= .4 ? 'a' : 'r'}"><i style="width:0%" data-to="${Math.round(d.v * 100)}"></i></div><small class="faint">${d.why}</small></div><div class="mono" style="text-align:right">${Math.round(d.v * 100)}% → ${dec(d.v * d.w * 100)} pts</div></div>`).join('')}</div>`;
 }
@@ -116,9 +122,12 @@ function newsHTML() {
   const harmHl = H.dead ? `${H.dead} ${plural(H.dead, 'REFÉM MORTO', 'REFÉNS MORTOS')}` : H.hurt ? `${H.hurt} ${plural(H.hurt, 'FERIDO', 'FERIDOS')}` : 'SEM FERIMENTOS';
   let hl, sub;
   const v = E.type === 'prazo' && E.variant === 'forcado' ? E.sub : E.variant;
-  if (E.type === 'rendicao') { hl = `APÓS ${horas} DE TENSÃO, REFÉNS SÃO LIBERTADOS ${H.dead ? 'COM ' + harmHl : H.hurt ? 'E ' + harmHl : 'SEM FERIMENTOS'}`; sub = 'Negociação conduzida pela força-tarefa leva assaltantes à rendição na Agência Central do Meridiano'; }
+  if (E.type === 'rendicao') {
+    hl = H.dead ? `RENDIÇÃO ENCERRA CERCO DE ${horas}, MAS CRISE DEIXA ${harmHl}` : H.hurt ? `RENDIÇÃO ENCERRA CERCO DE ${horas}; ${harmHl}` : `APÓS ${horas} DE TENSÃO, REFÉNS SÃO LIBERTADOS SEM FERIMENTOS`;
+    sub = H.dead ? 'Líder se entrega, mas o cerco cobrou vidas antes do fim da negociação' : 'Negociação conduzida pela força-tarefa leva assaltantes à rendição na Agência Central do Meridiano';
+  }
   else if (E.type === 'intervencao' || (E.type === 'prazo' && E.variant === 'forcado')) {
-    hl = v === 'limpa' ? `FORÇA-TAREFA ENCERRA CERCO DE ${horas} E RESGATA TODOS OS REFÉNS` : v === 'baixas' ? `INTERVENÇÃO ENCERRA CERCO DE ${horas}; ${harmHl}` : v === 'parcial' ? `AÇÃO DA POLÍCIA ENCERRA CERCO, MAS DEIXA ${harmHl}` : `INTERVENÇÃO TERMINA EM TRAGÉDIA NA AGÊNCIA CENTRAL`;
+    hl = v === 'limpa' ? (H.dead ? `FORÇA-TAREFA ENCERRA CERCO DE ${horas}; ${harmHl}` : H.hurt ? `FORÇA-TAREFA ENCERRA CERCO DE ${horas} E RETIRA OS REFÉNS; ${harmHl}` : `FORÇA-TAREFA ENCERRA CERCO DE ${horas} E RESGATA TODOS OS REFÉNS`) : v === 'baixas' ? `INTERVENÇÃO ENCERRA CERCO DE ${horas}; ${harmHl}` : v === 'parcial' ? `AÇÃO DA POLÍCIA ENCERRA CERCO, MAS DEIXA ${harmHl}` : `INTERVENÇÃO TERMINA EM TRAGÉDIA NA AGÊNCIA CENTRAL`;
     sub = E.type === 'prazo' ? 'Sem acordo ao fim do ultimato, comando autoriza entrada na agência do Banco Meridiano' : E.forced ? 'Ordem do gabinete do prefeito antecipa operação, segundo fontes do isolamento' : 'Operação foi autorizada depois de rodadas de negociação e levantamento de informações';
   } else if (E.type === 'fuga') {
     hl = E.variant === 'barrada' ? `FUGA É BARRADA EM ${z.toUpperCase()} E GRUPO É PRESO` : E.variant === 'perseguicao' ? 'PERSEGUIÇÃO PELA AVENIDA TERMINA COM PRISÃO DE ASSALTANTES' : `ASSALTANTES ESCAPAM POR ${z.toUpperCase()} E POLÍCIA INICIA BUSCA`;
