@@ -847,7 +847,7 @@ const EQUIP = [
   { id:'termica', nome:'Câmera térmica',        custo:70, ic:'thermal',desc:'Revela o número de pessoas em 1 zona. Em zona vizinha ao banco, revela quantos assaltantes há.' },
   { id:'negofone',nome:'Negofone seguro',       custo:60, ic:'phone',  desc:'+10% de chance de avanço na negociação.' },
   { id:'sniper',  nome:'Sniper de precisão',    custo:90, ic:'scope',  desc:'+20 de eficiência na zona posicionada (precisa de ao menos 1 agente lá). Reforça a prontidão de intervenção.' },
-  { id:'kit',     nome:'Kit médico avançado',   custo:40, ic:'med',    desc:'Estabiliza refém ferido: reduz o risco de agravamento e metade das lesões em eventos.' },
+  { id:'kit',     nome:'Kit médico avançado',   custo:40, ic:'med',    desc:'Estabiliza reféns feridos: ninguém piora por falta de atendimento. Reduz à metade o mal-estar do cativeiro longo e os ferimentos em eventos, e atenua as baixas numa intervenção.' },
   { id:'jammer',  nome:'Jammer de comunicação', custo:75, ic:'jammer', desc:'Bloqueia celulares dos assaltantes: sem cúmplice coordenado e sem lives. Isolamento eleva a agitação em +1/rodada.' },
   { id:'viatura', nome:'Viatura descaracterizada', custo:55, ic:'car', desc:'Mobilidade rápida: reposicionar agentes não gera perda de eficiência na rodada.' }
 ];
@@ -875,11 +875,11 @@ const PROFILES = {
 
 /* ---------- DIFICULDADE ---------- */
 const DIFF = {
-  protocolar: { nome:'Protocolar', slots:3, ops:.7, timer:150, lev:.30, dist:.24, ivp:-.03, agit:-1, evChance:.35, media:.85, vault:.85, stk:65, desp:.8, pbase:25, intel:.00, fat:.9,  lethal:.7, ret:55, hostile:0, assail:[2,3],
+  protocolar: { nome:'Protocolar', slots:3, porta:60, ops:.7, timer:150, lev:.30, dist:.24, ivp:-.03, agit:-1, evChance:.35, media:.85, vault:.85, stk:65, desp:.8, pbase:25, intel:.00, fat:.9,  lethal:.7, ret:55, hostile:0, assail:[2,3],
     blurb:'Para aprender a mecânica: bastante tempo, líder receptivo, eventos raros e plantão mais barato.' },
-  complexo:   { nome:'Complexo',   slots:3, ops:1,  timer:100, lev:.32, dist:.305, ivp:-.10, agit:0,  evChance:.55, media:1.0,  vault:1.0,  stk:58, desp:1.0, pbase:30, intel:.00, fat:1.0, lethal:1.0, ret:45, hostile:0, assail:[2,4],
+  complexo:   { nome:'Complexo',   slots:3, porta:60, ops:1,  timer:100, lev:.32, dist:.305, ivp:-.10, agit:0,  evChance:.55, media:1.0,  vault:1.0,  stk:58, desp:1.0, pbase:30, intel:.00, fat:1.0, lethal:1.0, ret:45, hostile:0, assail:[2,4],
     blurb:'O equilíbrio do documento: tempo apertado, líder reservado e eventos frequentes.' },
-  caotico:    { nome:'Caótico',    slots:2, ops:1.3,timer:65,  lev:.275, dist:.36, ivp:-.17, agit:2,  evChance:.80, media:1.2,  vault:1.2,  stk:58, desp:1.25,pbase:38, intel:-.10,fat:1.25,lethal:1.3, ret:46, hostile:1, assail:[3,4],
+  caotico:    { nome:'Caótico',    slots:2, porta:50, ops:1.3,timer:65,  lev:.275, dist:.36, ivp:-.17, agit:2,  evChance:.80, media:1.2,  vault:1.2,  stk:58, desp:1.25,pbase:38, intel:-.10,fat:1.25,lethal:1.3, ret:46, hostile:1, assail:[3,4],
     ncalm:1.3, negoFloor:.7, adaptAt:50, adaptMin:.4, violent:.75,
     blurb:'Só duas decisões por rodada, pouco tempo, líder hostil, investigações menos confiáveis, plantão mais caro e eventos quase toda rodada.' }
 };
@@ -990,10 +990,10 @@ const BADGES = [
   { id:'olhos',    nome:'Olhos abertos',          ic:'eye',   d:'Terminou com 5 das 6 variáveis ocultas reveladas.' },
   { id:'cofre',    nome:'Cofre intacto',          ic:'bank',  d:'Encerrou com o cofre abaixo de 40% de progresso.' },
   { id:'economia', nome:'Cofre da corporação',    ic:'coin',  d:'Terminou com 400 créditos ou mais de reserva.' },
-  { id:'porta',    nome:'Porta-voz',              ic:'mic',   d:'Todos os quatro stakeholders terminaram com 60 ou mais.' },
+  { id:'porta',    nome:'Porta-voz',              ic:'mic',   d:'Todos os quatro stakeholders terminaram com 60 ou mais (50 ou mais no Caótico, que tem só duas decisões por rodada).' },
   { id:'degraus',  nome:'Um degrau por vez',      ic:'stairs',d:'Chegou ao degrau 4 ou mais sem nunca pular etapa.' },
   { id:'rodizio',  nome:'Equipe descansada',      ic:'tired', d:'Nenhum agente chegou a fator de fadiga abaixo de 0,7.' },
-  { id:'equilibrio',nome:'Equilíbrio perfeito',   ic:'radar', d:'As cinco dimensões da pontuação acima de 60%.' },
+  { id:'equilibrio',nome:'Equilíbrio perfeito',   ic:'radar', d:'Vidas, Prisões, Valores e Confiança acima de 60% e Eficiência acima de 30%: nenhuma dimensão ficou para trás.' },
   { id:'mao',      nome:'Mão firme',              ic:'shield',d:'Intervenção bem-sucedida sem nenhum refém ferido.' }
 ];
 /* =====================================================================
@@ -1448,6 +1448,12 @@ function trackKnown() {
   const K = G.K, at = K.at || (K.at = {});
   [['profile', K.profile], ['route', !!K.route], ['count', K.count], ['vault', K.vault], ['hostages', K.hostages], ['accomplice', K.accomplice]]
     .forEach(([k, v]) => { if (v && at[k] == null) at[k] = G.round; });
+}
+/* Sorteio decorativo derivado do estado: não consome o gerador da partida, então comprar o kit não muda o resto do sorteio. */
+function sideRoll(i) {
+  let t = Math.imul((Math.round(G.agit * 997)) ^ (Math.round(G.media * 991) << 7) ^ (Math.round(G.vault * 983) << 13) ^ (G.round << 21), 0x85EBCA6B) + i * 0x9E3779B9;
+  t = Math.imul(t ^ t >>> 15, 0x2C1B3C6D); t = Math.imul(t ^ t >>> 12, 0x297A2D39); t ^= t >>> 15;
+  return (t >>> 0) / 4294967296;
 }
 const addAgit = v => { G.agit = clamp(G.agit + v, 0, 100); };
 const addMedia = v => { G.media = clamp(G.media + v, 0, 100); };
@@ -1911,11 +1917,17 @@ function resolveDecisions() {
     addAgit(7); addMedia(6); const h = addHurt(rnd() < (hasGear('kit') ? .15 : .30) ? 1 : 0);
     L(R, 'bad', 'alert', `Ag. Roberto Nunes age sozinho sob pressão e rompe o protocolo: agitação +7, mídia +6${h ? ', e um refém se fere no tumulto' : ''}.`);
   }
-  // reféns feridos agravam
+  // reféns feridos agravam. Com o kit médico ninguém morre por isso; o que ele evitou é sorteado à parte e aparece no resultado
   const H = G.hostages;
   if (H.hurt > 0 && !hasGear('kit')) {
     let died = 0; for (let i = 0; i < H.hurt; i++) if (rnd() < .12 * D.lethal) died++;
-    if (died) { addDead(died); L(R, 'bad', 'heart', `Sem atendimento adequado, ${died} refém ferido não resiste. Uma morte confirmada.`); }
+    if (died) { addDead(died); L(R, 'bad', 'heart', died === 1 ? 'Sem atendimento adequado, um refém ferido não resiste. Uma morte confirmada.' : `Sem atendimento adequado, ${died} reféns feridos não resistem. ${died} mortes confirmadas.`); }
+  } else if (H.hurt > 0) {
+    let saved = 0; for (let i = 0; i < H.hurt; i++) if (sideRoll(i) < .12 * D.lethal) saved++;
+    if (saved) {
+      G.stats.kitSaves = (G.stats.kitSaves || 0) + saved;
+      L(R, 'good', 'heart', saved === 1 ? 'O kit médico estabilizou um refém ferido que estava piorando. Sem ele, teria sido uma morte.' : `O kit médico estabilizou ${saved} reféns feridos que estavam piorando. Sem ele, teriam sido ${saved} mortes.`);
+    }
   }
   // desgaste do cativeiro: quanto mais longo o cerco, mais reféns passam mal
   if (G.round >= 4 && G.hostages.inside - H.hurt - H.dead > 0 && rnd() < .18 * (G.round - 3) * D.lethal * (hasGear('kit') ? .5 : 1)) {
@@ -2790,7 +2802,7 @@ function gearNote(e) {
     case 'termica': return placed ? `lendo ${ZNAME(z)} (revelação feita no início)` : 'na reserva: sem leitura';
     case 'escudo': return '+10 de prontidão da intervenção';
     case 'negofone': return '+10 pontos na chance de avanço';
-    case 'kit': return 'reduz agravamento e lesões em eventos';
+    case 'kit': return `${G.hostages.hurt ? `${G.hostages.hurt} ${plural(G.hostages.hurt, 'ferido sob atendimento', 'feridos sob atendimento')}: ninguém piora por falta de socorro` : 'de prontidão: ferido não piora por falta de socorro'}${G.stats.kitSaves ? `; já evitou ${G.stats.kitSaves} ${plural(G.stats.kitSaves, 'morte', 'mortes')}` : ''}`;
     case 'jammer': return 'sem cúmplice coordenado nem lives; agitação +1/rodada';
     case 'viatura': return 'reposicionar não perde eficiência';
   }
@@ -3217,19 +3229,31 @@ function capReason(S, H, E) {
   if (S.capWhy === 'fracasso') return `porque a intervenção fracassou. Entrar e perder o controle da operação nunca conta como boa condução${H.dead ? ` (${H.dead} ${plural(H.dead, 'refém morto', 'reféns mortos')})` : ''}.`;
   return `porque houve ${H.dead} ${plural(H.dead, 'refém morto', 'reféns mortos')}. Nesta simulação, vidas perdidas limitam a nota máxima.`;
 }
+/* O que separa o resultado da próxima nota: as duas maiores perdas da composição (só para A e B, sem teto aplicado). */
+const GRADE_NEXT = { A: ['S', 90], B: ['A', 80] };
+const DIM_LOSS = { Vidas: 'reféns feridos ou mortos', Prisões: 'assaltantes que não foram presos', Valores: 'perda do cofre', Eficiência: 'verba gasta e duração da crise', Confiança: 'stakeholders insatisfeitos' };
+function nextGradeHint(S, dims) {
+  const nx = GRADE_NEXT[S.grade]; if (!nx || S.capped) return '';
+  const loss = dims.map(d => ({ k: d.k, l: (1 - d.v) * d.w * 100 })).sort((a, b) => b.l - a.l).slice(0, 2);
+  const eff = loss[0].k === 'Eficiência' && nx[0] === 'S' ? ' O S pede verba sobrando, mas equipe enxuta demais custa proteção em crises difíceis.' : '';
+  const gap = nx[1] - S.total;
+  return `${gap <= 1 ? 'Faltou' : 'Faltaram'} ${dec(gap)} ${gap <= 1 ? 'ponto' : 'pontos'} para a nota ${nx[0]}. Onde mais se perdeu: ${loss.map(x => `${x.k} (−${dec(x.l)} pts: ${DIM_LOSS[x.k]})`).join('; ')}.${eff}`;
+}
 function scoreHTML() {
   const S = G.score, H = G.hostages, E = G.end;
   const dims = [
-    { k: 'Vidas', v: S.vidas, w: .40, why: `${H.dead} ${plural(H.dead, 'morto', 'mortos')} e ${H.hurt} ${plural(H.hurt, 'ferido', 'feridos')} entre ${HOSTAGES} reféns (cada morte pesa 2, cada ferido 0,5).` },
+    { k: 'Vidas', v: S.vidas, w: .40, why: `${H.dead} ${plural(H.dead, 'morto', 'mortos')} e ${H.hurt} ${plural(H.hurt, 'ferido', 'feridos')} entre ${HOSTAGES} reféns (cada morte pesa 2, cada ferido 0,5).${G.stats.kitSaves ? ` O kit médico evitou ${G.stats.kitSaves} ${plural(G.stats.kitSaves, 'morte', 'mortes')}.` : ''}` },
     { k: 'Prisões', v: S.captura, w: .20, why: `${outName(E)}: ${Math.round(S.captura * 100)}% dos responsáveis presos.` },
     { k: 'Valores', v: S.valores, w: .15, why: `Cofre em ${Math.round(G.vault)}% no desfecho; fator de perda do desfecho ${String(E.lootF).replace('.', ',')}.` },
     { k: 'Eficiência', v: S.eficiencia, w: .10, why: `${fmt(G.credits)} créditos sobraram e a crise durou ${G.round} rodadas. O plantão custou ${fmt(G.spent.plantao)} no total${G.deficit ? ` e ${G.deficit} ${plural(G.deficit, 'rodada', 'rodadas')} ficaram no vermelho` : ''}.` },
     { k: 'Confiança', v: S.confianca, w: .15, why: `Média ponderada dos stakeholders: ${STK_KEYS.map(k => `${STK[k].nome} ${Math.round(G.stk[k].sat)}`).join(' · ')}.` }
   ];
+  const hint = nextGradeHint(S, dims);
   return `<div class="scorehead"><div style="text-align:center">${radarSVG(dims)}</div>
     <div class="grid" style="gap:10px"><div class="eyebrow">Nota final</div><h1 class="sr">Pontuação final: nota ${S.grade}, ${dec(S.total)} de 100</h1><div class="grade ${S.grade}" aria-hidden="true">${S.grade}</div><div class="bigscore" aria-hidden="true">${dec(S.total)} / 100</div>
     ${S.capped ? `<div class="insight warn">${icon('alert', '', 1.8)}<span>Teto aplicado: a pontuação bruta (${dec(S.raw)}) foi limitada a ${S.cap} ${capReason(S, H, E)}</span></div>` : ''}
-    <p class="muted" style="max-width:520px">${S.grade === 'S' ? 'Operação exemplar.' : S.grade === 'A' ? 'Excelente condução, com pouco a corrigir.' : S.grade === 'B' ? 'Boa condução, com trade-offs visíveis.' : S.grade === 'C' ? 'Resultado aceitável, mas com perdas evitáveis.' : S.grade === 'D' ? 'Resultado fraco: as decisões se acumularam contra você.' : 'Operação malsucedida. A falha também ensina: veja o debrief.'}</p></div></div>
+    <p class="muted" style="max-width:520px">${S.grade === 'S' ? 'Operação exemplar.' : S.grade === 'A' ? 'Excelente condução, com pouco a corrigir.' : S.grade === 'B' ? 'Boa condução, com trade-offs visíveis.' : S.grade === 'C' ? 'Resultado aceitável, mas com perdas evitáveis.' : S.grade === 'D' ? 'Resultado fraco: as decisões se acumularam contra você.' : 'Operação malsucedida. A falha também ensina: veja o debrief.'}</p>
+    ${hint ? `<p class="faint" style="max-width:520px;font-size:13px">${hint}</p>` : ''}</div></div>
     <div class="card" style="margin-top:18px"><h2 class="h3">Composição</h2>${dims.map(d => `<div class="dimrow"><div><b>${d.k}</b><small>peso ${Math.round(d.w * 100)}%</small></div><div><div class="meter tall ${d.v >= .7 ? 'g' : d.v >= .4 ? 'a' : 'r'}"><i style="width:0%" data-to="${Math.round(d.v * 100)}"></i></div><small class="faint">${d.why}</small></div><div class="mono" style="text-align:right">${Math.round(d.v * 100)}% → ${dec(d.v * d.w * 100)} pts</div></div>`).join('')}</div>`;
 }
 
@@ -3294,10 +3318,10 @@ function badgeEarned(id) {
     case 'olhos': return knownCount() >= 5;
     case 'cofre': return G.vault < 40;
     case 'economia': return G.credits >= 400;
-    case 'porta': return STK_KEYS.every(k => G.stk[k].sat >= 60);
+    case 'porta': return STK_KEYS.every(k => G.stk[k].sat >= DIFF[G.diff].porta);
     case 'degraus': return G.nego.maxStep >= 4 && G.nego.skips === 0;
     case 'rodizio': return st.minFF >= .7;
-    case 'equilibrio': return [S.vidas, S.captura, S.valores, S.eficiencia, S.confianca].every(x => x > .6);
+    case 'equilibrio': return [S.vidas, S.captura, S.valores, S.confianca].every(x => x > .6) && S.eficiencia > .3;
     case 'mao': return E.type === 'intervencao' && ['limpa', 'baixas'].includes(E.variant) && H.hurt + H.dead === 0;
   }
   return false;
@@ -3370,7 +3394,7 @@ function debriefHTML() {
   const empty = ZONES.filter(z => (st.initCov[z.id] || 0) === 0).length;
   const dimsArr = [['vidas', S.vidas], ['captura', S.captura], ['valores', S.valores], ['eficiência', S.eficiencia], ['confiança', S.confianca]].sort((a, b) => a[1] - b[1]);
   const weakest = dimsArr[0][0];
-  const next = { vidas: 'abrir a negociação já na rodada 1 e manter a escada em ordem; o líder é o seu maior fator de risco', captura: 'cobrir mais as rotas candidatas (ou investir em rota) e conter o cofre com a pressão da Entrada', valores: 'reduzir o ritmo do cofre com agentes na Entrada ou fechar a rota antes que ele abra', 'eficiência': 'cortar gastos sem retorno (apoio externo e investigações redundantes) e encerrar a crise mais cedo', confiança: 'falar com os stakeholders mais cedo e com mais regularidade, em especial o prefeito antes da rodada 6' }[weakest];
+  const next = { vidas: 'abrir a negociação já na rodada 1 e manter a escada em ordem; o líder é o seu maior fator de risco', captura: 'cobrir mais as rotas candidatas (ou investir em rota) e conter o cofre com a pressão da Entrada', valores: 'reduzir o ritmo do cofre com agentes na Entrada ou fechar a rota antes que ele abra', 'eficiência': 'enxugar o que se contrata e compra antes do cerco (é de onde sai a maior parte da verba), cortar gastos sem retorno e encerrar a crise mais cedo', confiança: 'falar com os stakeholders mais cedo e com mais regularidade, em especial o prefeito antes da rodada 6' }[weakest];
   const C = [
     { n: 'Teoria das Restrições', ref: 'Goldratt & Cox (1984)', you: `${tocRuns().length ? 'Gargalo por rodada: ' + runTxt(tocRuns()) + '. ' : ''}${tocAlign().n ? `${tocAlign().hit} de ${tocAlign().n} ordens de recurso miraram o gargalo do momento. ` : ''}Você terminou com ${adequateCount()} de 7 zonas adequadas, e a rota real (${ZONE[G.route].nome}) tinha ${st.initCov[G.route] || 0}% de cobertura no início.`, les: 'Melhorias fora da restrição não mudam o resultado do sistema. Os cinco passos de foco: identificar o elo mais fraco, explorá-lo, subordinar o resto a ele, elevá-lo e repetir, porque o gargalo migra. Aqui: informação (início), pessoal (meio), tempo e fadiga (fim). Reforçar uma zona que não era rota foi orçamento parado.' },
     { n: 'Racionalidade limitada e valor da informação', ref: 'Simon (1955); Howard (1966)', you: `Você gastou ${fmt(G.spent.intel)} créditos em inteligência (${st.intel} investigações) e terminou sabendo ${knownCount()} de 6 variáveis ocultas${miss.length ? `. Ficaram ocultas: ${miss.join(', ')}.` : '.'}`, les: 'Uma informação vale a diferença entre o resultado esperado de decidir com ela e sem ela. Ninguém otimiza: todos satisfazem. A pergunta é quanto saber antes de agir.' },

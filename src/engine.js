@@ -268,6 +268,12 @@ function trackKnown() {
   [['profile', K.profile], ['route', !!K.route], ['count', K.count], ['vault', K.vault], ['hostages', K.hostages], ['accomplice', K.accomplice]]
     .forEach(([k, v]) => { if (v && at[k] == null) at[k] = G.round; });
 }
+/* Sorteio decorativo derivado do estado: não consome o gerador da partida, então comprar o kit não muda o resto do sorteio. */
+function sideRoll(i) {
+  let t = Math.imul((Math.round(G.agit * 997)) ^ (Math.round(G.media * 991) << 7) ^ (Math.round(G.vault * 983) << 13) ^ (G.round << 21), 0x85EBCA6B) + i * 0x9E3779B9;
+  t = Math.imul(t ^ t >>> 15, 0x2C1B3C6D); t = Math.imul(t ^ t >>> 12, 0x297A2D39); t ^= t >>> 15;
+  return (t >>> 0) / 4294967296;
+}
 const addAgit = v => { G.agit = clamp(G.agit + v, 0, 100); };
 const addMedia = v => { G.media = clamp(G.media + v, 0, 100); };
 
@@ -730,11 +736,17 @@ function resolveDecisions() {
     addAgit(7); addMedia(6); const h = addHurt(rnd() < (hasGear('kit') ? .15 : .30) ? 1 : 0);
     L(R, 'bad', 'alert', `Ag. Roberto Nunes age sozinho sob pressão e rompe o protocolo: agitação +7, mídia +6${h ? ', e um refém se fere no tumulto' : ''}.`);
   }
-  // reféns feridos agravam
+  // reféns feridos agravam. Com o kit médico ninguém morre por isso; o que ele evitou é sorteado à parte e aparece no resultado
   const H = G.hostages;
   if (H.hurt > 0 && !hasGear('kit')) {
     let died = 0; for (let i = 0; i < H.hurt; i++) if (rnd() < .12 * D.lethal) died++;
-    if (died) { addDead(died); L(R, 'bad', 'heart', `Sem atendimento adequado, ${died} refém ferido não resiste. Uma morte confirmada.`); }
+    if (died) { addDead(died); L(R, 'bad', 'heart', died === 1 ? 'Sem atendimento adequado, um refém ferido não resiste. Uma morte confirmada.' : `Sem atendimento adequado, ${died} reféns feridos não resistem. ${died} mortes confirmadas.`); }
+  } else if (H.hurt > 0) {
+    let saved = 0; for (let i = 0; i < H.hurt; i++) if (sideRoll(i) < .12 * D.lethal) saved++;
+    if (saved) {
+      G.stats.kitSaves = (G.stats.kitSaves || 0) + saved;
+      L(R, 'good', 'heart', saved === 1 ? 'O kit médico estabilizou um refém ferido que estava piorando. Sem ele, teria sido uma morte.' : `O kit médico estabilizou ${saved} reféns feridos que estavam piorando. Sem ele, teriam sido ${saved} mortes.`);
+    }
   }
   // desgaste do cativeiro: quanto mais longo o cerco, mais reféns passam mal
   if (G.round >= 4 && G.hostages.inside - H.hurt - H.dead > 0 && rnd() < .18 * (G.round - 3) * D.lethal * (hasGear('kit') ? .5 : 1)) {

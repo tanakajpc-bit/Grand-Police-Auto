@@ -152,6 +152,25 @@ function policyEquilibrado() {
   };
 }
 
+/* Comunicador: negocia todo turno, fala com quem está mais esquecido e não gasta em inteligência. Serve para medir o que
+   a equipe enxuta consegue só com negociação e comunicação (equipe e equipamento escolhidos de fora). */
+function policyComunicador(team, gear, thr = 75) {
+  return {
+    name: 'comunicador', style: 'peace',
+    setup(A) { team.forEach(id => hire(A, id)); gear.forEach(id => buy(A, id)); beginSiege(A); A.autoPlace(); },
+    decide(A, rn) {
+      const G = A.G, slots = A.DIFF[G.diff].slots, out = [];
+      const add = d => { if (out.length >= slots) return false; const r = A.addDecision(d); if (r.ok) out.push(d.kind); return r.ok; };
+      add(mk.nego(negoTech(A)));
+      for (const k of A.STK_KEYS.slice().sort((a, b) => G.stk[a].sat - G.stk[b].sat)) {
+        if (out.length >= slots) break;
+        if (G.stk[k].sat < thr || G.stk[k].sem >= 1) { const cid = COMM_FOR[k]; if (!(cid === 'acolhe' && G.credits < 20)) add(mk.com(A, cid)); }
+      }
+      return out;
+    }
+  };
+}
+
 /* ---------- bots de borda ---------- */
 function policyEdge(kind) {
   const base = {
@@ -271,4 +290,4 @@ function summarize(A, pol, diff) {
   };
 }
 
-module.exports = { load, playGame, policyNegociador, policyAgressivo, policyEquilibrado, policyEdge, policyFuzz, hire, buy, mk, placeSmart };
+module.exports = { load, playGame, policyNegociador, policyAgressivo, policyEquilibrado, policyComunicador, policyEdge, policyFuzz, hire, buy, mk, placeSmart };

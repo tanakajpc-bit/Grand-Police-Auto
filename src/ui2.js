@@ -149,7 +149,7 @@ function gearNote(e) {
     case 'termica': return placed ? `lendo ${ZNAME(z)} (revelação feita no início)` : 'na reserva: sem leitura';
     case 'escudo': return '+10 de prontidão da intervenção';
     case 'negofone': return '+10 pontos na chance de avanço';
-    case 'kit': return 'reduz agravamento e lesões em eventos';
+    case 'kit': return `${G.hostages.hurt ? `${G.hostages.hurt} ${plural(G.hostages.hurt, 'ferido sob atendimento', 'feridos sob atendimento')}: ninguém piora por falta de socorro` : 'de prontidão: ferido não piora por falta de socorro'}${G.stats.kitSaves ? `; já evitou ${G.stats.kitSaves} ${plural(G.stats.kitSaves, 'morte', 'mortes')}` : ''}`;
     case 'jammer': return 'sem cúmplice coordenado nem lives; agitação +1/rodada';
     case 'viatura': return 'reposicionar não perde eficiência';
   }

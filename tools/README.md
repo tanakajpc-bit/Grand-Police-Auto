@@ -11,8 +11,11 @@ Carrega `data.js`, `story.js`, `engine.js` e `dash.js` num contexto `vm` isolado
 | `node tools/sim/matriz.js [N] [filtro]` | Nível de jogador (novato, mid, mid+, especialistas `exp_paz`, `exp_eq`, `exp_agr`) × dificuldade: nota média, distribuição de notas, mortes e desfechos. |
 | `node tools/sim/arquetipos.js [N]` | Os três jogos de referência (negociadora, agressiva, equilibrada) nas três dificuldades. |
 | `node tools/sim/edge.js [N] [NF]` | Casos extremos (sem equipe, gasta tudo, ignora negociação, só uma frente, passivo, intervém sempre…) mais um fuzz de `NF` partidas que confere invariantes a cada rodada (sem NaN, reféns que fecham 17, notas e tetos coerentes). |
+| `node tools/sim/itens.js [N] [equilibrada\|negociadora\|agressiva] [gratis]` | Valor de cada equipamento: a mesma equipe e política com um item só (ou nenhum). Pago inclui o custo de oportunidade; `gratis` mostra o efeito puro. |
+| `node tools/sim/notas.js [N]` | Fração das partidas que passa de cada limiar de nota (S e A) por jogador e dificuldade, incluindo equipes enxutas e cheias. |
+| `node tools/sim/comparar.js [ref-git] [N]` | Teste diferencial: mesmas sementes com o motor de uma versão anterior (`git show`) e com o atual; conta as partidas que divergem. Zero divergência prova que uma mudança de interface ou de texto não mexeu no jogo. |
 
-`PERI_SRC=/outra/pasta/src` simula uma variante do código sem mexer no repositório. Os robôs ficam em `bots.js` (políticas e corredor de partidas), `experts.js` e `tiers.js`.
+`PERI_SRC=/outra/pasta/src` simula uma variante do código sem mexer no repositório. Os robôs ficam em `bots.js` (políticas e corredor de partidas; `policyComunicador` joga só negociação e comunicação com a equipe que se escolher), `experts.js` e `tiers.js`.
 
 Limite conhecido: `siegeAlerts()` e `milestones()` usam funções da camada de interface (por exemplo `perceivedAgit`), então só rodam no navegador; o fuzz de interface os cobre.
 
@@ -38,4 +41,15 @@ Nota média por nível de jogador (Protocolar / Complexo / Caótico):
 | especialista, equilibrado | 82,4 | 75,0 | 63,6 |
 | especialista, agressivo | 75,1 | 69,3 | 52,4 |
 
-Se uma mudança futura mover estes números mais do que o ruído (cerca de ±1,5 ponto), a ordem Protocolar > Complexo > Caótico ou a relação entre os níveis de jogador pode ter quebrado.
+Valor dos equipamentos (`itens.js 2000 equilibrada gratis`): nota ganha com o item de graça em Protocolar / Complexo / Caótico.
+
+| Item (custo) | Ganho de nota |
+| --- | --- |
+| Negofone (60) | +3,2 / +3,7 / +4,6 |
+| Kit médico (40) | +1,1 / +2,4 / +3,7 |
+| Drone (80) | +0,3 / +0,9 / +1,6 |
+| Viatura (55) | +0,1 / +0,6 / +1,0 |
+| Sniper (90), escudo (50), térmica (70) | de −0,5 a +0,4 (o escudo e o sniper valem +1,5 a +3,2 para a política agressiva) |
+| Jammer (75) | −0,4 / −1,3 / −0,4 |
+
+Se uma mudança futura mover as notas médias dos níveis de jogador mais do que o ruído (cerca de ±1,5 ponto), a ordem Protocolar > Complexo > Caótico ou a relação entre os níveis pode ter quebrado. Os ganhos de nota dos equipamentos têm ruído de cerca de ±0,5 com N = 2.000.

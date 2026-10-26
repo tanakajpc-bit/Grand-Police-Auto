@@ -99,19 +99,31 @@ function capReason(S, H, E) {
   if (S.capWhy === 'fracasso') return `porque a intervenção fracassou. Entrar e perder o controle da operação nunca conta como boa condução${H.dead ? ` (${H.dead} ${plural(H.dead, 'refém morto', 'reféns mortos')})` : ''}.`;
   return `porque houve ${H.dead} ${plural(H.dead, 'refém morto', 'reféns mortos')}. Nesta simulação, vidas perdidas limitam a nota máxima.`;
 }
+/* O que separa o resultado da próxima nota: as duas maiores perdas da composição (só para A e B, sem teto aplicado). */
+const GRADE_NEXT = { A: ['S', 90], B: ['A', 80] };
+const DIM_LOSS = { Vidas: 'reféns feridos ou mortos', Prisões: 'assaltantes que não foram presos', Valores: 'perda do cofre', Eficiência: 'verba gasta e duração da crise', Confiança: 'stakeholders insatisfeitos' };
+function nextGradeHint(S, dims) {
+  const nx = GRADE_NEXT[S.grade]; if (!nx || S.capped) return '';
+  const loss = dims.map(d => ({ k: d.k, l: (1 - d.v) * d.w * 100 })).sort((a, b) => b.l - a.l).slice(0, 2);
+  const eff = loss[0].k === 'Eficiência' && nx[0] === 'S' ? ' O S pede verba sobrando, mas equipe enxuta demais custa proteção em crises difíceis.' : '';
+  const gap = nx[1] - S.total;
+  return `${gap <= 1 ? 'Faltou' : 'Faltaram'} ${dec(gap)} ${gap <= 1 ? 'ponto' : 'pontos'} para a nota ${nx[0]}. Onde mais se perdeu: ${loss.map(x => `${x.k} (−${dec(x.l)} pts: ${DIM_LOSS[x.k]})`).join('; ')}.${eff}`;
+}
 function scoreHTML() {
   const S = G.score, H = G.hostages, E = G.end;
   const dims = [
-    { k: 'Vidas', v: S.vidas, w: .40, why: `${H.dead} ${plural(H.dead, 'morto', 'mortos')} e ${H.hurt} ${plural(H.hurt, 'ferido', 'feridos')} entre ${HOSTAGES} reféns (cada morte pesa 2, cada ferido 0,5).` },
+    { k: 'Vidas', v: S.vidas, w: .40, why: `${H.dead} ${plural(H.dead, 'morto', 'mortos')} e ${H.hurt} ${plural(H.hurt, 'ferido', 'feridos')} entre ${HOSTAGES} reféns (cada morte pesa 2, cada ferido 0,5).${G.stats.kitSaves ? ` O kit médico evitou ${G.stats.kitSaves} ${plural(G.stats.kitSaves, 'morte', 'mortes')}.` : ''}` },
     { k: 'Prisões', v: S.captura, w: .20, why: `${outName(E)}: ${Math.round(S.captura * 100)}% dos responsáveis presos.` },
     { k: 'Valores', v: S.valores, w: .15, why: `Cofre em ${Math.round(G.vault)}% no desfecho; fator de perda do desfecho ${String(E.lootF).replace('.', ',')}.` },
     { k: 'Eficiência', v: S.eficiencia, w: .10, why: `${fmt(G.credits)} créditos sobraram e a crise durou ${G.round} rodadas. O plantão custou ${fmt(G.spent.plantao)} no total${G.deficit ? ` e ${G.deficit} ${plural(G.deficit, 'rodada', 'rodadas')} ficaram no vermelho` : ''}.` },
     { k: 'Confiança', v: S.confianca, w: .15, why: `Média ponderada dos stakeholders: ${STK_KEYS.map(k => `${STK[k].nome} ${Math.round(G.stk[k].sat)}`).join(' · ')}.` }
   ];
+  const hint = nextGradeHint(S, dims);
   return `<div class="scorehead"><div style="text-align:center">${radarSVG(dims)}</div>
     <div class="grid" style="gap:10px"><div class="eyebrow">Nota final</div><h1 class="sr">Pontuação final: nota ${S.grade}, ${dec(S.total)} de 100</h1><div class="grade ${S.grade}" aria-hidden="true">${S.grade}</div><div class="bigscore" aria-hidden="true">${dec(S.total)} / 100</div>
     ${S.capped ? `<div class="insight warn">${icon('alert', '', 1.8)}<span>Teto aplicado: a pontuação bruta (${dec(S.raw)}) foi limitada a ${S.cap} ${capReason(S, H, E)}</span></div>` : ''}
-    <p class="muted" style="max-width:520px">${S.grade === 'S' ? 'Operação exemplar.' : S.grade === 'A' ? 'Excelente condução, com pouco a corrigir.' : S.grade === 'B' ? 'Boa condução, com trade-offs visíveis.' : S.grade === 'C' ? 'Resultado aceitável, mas com perdas evitáveis.' : S.grade === 'D' ? 'Resultado fraco: as decisões se acumularam contra você.' : 'Operação malsucedida. A falha também ensina: veja o debrief.'}</p></div></div>
+    <p class="muted" style="max-width:520px">${S.grade === 'S' ? 'Operação exemplar.' : S.grade === 'A' ? 'Excelente condução, com pouco a corrigir.' : S.grade === 'B' ? 'Boa condução, com trade-offs visíveis.' : S.grade === 'C' ? 'Resultado aceitável, mas com perdas evitáveis.' : S.grade === 'D' ? 'Resultado fraco: as decisões se acumularam contra você.' : 'Operação malsucedida. A falha também ensina: veja o debrief.'}</p>
+    ${hint ? `<p class="faint" style="max-width:520px;font-size:13px">${hint}</p>` : ''}</div></div>
     <div class="card" style="margin-top:18px"><h2 class="h3">Composição</h2>${dims.map(d => `<div class="dimrow"><div><b>${d.k}</b><small>peso ${Math.round(d.w * 100)}%</small></div><div><div class="meter tall ${d.v >= .7 ? 'g' : d.v >= .4 ? 'a' : 'r'}"><i style="width:0%" data-to="${Math.round(d.v * 100)}"></i></div><small class="faint">${d.why}</small></div><div class="mono" style="text-align:right">${Math.round(d.v * 100)}% → ${dec(d.v * d.w * 100)} pts</div></div>`).join('')}</div>`;
 }
 
@@ -176,10 +188,10 @@ function badgeEarned(id) {
     case 'olhos': return knownCount() >= 5;
     case 'cofre': return G.vault < 40;
     case 'economia': return G.credits >= 400;
-    case 'porta': return STK_KEYS.every(k => G.stk[k].sat >= 60);
+    case 'porta': return STK_KEYS.every(k => G.stk[k].sat >= DIFF[G.diff].porta);
     case 'degraus': return G.nego.maxStep >= 4 && G.nego.skips === 0;
     case 'rodizio': return st.minFF >= .7;
-    case 'equilibrio': return [S.vidas, S.captura, S.valores, S.eficiencia, S.confianca].every(x => x > .6);
+    case 'equilibrio': return [S.vidas, S.captura, S.valores, S.confianca].every(x => x > .6) && S.eficiencia > .3;
     case 'mao': return E.type === 'intervencao' && ['limpa', 'baixas'].includes(E.variant) && H.hurt + H.dead === 0;
   }
   return false;
@@ -252,7 +264,7 @@ function debriefHTML() {
   const empty = ZONES.filter(z => (st.initCov[z.id] || 0) === 0).length;
   const dimsArr = [['vidas', S.vidas], ['captura', S.captura], ['valores', S.valores], ['eficiência', S.eficiencia], ['confiança', S.confianca]].sort((a, b) => a[1] - b[1]);
   const weakest = dimsArr[0][0];
-  const next = { vidas: 'abrir a negociação já na rodada 1 e manter a escada em ordem; o líder é o seu maior fator de risco', captura: 'cobrir mais as rotas candidatas (ou investir em rota) e conter o cofre com a pressão da Entrada', valores: 'reduzir o ritmo do cofre com agentes na Entrada ou fechar a rota antes que ele abra', 'eficiência': 'cortar gastos sem retorno (apoio externo e investigações redundantes) e encerrar a crise mais cedo', confiança: 'falar com os stakeholders mais cedo e com mais regularidade, em especial o prefeito antes da rodada 6' }[weakest];
+  const next = { vidas: 'abrir a negociação já na rodada 1 e manter a escada em ordem; o líder é o seu maior fator de risco', captura: 'cobrir mais as rotas candidatas (ou investir em rota) e conter o cofre com a pressão da Entrada', valores: 'reduzir o ritmo do cofre com agentes na Entrada ou fechar a rota antes que ele abra', 'eficiência': 'enxugar o que se contrata e compra antes do cerco (é de onde sai a maior parte da verba), cortar gastos sem retorno e encerrar a crise mais cedo', confiança: 'falar com os stakeholders mais cedo e com mais regularidade, em especial o prefeito antes da rodada 6' }[weakest];
   const C = [
     { n: 'Teoria das Restrições', ref: 'Goldratt & Cox (1984)', you: `${tocRuns().length ? 'Gargalo por rodada: ' + runTxt(tocRuns()) + '. ' : ''}${tocAlign().n ? `${tocAlign().hit} de ${tocAlign().n} ordens de recurso miraram o gargalo do momento. ` : ''}Você terminou com ${adequateCount()} de 7 zonas adequadas, e a rota real (${ZONE[G.route].nome}) tinha ${st.initCov[G.route] || 0}% de cobertura no início.`, les: 'Melhorias fora da restrição não mudam o resultado do sistema. Os cinco passos de foco: identificar o elo mais fraco, explorá-lo, subordinar o resto a ele, elevá-lo e repetir, porque o gargalo migra. Aqui: informação (início), pessoal (meio), tempo e fadiga (fim). Reforçar uma zona que não era rota foi orçamento parado.' },
     { n: 'Racionalidade limitada e valor da informação', ref: 'Simon (1955); Howard (1966)', you: `Você gastou ${fmt(G.spent.intel)} créditos em inteligência (${st.intel} investigações) e terminou sabendo ${knownCount()} de 6 variáveis ocultas${miss.length ? `. Ficaram ocultas: ${miss.join(', ')}.` : '.'}`, les: 'Uma informação vale a diferença entre o resultado esperado de decidir com ela e sem ela. Ninguém otimiza: todos satisfazem. A pergunta é quanto saber antes de agir.' },
