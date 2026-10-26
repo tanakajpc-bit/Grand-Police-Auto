@@ -188,7 +188,7 @@ function intervPower() {
   return clamp(p, 0, 100);
 }
 function intervProb(extra = 0) {
-  const pr = .12 + .45 * intervPower() / 100 + .33 * infoFrac() - .30 * G.agit / 100 + (G.powerCut > 0 ? .04 : 0) + extra;
+  const pr = .12 + .45 * intervPower() / 100 + .33 * infoFrac() - .30 * G.agit / 100 + (G.powerCut > 0 ? .04 : 0) + (D_().ivp || 0) + extra;
   return clamp(pr, .05, .95);
 }
 const hostagesLeft = () => G.hostages.inside;
@@ -252,7 +252,7 @@ function doEscape(cause) {
 }
 function addHurtFree(n) { const H = G.hostages; const free = HOSTAGES - H.dead - H.hurt; n = Math.max(0, Math.min(n, free)); H.hurt += n; return n; }
 function doUltimatum() {
-  const d = G.nego.step, p = clamp(.15 + .14 * (d - 1) - G.agit / 250 + (G.K.profile ? .05 : 0), .05, .9);
+  const d = G.nego.step, p = clamp(.06 + .11 * (d - 1) - G.agit / 250 + (G.K.profile ? .05 : 0), .05, .9);
   if (rnd() < p) {
     const H = G.hostages; H.freed += H.inside - H.dead; H.inside = H.dead;
     const h = rnd() < .3 ? addHurtFree(1) : 0;
@@ -612,6 +612,10 @@ function resolveDecisions() {
   if (H.hurt > 0 && !hasGear('kit')) {
     let died = 0; for (let i = 0; i < H.hurt; i++) if (rnd() < .12 * D.lethal) died++;
     if (died) { addDead(died); L(R, 'bad', 'heart', `Sem atendimento adequado, ${died} refém ferido não resiste. Uma morte confirmada.`); }
+  }
+  // desgaste do cativeiro: quanto mais longo o cerco, mais reféns passam mal
+  if (G.round >= 4 && G.hostages.inside - H.hurt - H.dead > 0 && rnd() < .18 * (G.round - 3) * D.lethal * (hasGear('kit') ? .5 : 1)) {
+    addHurt(1); L(R, 'warn', 'heart', 'O cativeiro prolongado cobra seu preço: um refém passa mal e precisa de atendimento.');
   }
   if (G.pendingDeath) {
     const pd = G.pendingDeath; pd.left--;
