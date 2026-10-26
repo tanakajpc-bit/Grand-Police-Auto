@@ -264,7 +264,7 @@ function tabNego() {
   return `${hot}<div class="ladder">${ladder}</div>
     <label class="field">Negociador
       <select id="negotiator" data-chg="negotiator">${ags.map(id => `<option value="${id}" ${negId === id ? 'selected' : ''}>${shortName(agentById(id).nome)} · Negoc. ${stat(id, 'neg')}${G.az[id] && G.az[id] !== 'reserva' ? ' (em campo)' : ' (comando)'}</option>`).join('') || '<option>Comandante (você)</option>'}</select></label>
-    <p class="faint" style="font-size:11.5px">Postura compatível com o degrau atual: +20%. Pular etapa: −25% e metade da chance, com 20% de regredir. Pressionar sobe a agitação. Fadiga e pressão alta reduzem a habilidade do negociador (hoje ${negoSkill().toFixed(1)}).</p>
+    <p class="faint" style="font-size:11.5px">Postura compatível com o degrau atual: +20%. Pular etapa: −25% e metade da chance, com 20% de regredir. Pressionar sobe a agitação. Fadiga e pressão alta reduzem a habilidade do negociador (hoje ${negoSkill().toFixed(1)}). Com o canal aberto, as famílias contam como atendidas na rodada e cada avanço de degrau dá +3 a elas, um alívio quando as decisões são poucas.</p>
     <div class="optlist">${posts}${opt('alert', 'Pressionar (ultimato)', `Sobe a agitação em +${PR_().press} (valor real). Pode regredir a negociação.`, '', 'addnego', 'data-t="press"', { danger: true, pressed: !!q && q.p.tech === 'press', disabled: G.queue.some(x => x.kind === 'interv') })}</div>`;
 }
 function tabIntel() {

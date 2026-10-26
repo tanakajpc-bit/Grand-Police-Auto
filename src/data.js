@@ -157,7 +157,8 @@ const DIFF = {
     blurb:'Para aprender a mecânica. Mais tempo, líder mais receptivo, eventos raros.' },
   complexo:   { nome:'Complexo',   slots:3, ops:1,  timer:100, resist:1.55, ivp:-.13, agit:0,  evChance:.55, media:1.0,  vault:1.0,  stk:58, desp:1.0, pbase:30, intel:.00, fat:1.0, lethal:1.0, ret:45, hostile:0, assail:[2,4],
     blurb:'O equilíbrio do documento. Tempo apertado, eventos frequentes.' },
-  caotico:    { nome:'Caótico',    slots:2, ops:1.3,timer:65,  resist:1.70, ivp:-.16, agit:2,  evChance:.80, media:1.2,  vault:1.2,  stk:50, desp:1.25,pbase:38, intel:-.10,fat:1.25,lethal:1.3, ret:38, hostile:1, assail:[3,4],
+  caotico:    { nome:'Caótico',    slots:2, ops:1.3,timer:65,  resist:1.60, ivp:-.19, agit:2,  evChance:.80, media:1.2,  vault:1.2,  stk:58, desp:1.25,pbase:38, intel:-.10,fat:1.25,lethal:1.3, ret:46, hostile:1, assail:[3,4],
+    ncalm:1.3, negoFloor:.7, adaptAt:50, adaptMin:.4, violent:.75,
     blurb:'Só duas decisões por rodada, pouco tempo, informação mais cara e eventos quase toda rodada.' }
 };
 

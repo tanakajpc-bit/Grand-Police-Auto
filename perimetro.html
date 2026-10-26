@@ -735,7 +735,8 @@ const DIFF = {
     blurb:'Para aprender a mecânica. Mais tempo, líder mais receptivo, eventos raros.' },
   complexo:   { nome:'Complexo',   slots:3, ops:1,  timer:100, resist:1.55, ivp:-.13, agit:0,  evChance:.55, media:1.0,  vault:1.0,  stk:58, desp:1.0, pbase:30, intel:.00, fat:1.0, lethal:1.0, ret:45, hostile:0, assail:[2,4],
     blurb:'O equilíbrio do documento. Tempo apertado, eventos frequentes.' },
-  caotico:    { nome:'Caótico',    slots:2, ops:1.3,timer:65,  resist:1.70, ivp:-.16, agit:2,  evChance:.80, media:1.2,  vault:1.2,  stk:50, desp:1.25,pbase:38, intel:-.10,fat:1.25,lethal:1.3, ret:38, hostile:1, assail:[3,4],
+  caotico:    { nome:'Caótico',    slots:2, ops:1.3,timer:65,  resist:1.60, ivp:-.19, agit:2,  evChance:.80, media:1.2,  vault:1.2,  stk:58, desp:1.25,pbase:38, intel:-.10,fat:1.25,lethal:1.3, ret:46, hostile:1, assail:[3,4],
+    ncalm:1.3, negoFloor:.7, adaptAt:50, adaptMin:.4, violent:.75,
     blurb:'Só duas decisões por rodada, pouco tempo, informação mais cara e eventos quase toda rodada.' }
 };
 
@@ -1199,7 +1200,7 @@ function getNegotiator() {
 }
 function negoSkill() {
   const id = getNegotiator(); if (!id) return 2.7;
-  return stat(id, 'neg') * fp(id) * ff(id);
+  return stat(id, 'neg') * Math.max(fp(id), D_().negoFloor || 0) * ff(id);
 }
 function negoParts(tech) {
   const n = G.nego, d = n.step, D = D_(), P = PR_(), id = getNegotiator(), skill = negoSkill();
@@ -1226,7 +1227,7 @@ function negoCalm(tech, stepAfter) {
   const P = PR_(), id = getNegotiator(), kind = POSTURES[tech - 1].kind;
   let m = P.mult[kind];
   if (id === 'paulo' && tech <= 3) m *= 1.2;
-  return 3 * stepAfter * m;
+  return 3 * stepAfter * m * (D_().ncalm || 1);
 }
 
 /* ---------------- Intervenção, fuga, desfechos ---------------- */
@@ -1331,8 +1332,9 @@ function doSurrender() {
 function doEscape(cause) {
   const P = PR_(), H = G.hostages;
   let z = G.routeNow, adapted = false;
-  const covR = zoneCoverage(z);
-  if ((G.exposed > 0 || covR >= 80) && rnd() < (G.exposed > 0 ? .8 : P.adapt)) {
+  const covR = zoneCoverage(z), D = D_();
+  // no Caótico o líder testa o cerco: reage a rotas cobertas já a partir de 50% (nas demais, só a partir de 80%)
+  if ((G.exposed > 0 || covR >= (D.adaptAt || 80)) && rnd() < (G.exposed > 0 ? .8 : Math.max(P.adapt, D.adaptMin || 0))) {
     const alts = G.routes.filter(r => r !== z).sort((a, b) => zoneCoverage(a) - zoneCoverage(b));
     if (alts.length) { z = alts[0]; G.routeNow = z; adapted = true; }
   }
@@ -1653,7 +1655,10 @@ function resolveNego(dec, R) {
   if (np.skip) { n.skips++; G.stats.skips++; }
   const ok = rnd() < np.p;
   const posture = POSTURES[tech - 1].nome;
+  // canal aberto: as famílias sabem que alguém está falando com o líder, então a espera deixa de contar como "sem atenção"
+  G.attended.familias = true;
   if (ok) {
+    stake('familias', 3); why(R, 'familias', 3, 'avanço na negociação');
     if (n.step < 5) n.step++;
     n.failStreak = 0; n.maxStep = Math.max(n.maxStep, n.step);
     L(R, 'good', 'stairs', `${nm}: ${posture}${np.skip ? ' (pulando etapa)' : ''}. Funcionou. Degrau ${n.step}: ${STEPS[n.step - 1].nome}.`);
@@ -1937,7 +1942,7 @@ function finishRound() {
   if (R.interv) { out = doIntervention(false); }
   // ação desesperada
   if (!out && G.agit > 80 && rnd() < (G.agit - 80) * .02 * D.desp) {
-    if (rnd() < .55) {
+    if (rnd() < (D.violent || .55)) {
       const h = addHurt(1), dead = h && rnd() < .25 * D.lethal ? addDead(1) : 0; addAgit(-10);
       L(R, 'bad', 'shot', `AÇÃO DESESPERADA: o líder dispara contra a parede e agride um refém${dead ? ', que não sobrevive' : h ? ', que fica ferido' : ''}. A tensão se esvazia por um instante (agitação −10).`);
     } else {
@@ -2714,7 +2719,7 @@ function tabNego() {
   return `${hot}<div class="ladder">${ladder}</div>
     <label class="field">Negociador
       <select id="negotiator" data-chg="negotiator">${ags.map(id => `<option value="${id}" ${negId === id ? 'selected' : ''}>${shortName(agentById(id).nome)} · Negoc. ${stat(id, 'neg')}${G.az[id] && G.az[id] !== 'reserva' ? ' (em campo)' : ' (comando)'}</option>`).join('') || '<option>Comandante (você)</option>'}</select></label>
-    <p class="faint" style="font-size:11.5px">Postura compatível com o degrau atual: +20%. Pular etapa: −25% e metade da chance, com 20% de regredir. Pressionar sobe a agitação. Fadiga e pressão alta reduzem a habilidade do negociador (hoje ${negoSkill().toFixed(1)}).</p>
+    <p class="faint" style="font-size:11.5px">Postura compatível com o degrau atual: +20%. Pular etapa: −25% e metade da chance, com 20% de regredir. Pressionar sobe a agitação. Fadiga e pressão alta reduzem a habilidade do negociador (hoje ${negoSkill().toFixed(1)}). Com o canal aberto, as famílias contam como atendidas na rodada e cada avanço de degrau dá +3 a elas, um alívio quando as decisões são poucas.</p>
     <div class="optlist">${posts}${opt('alert', 'Pressionar (ultimato)', `Sobe a agitação em +${PR_().press} (valor real). Pode regredir a negociação.`, '', 'addnego', 'data-t="press"', { danger: true, pressed: !!q && q.p.tech === 'press', disabled: G.queue.some(x => x.kind === 'interv') })}</div>`;
 }
 function tabIntel() {

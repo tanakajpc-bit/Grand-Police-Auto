@@ -163,7 +163,7 @@ function getNegotiator() {
 }
 function negoSkill() {
   const id = getNegotiator(); if (!id) return 2.7;
-  return stat(id, 'neg') * fp(id) * ff(id);
+  return stat(id, 'neg') * Math.max(fp(id), D_().negoFloor || 0) * ff(id);
 }
 function negoParts(tech) {
   const n = G.nego, d = n.step, D = D_(), P = PR_(), id = getNegotiator(), skill = negoSkill();
@@ -190,7 +190,7 @@ function negoCalm(tech, stepAfter) {
   const P = PR_(), id = getNegotiator(), kind = POSTURES[tech - 1].kind;
   let m = P.mult[kind];
   if (id === 'paulo' && tech <= 3) m *= 1.2;
-  return 3 * stepAfter * m;
+  return 3 * stepAfter * m * (D_().ncalm || 1);
 }
 
 /* ---------------- Intervenção, fuga, desfechos ---------------- */
@@ -295,8 +295,9 @@ function doSurrender() {
 function doEscape(cause) {
   const P = PR_(), H = G.hostages;
   let z = G.routeNow, adapted = false;
-  const covR = zoneCoverage(z);
-  if ((G.exposed > 0 || covR >= 80) && rnd() < (G.exposed > 0 ? .8 : P.adapt)) {
+  const covR = zoneCoverage(z), D = D_();
+  // no Caótico o líder testa o cerco: reage a rotas cobertas já a partir de 50% (nas demais, só a partir de 80%)
+  if ((G.exposed > 0 || covR >= (D.adaptAt || 80)) && rnd() < (G.exposed > 0 ? .8 : Math.max(P.adapt, D.adaptMin || 0))) {
     const alts = G.routes.filter(r => r !== z).sort((a, b) => zoneCoverage(a) - zoneCoverage(b));
     if (alts.length) { z = alts[0]; G.routeNow = z; adapted = true; }
   }
@@ -617,7 +618,10 @@ function resolveNego(dec, R) {
   if (np.skip) { n.skips++; G.stats.skips++; }
   const ok = rnd() < np.p;
   const posture = POSTURES[tech - 1].nome;
+  // canal aberto: as famílias sabem que alguém está falando com o líder, então a espera deixa de contar como "sem atenção"
+  G.attended.familias = true;
   if (ok) {
+    stake('familias', 3); why(R, 'familias', 3, 'avanço na negociação');
     if (n.step < 5) n.step++;
     n.failStreak = 0; n.maxStep = Math.max(n.maxStep, n.step);
     L(R, 'good', 'stairs', `${nm}: ${posture}${np.skip ? ' (pulando etapa)' : ''}. Funcionou. Degrau ${n.step}: ${STEPS[n.step - 1].nome}.`);
@@ -901,7 +905,7 @@ function finishRound() {
   if (R.interv) { out = doIntervention(false); }
   // ação desesperada
   if (!out && G.agit > 80 && rnd() < (G.agit - 80) * .02 * D.desp) {
-    if (rnd() < .55) {
+    if (rnd() < (D.violent || .55)) {
       const h = addHurt(1), dead = h && rnd() < .25 * D.lethal ? addDead(1) : 0; addAgit(-10);
       L(R, 'bad', 'shot', `AÇÃO DESESPERADA: o líder dispara contra a parede e agride um refém${dead ? ', que não sobrevive' : h ? ', que fica ferido' : ''}. A tensão se esvazia por um instante (agitação −10).`);
     } else {
