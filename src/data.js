@@ -202,8 +202,8 @@ const COMMS = [
 const EVENT_DEFS = [
   { id:'tiroteio',  titulo:'Tiroteio acidental', ic:'shot', radio:'[RÁDIO] Disparo! Repito, disparo dentro da agência. Equipe Entrada, confirmem posição! Câmbio.',
     desc:'Um estampido seco corta a tarde. Ninguém sabe quem atirou, nem em quê. A rua inteira recua um passo.' },
-  { id:'passamal',  titulo:'Refém passa mal', ic:'heart', radio:'[RÁDIO] O líder pediu insulina pelo telefone. Diz que uma cliente está desmaiando. Câmbio.',
-    desc:'Uma das reféns é diabética e o tempo para a insulina está acabando. É uma oportunidade de troca humanitária, e também um risco.' },
+  { id:'passamal',  titulo:'Refém passa mal', ic:'heart', radio:'[RÁDIO] O líder pediu insulina pelo telefone. Diz que uma senhora está desmaiando. Câmbio.',
+    desc:'Lúcia Andrade, 67 anos, aposentada, é diabética. Veio ao banco pagar contas antes do almoço e não comeu desde então. O tempo para a insulina está acabando. É uma oportunidade de troca humanitária, e também um risco.' },
   { id:'heli',      titulo:'Helicóptero de TV', ic:'heli', radio:'[RÁDIO] Central, temos um helicóptero da Rede Litoral sobrevoando a área. Posições das equipes estão expostas do alto. Repito: estamos visíveis. Câmbio.',
     desc:'As imagens ao vivo mostram cada posição do perímetro. Se alguém lá dentro tem uma televisão, o plano acaba de ser entregue.' },
   { id:'segundo',   titulo:'Segundo incidente', ic:'alert', radio:'[RÁDIO] Central, acidente com múltiplas vítimas no Viaduto Norte. Estão pedindo todas as unidades disponíveis. Câmbio.',
@@ -212,7 +212,7 @@ const EVENT_DEFS = [
     desc:'Há um quarto elemento do lado de fora, coordenando o plano. A rota de fuga acaba de ganhar reforço.' },
   { id:'prefeito',  titulo:'Telefonema do prefeito', ic:'mayor', radio:'[RÁDIO] Comandante, o gabinete do prefeito na linha de segurança. Ele quer falar com você agora. Câmbio.',
     desc:'“Não quero ver isso no noticiário das 8.” A voz do outro lado não pede, informa.' },
-  { id:'live',      titulo:'Live nas redes', ic:'live', radio:'[RÁDIO] Central, há uma transmissão ao vivo vindo de dentro do banco. Um refém está filmando. Já passa de cem mil pessoas assistindo. Câmbio.',
+  { id:'live',      titulo:'Live nas redes', ic:'live', radio:'[RÁDIO] Central, há uma transmissão ao vivo vindo de dentro do banco. Thiago Lima, 19 anos, está filmando com o celular escondido. Já passa de cem mil pessoas assistindo. Câmbio.',
     desc:'A pressão explode, mas a câmera também mostra o que ninguém de fora conseguia ver.' },
   { id:'proposta',  titulo:'Proposta dos assaltantes', ic:'swap', radio:'[RÁDIO] O líder fez uma oferta: três reféns em troca de um veículo na porta. Repito: três por um carro. Câmbio.',
     desc:'A troca clássica. Vidas imediatas contra mobilidade para quem tenta fugir.' },
@@ -225,7 +225,7 @@ const EVENT_DEFS = [
   { id:'deadline',  titulo:'Deadline do noticiário', ic:'clock', radio:'[RÁDIO] Central, o jornal das 20h confirmou abertura ao vivo na frente da agência. Faltam cerca de duas rodadas. Câmbio.',
     desc:'O relógio da cidade agora tem hora marcada. O prefeito exige uma resolução antes do horário nobre.' },
   /* extras do documento original (Tabela 8) */
-  { id:'familia',   titulo:'Família na linha', ic:'family', radio:'[RÁDIO] Uma mãe conseguiu ligar para o celular da filha, que está dentro do banco. Elas estão na linha agora. Câmbio.',
+  { id:'familia',   titulo:'Família na linha', ic:'family', radio:'[RÁDIO] A mãe de Yara Tavares, a estagiária da agência, conseguiu ligar para o celular da filha. Elas estão na linha agora. Câmbio.',
     desc:'Um familiar abriu contato direto com uma refém. É um canal humano e também um canal fora do seu controle.' },
   { id:'diretor',   titulo:'Diretor do banco interfere', ic:'bank', radio:'[RÁDIO] Comandante, o diretor regional do Meridiano está no isolamento e exige falar com você. Câmbio.',
     desc:'Ele pede prioridade para proteger o cofre. A pressão institucional chegou ao posto de comando.' },

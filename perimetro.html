@@ -108,8 +108,9 @@ button,select,input{font:inherit;color:inherit}
 .brief .day{font-family:var(--cond);text-transform:uppercase;letter-spacing:.3em;color:var(--ink3);font-size:13px;margin-bottom:6px}
 .brief .narr{font-family:var(--serif);font-size:clamp(18px,2.1vw,23px);line-height:1.62;margin-top:22px;color:#dfe6f1}
 .brief .narr p{margin-bottom:16px;opacity:0;animation:rise .9s ease forwards}
-.brief .narr p:nth-child(1){animation-delay:.2s}.brief .narr p:nth-child(2){animation-delay:1.6s}.brief .narr p:nth-child(3){animation-delay:3.2s}.brief .narr p:nth-child(4){animation-delay:4.8s}.brief .narr p:nth-child(5){animation-delay:6.4s}
-.brief .after{opacity:0;animation:rise .9s ease 7.2s forwards}
+.brief .narr p:nth-child(1){animation-delay:.3s}.brief .narr p:nth-child(2){animation-delay:1.5s}.brief .narr p:nth-child(3){animation-delay:2.7s}
+.brief .after{opacity:0;animation:rise .9s ease 3.7s forwards}
+.brief{cursor:default}
 @keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 .noanim .brief .narr p,.noanim .brief .after{opacity:1;animation:none}
 .objgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:22px}
@@ -362,6 +363,125 @@ select:hover{border-color:var(--blue)}
 .opt span.d b{display:inline}
 #app.still .screen,#app.still .res-line,#app.still .qitem,#app.still .modalback{animation:none}
 .siege .colA{align-content:start}
+
+/* ===== L1.2 — imersão, pacing e feedback ===== */
+/* ticker de manchetes */
+.ticker{display:flex;align-items:stretch;gap:0;margin-top:8px;border:1px solid rgba(255,84,104,.35);border-radius:6px;overflow:hidden;background:#0b111c;font-size:12px;max-width:1560px;margin-inline:auto}
+.ticker>b{flex:none;background:var(--red);color:#fff;font-family:var(--cond);letter-spacing:.14em;font-size:11px;padding:4px 10px;display:grid;place-items:center}
+.ticker .tk{overflow:hidden;flex:1;position:relative;mask-image:linear-gradient(90deg,transparent,#000 3%,#000 97%,transparent)}
+.ticker .tkin{display:inline-flex;gap:18px;white-space:nowrap;padding:4px 0;animation:tick 60s linear infinite;color:#dbe4f1}
+.ticker .tkin i{color:var(--red);font-style:normal;font-size:9px;align-self:center}
+@keyframes tick{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.brief .ticker{margin:0 0 22px}
+@media (prefers-reduced-motion:reduce){.ticker .tkin{animation:none;white-space:normal;flex-wrap:wrap}}
+/* reféns no briefing */
+.hstrip{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.hstrip .hp{display:grid;justify-items:center;gap:2px;width:52px;opacity:0;animation:rise .5s ease forwards;animation-delay:calc(3.9s + var(--i) * 70ms)}
+.hstrip .hp svg{width:20px;height:26px;fill:#5d7aa6}
+.hstrip .hp small{font-size:10.5px;color:var(--ink2);white-space:nowrap}
+.noanim .hstrip .hp{opacity:1;animation:none}
+.bio{font-family:var(--serif);font-style:italic;font-size:13px;color:var(--ink2);line-height:1.35}
+/* reféns no cerco */
+.roster{display:grid;grid-template-columns:repeat(auto-fill,minmax(82px,1fr));gap:5px}
+.rp{display:grid;padding:5px 7px;border-radius:7px;border:1px solid var(--line);background:var(--bg2);line-height:1.2}
+.rp b{font-size:12px}.rp small{font-size:10px;color:var(--ink3)}
+.rp.in{border-color:rgba(77,166,255,.35)}
+.rp.unk{border-style:dashed}
+.rp.out{border-color:rgba(65,208,143,.5);background:var(--green-bg)}.rp.out small{color:var(--green)}
+.rp.hurt{border-color:rgba(246,166,35,.6);background:var(--amber-bg)}.rp.hurt small{color:var(--amber)}
+.rp.dead{border-color:#5b6475;background:#141922;opacity:.75}.rp.dead b{text-decoration:line-through;text-decoration-color:#8b93a3}
+/* linha direta */
+.hotline{border:1px solid rgba(246,166,35,.4);background:linear-gradient(180deg,rgba(246,166,35,.08),transparent);border-radius:10px;padding:12px;display:grid;gap:8px}
+.hotline .scene{font-family:var(--serif);font-size:15px;line-height:1.5;color:#dfe6f1}
+.hotline blockquote{margin:0;padding:8px 12px;border-left:3px solid var(--amber);background:#0d1523;border-radius:0 8px 8px 0;font-family:var(--serif);font-size:16px;font-style:italic}
+.hotline blockquote.bad{border-color:var(--red)}.hotline blockquote.good{border-color:var(--green)}
+.hotline cite{display:block;font-style:normal;font-family:var(--sans);font-size:11px;color:var(--ink3);margin-top:4px}
+.hotline .ask{font-size:12.5px;color:var(--amber);font-weight:600}
+.res-line.voice{border-color:rgba(246,166,35,.4);background:#0d1523;font-family:var(--serif);font-style:italic;font-size:15.5px}
+/* atualização: céu por hora do dia */
+.skyband{position:relative;height:190px;border-radius:14px;overflow:hidden;border:1px solid var(--line);background:linear-gradient(180deg,#36577f,#8aa6c4)}
+.skyband svg.skyline{position:absolute;left:0;right:0;bottom:0;width:100%;height:85%}
+.skyband .win{animation:flick 6s infinite}
+.skyband .siren{bottom:6px;width:110px;height:50px}
+.skyband .cap{position:absolute;left:0;right:0;bottom:0;padding:14px 18px;background:linear-gradient(0deg,rgba(5,8,15,.9),rgba(5,8,15,0))}
+.skyband h1{font-family:var(--cond);font-size:clamp(26px,4vw,46px);letter-spacing:.03em;margin:4px 0 0;text-shadow:0 2px 12px rgba(0,0,0,.6)}
+.skyband.r1 .win,.skyband.r2 .win,.skyband.r3 .win{opacity:.12!important}
+.skyband.r1,.skyband.r2{background:linear-gradient(180deg,#3d618d,#9ab5cf)}
+.skyband.r3{background:linear-gradient(180deg,#3b5a82,#c3a57d)}
+.skyband.r4{background:linear-gradient(180deg,#34466e,#d39361)}
+.skyband.r5{background:linear-gradient(180deg,#2a3158,#e07b4a)}
+.skyband.r6{background:linear-gradient(180deg,#1d2346,#a8505a)}
+.skyband.r7{background:linear-gradient(180deg,#0b1122,#2b3058)}
+.skyband.r8{background:linear-gradient(180deg,#04070d,#121a33)}
+.skyband.r1 .siren,.skyband.r2 .siren{display:none}
+.track{display:grid;grid-template-columns:repeat(8,1fr);gap:4px}
+.track .tk{position:relative;display:grid;gap:3px;justify-items:center;font-family:var(--mono);color:var(--ink3)}
+.track .tk i{display:block;width:100%;height:6px;border-radius:99px;background:#0b1320;border:1px solid var(--line2)}
+.track .tk.past i{background:var(--line2)}
+.track .tk.now i{background:var(--amber);border-color:var(--amber);box-shadow:0 0 0 3px rgba(246,166,35,.18)}
+.track .tk.now small{color:var(--amber)}
+.track small{font-size:10.5px}
+.track em{position:absolute;top:-16px;color:var(--amber)}
+.intro{font-size:clamp(17px,1.9vw,21px);line-height:1.6;color:#dfe6f1}
+.call{display:grid;grid-template-columns:34px 1fr;gap:12px;align-items:start;padding:12px 14px;border-radius:10px;border:1px solid rgba(255,84,104,.45);background:var(--red-bg)}
+.call .ico{color:#ff9aa7;width:28px;height:28px}
+.call small{font-family:var(--cond);text-transform:uppercase;letter-spacing:.12em;font-size:11px;color:#ff9aa7}
+.call p{font-family:var(--serif);font-size:16.5px;line-height:1.45;margin-top:2px}
+.council{display:grid;gap:10px}
+.adv{display:grid;grid-template-columns:44px 1fr;gap:10px;align-items:start}
+.adv .sil{width:44px;height:50px}
+.adv b{font-size:13.5px}
+.adv p{font-family:var(--serif);font-size:15px;line-height:1.45;color:#dfe6f1;margin-top:3px}
+.pill.violet{color:var(--violet);border-color:rgba(167,139,250,.5);background:rgba(167,139,250,.12)}
+/* dossiê de inteligência */
+.dossiers{display:grid;gap:10px}
+.dossier{position:relative;padding:12px 14px;border-radius:10px;border:1px solid var(--line2);background:#0d1523;display:grid;gap:6px;font-size:13px;animation:fadein .5s both}
+.dossier.ok{border-color:rgba(65,208,143,.55)}
+.dossier.no{border-color:rgba(246,166,35,.5)}
+.dossier .stamp{position:absolute;top:10px;right:12px;font-family:var(--cond);text-transform:uppercase;letter-spacing:.18em;font-size:11px;font-weight:700;padding:2px 8px;border:2px solid;border-radius:4px;transform:rotate(-4deg)}
+.dossier.ok .stamp{color:var(--green)}.dossier.no .stamp{color:var(--amber)}
+.dossier b{font-size:13.5px;padding-right:110px}
+.dossier .impact{padding:7px 10px;border-radius:7px;background:var(--blue-bg);border:1px solid rgba(77,166,255,.35)}
+.dossier .impact small{display:block;font-family:var(--cond);text-transform:uppercase;letter-spacing:.12em;font-size:10.5px;color:var(--blue)}
+/* guia da primeira rodada */
+.guide{border-color:rgba(77,166,255,.5);background:linear-gradient(180deg,var(--blue-bg),var(--panel))}
+.guide ol{margin:0 0 6px;padding-left:18px;display:grid;gap:4px;font-size:12.5px}
+/* resolução: seções, causa e efeito */
+.sec{display:grid;gap:8px}
+.wf{display:grid;gap:6px}
+.wfr{display:grid;grid-template-columns:minmax(120px,1.2fr) 1fr 92px;gap:8px;align-items:center;font-size:12.5px}
+.wfr>span{color:var(--ink2)}
+.wfr b{text-align:right;font-size:12px}
+.wfb{position:relative;height:10px;background:#0b1320;border-radius:99px;border:1px solid var(--line)}
+.wfb::after{content:"";position:absolute;left:50%;top:-3px;bottom:-3px;width:1px;background:var(--ink3)}
+.wfb i{position:absolute;top:0;bottom:0;border-radius:99px}
+.wfb i.bad{background:var(--red)}.wfb i.good{background:var(--green)}
+.wfr.tot{border-top:1px dashed var(--line);padding-top:6px}
+.sw{font-size:12.5px;padding:6px 0;border-bottom:1px dashed var(--line)}
+.sw small{display:block;color:var(--ink3);margin-top:2px}
+.sw .pos{color:var(--green)}.sw .neg{color:#ff9aa7}
+.hc{display:grid;grid-template-columns:22px 1fr;gap:8px;font-size:13px;padding:8px 10px;border-radius:8px;border:1px solid var(--line)}
+.hc .ico{width:18px;height:18px}
+.hc.out{border-color:rgba(65,208,143,.45);background:var(--green-bg)}.hc.out .ico{color:var(--green)}
+.hc.hurt{border-color:rgba(246,166,35,.5);background:var(--amber-bg)}.hc.hurt .ico{color:var(--amber)}
+.hc.dead{border-color:#5b6475;background:#141922}.hc.dead .ico{color:var(--ink3)}
+/* revelação final */
+.truth .trows{display:grid;gap:6px}
+.truth .tr{display:grid;grid-template-columns:150px 1fr;gap:4px 12px;padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:var(--bg2);font-size:13px}
+.truth .tr small{grid-column:1/-1;color:var(--ink3)}
+.truth .tr.k small{color:var(--green)}.truth .tr.u small{color:#ff9aa7}
+.truth .tr b{font-family:var(--mono)}
+.truth p{font-family:var(--serif);font-size:16px;line-height:1.5}
+/* corte de cena entre fases */
+.cut{position:fixed;inset:0;z-index:120;display:grid;place-items:center;padding:24px;background:radial-gradient(800px 400px at 50% 40%,rgba(22,35,59,.97),rgba(3,6,12,.98));animation:fadein .4s}
+.cutin{max-width:680px;text-align:center;display:grid;gap:14px}
+.cutin .time{font-family:var(--mono);color:var(--amber);font-size:clamp(40px,7vw,72px);line-height:1}
+.cutin h2{font-family:var(--cond);text-transform:uppercase;letter-spacing:.22em;font-size:clamp(18px,2.4vw,26px)}
+.cutin p{font-family:var(--serif);font-size:clamp(16px,1.9vw,20px);line-height:1.55;color:#dfe6f1;opacity:0;animation:rise .8s ease forwards}
+.cutin p.radio-q{font-family:var(--mono);font-size:13.5px;color:#cdd8e8;border-left:3px solid var(--red);padding-left:12px;text-align:left}
+.cutin .btn{opacity:0;animation:rise .6s ease forwards}
+@media (prefers-reduced-motion:reduce){.cutin p,.cutin .btn,.hstrip .hp{opacity:1}}
+.icard .dossier>b{display:none}.icard .dossier{padding-top:30px}
 </style>
 <div id="edge" class="edge" aria-hidden="true"></div><div id="toasts" role="status" aria-live="polite"></div><div id="app"></div>
 <script>
@@ -569,8 +689,8 @@ const COMMS = [
 const EVENT_DEFS = [
   { id:'tiroteio',  titulo:'Tiroteio acidental', ic:'shot', radio:'[RÁDIO] Disparo! Repito, disparo dentro da agência. Equipe Entrada, confirmem posição! Câmbio.',
     desc:'Um estampido seco corta a tarde. Ninguém sabe quem atirou, nem em quê. A rua inteira recua um passo.' },
-  { id:'passamal',  titulo:'Refém passa mal', ic:'heart', radio:'[RÁDIO] O líder pediu insulina pelo telefone. Diz que uma cliente está desmaiando. Câmbio.',
-    desc:'Uma das reféns é diabética e o tempo para a insulina está acabando. É uma oportunidade de troca humanitária, e também um risco.' },
+  { id:'passamal',  titulo:'Refém passa mal', ic:'heart', radio:'[RÁDIO] O líder pediu insulina pelo telefone. Diz que uma senhora está desmaiando. Câmbio.',
+    desc:'Lúcia Andrade, 67 anos, aposentada, é diabética. Veio ao banco pagar contas antes do almoço e não comeu desde então. O tempo para a insulina está acabando. É uma oportunidade de troca humanitária, e também um risco.' },
   { id:'heli',      titulo:'Helicóptero de TV', ic:'heli', radio:'[RÁDIO] Central, temos um helicóptero da Rede Litoral sobrevoando a área. Posições das equipes estão expostas do alto. Repito: estamos visíveis. Câmbio.',
     desc:'As imagens ao vivo mostram cada posição do perímetro. Se alguém lá dentro tem uma televisão, o plano acaba de ser entregue.' },
   { id:'segundo',   titulo:'Segundo incidente', ic:'alert', radio:'[RÁDIO] Central, acidente com múltiplas vítimas no Viaduto Norte. Estão pedindo todas as unidades disponíveis. Câmbio.',
@@ -579,7 +699,7 @@ const EVENT_DEFS = [
     desc:'Há um quarto elemento do lado de fora, coordenando o plano. A rota de fuga acaba de ganhar reforço.' },
   { id:'prefeito',  titulo:'Telefonema do prefeito', ic:'mayor', radio:'[RÁDIO] Comandante, o gabinete do prefeito na linha de segurança. Ele quer falar com você agora. Câmbio.',
     desc:'“Não quero ver isso no noticiário das 8.” A voz do outro lado não pede, informa.' },
-  { id:'live',      titulo:'Live nas redes', ic:'live', radio:'[RÁDIO] Central, há uma transmissão ao vivo vindo de dentro do banco. Um refém está filmando. Já passa de cem mil pessoas assistindo. Câmbio.',
+  { id:'live',      titulo:'Live nas redes', ic:'live', radio:'[RÁDIO] Central, há uma transmissão ao vivo vindo de dentro do banco. Thiago Lima, 19 anos, está filmando com o celular escondido. Já passa de cem mil pessoas assistindo. Câmbio.',
     desc:'A pressão explode, mas a câmera também mostra o que ninguém de fora conseguia ver.' },
   { id:'proposta',  titulo:'Proposta dos assaltantes', ic:'swap', radio:'[RÁDIO] O líder fez uma oferta: três reféns em troca de um veículo na porta. Repito: três por um carro. Câmbio.',
     desc:'A troca clássica. Vidas imediatas contra mobilidade para quem tenta fugir.' },
@@ -592,7 +712,7 @@ const EVENT_DEFS = [
   { id:'deadline',  titulo:'Deadline do noticiário', ic:'clock', radio:'[RÁDIO] Central, o jornal das 20h confirmou abertura ao vivo na frente da agência. Faltam cerca de duas rodadas. Câmbio.',
     desc:'O relógio da cidade agora tem hora marcada. O prefeito exige uma resolução antes do horário nobre.' },
   /* extras do documento original (Tabela 8) */
-  { id:'familia',   titulo:'Família na linha', ic:'family', radio:'[RÁDIO] Uma mãe conseguiu ligar para o celular da filha, que está dentro do banco. Elas estão na linha agora. Câmbio.',
+  { id:'familia',   titulo:'Família na linha', ic:'family', radio:'[RÁDIO] A mãe de Yara Tavares, a estagiária da agência, conseguiu ligar para o celular da filha. Elas estão na linha agora. Câmbio.',
     desc:'Um familiar abriu contato direto com uma refém. É um canal humano e também um canal fora do seu controle.' },
   { id:'diretor',   titulo:'Diretor do banco interfere', ic:'bank', radio:'[RÁDIO] Comandante, o diretor regional do Meridiano está no isolamento e exige falar com você. Câmbio.',
     desc:'Ele pede prioridade para proteger o cofre. A pressão institucional chegou ao posto de comando.' },
@@ -616,6 +736,189 @@ const BADGES = [
   { id:'equilibrio',nome:'Equilíbrio perfeito',   ic:'radar', d:'As cinco dimensões da pontuação acima de 60%.' },
   { id:'mao',      nome:'Mão firme',              ic:'shield',d:'Intervenção bem-sucedida sem nenhum refém ferido.' }
 ];
+/* =====================================================================
+   NARRATIVA — pessoas, vozes e manchetes (L1.2)
+   Tudo aqui é fictício. Os textos só leem o estado; quem muda o estado é o motor.
+   ===================================================================== */
+
+/* ---------- Os 17 reféns: cada número é uma pessoa ---------- */
+const HOSTAGE_LIST = [
+  { id:'lucia',    nome:'Lúcia Andrade',    idade:67, papel:'aposentada, cliente',         nota:'diabética, usa insulina' },
+  { id:'rafael',   nome:'Rafael Mota',      idade:24, papel:'caixa da agência' },
+  { id:'larissa',  nome:'Larissa Campos',   idade:35, papel:'gerente da agência' },
+  { id:'jorge',    nome:'Jorge Kawasaki',   idade:52, papel:'dono de uma papelaria, cliente' },
+  { id:'joana',    nome:'Joana Prado',      idade:29, papel:'cliente',                     nota:'grávida de sete meses' },
+  { id:'marta',    nome:'Marta Oliveira',   idade:45, papel:'vigilante da agência' },
+  { id:'thiago',   nome:'Thiago Lima',      idade:19, papel:'estudante, cliente' },
+  { id:'irene',    nome:'Irene Castro',     idade:58, papel:'auxiliar de limpeza' },
+  { id:'samuel',   nome:'Samuel Nogueira',  idade:33, papel:'contador, cliente' },
+  { id:'benedito', nome:'Benedito Alves',   idade:74, papel:'aposentado, cliente',         nota:'usa aparelho auditivo' },
+  { id:'yara',     nome:'Yara Tavares',     idade:22, papel:'estagiária da agência' },
+  { id:'mateus',   nome:'Mateus Fonseca',   idade:41, papel:'eletricista, cliente' },
+  { id:'otavio',   nome:'Otávio Brandão',   idade:60, papel:'empresário, cliente' },
+  { id:'cecilia',  nome:'Cecília Moura',    idade:48, papel:'professora, cliente' },
+  { id:'helio',    nome:'Hélio Santana',    idade:55, papel:'taxista, cliente' },
+  { id:'paulah',   nome:'Paula Hirata',     idade:39, papel:'atendente da agência' },
+  { id:'davi',     nome:'Davi Rezende',     idade:30, papel:'entregador, cliente' }
+];
+const HOST = Object.fromEntries(HOSTAGE_LIST.map(h => [h.id, h]));
+const firstName = id => HOST[id].nome.split(' ')[0];
+
+/* ---------- Biografias curtas dos agentes (cartas de recrutamento) ---------- */
+const BIOS = {
+  renata: 'Vinte anos de ocorrências com reféns. Fala pouco e lembra de tudo.',
+  marcos: 'Ex-instrutor de tiro. Aguenta doze horas de posição sem reclamar.',
+  carla: 'Veio da divisão de fraudes bancárias. Lê um relatório como quem lê um rosto.',
+  paulo: 'Negociador-chefe da capital. Nunca perdeu um refém em mesa de negociação.',
+  lucas: 'Patrulheiro de rua que conhece cada beco do centro de Porto Alto.',
+  fernanda: 'Ex-assessora de imprensa da Secretaria. Sabe o que vira manchete.',
+  andre: 'Grupo tático. Acredita que cada minuto de conversa é um minuto perdido.',
+  sofia: 'Analista de inteligência. Cruza câmeras, cadastros e telefones em minutos.',
+  roberto: 'Corajoso e rápido. Às vezes rápido demais.',
+  camila: 'Faz de tudo um pouco e se adapta ao que a equipe precisar.',
+  diego: 'Comandou a retomada do Terminal Sul. Pensa a operação inteira de uma vez.',
+  marina: 'Mediadora de conflitos em presídios. Baixa a voz e a sala inteira acompanha.'
+};
+
+/* ---------- A voz do líder (cada perfil fala de um jeito: é assim que a névoa se dissipa) ---------- */
+const LEADER = {
+  calculista: {
+    step: ['', 'Vamos ser objetivos. Vocês têm algo a oferecer ou estão só ganhando tempo?', 'Não preciso que você entenda o que eu sinto. Preciso que entenda o que eu quero.',
+      'A água chegou no horário que você disse. Anotei. Continue assim.', 'Me mostre os termos. Se fizer sentido, eu considero.', 'Quero tudo combinado: quem sai primeiro, por onde e quem garante.'],
+    fail: 'Isso não responde ao que eu perguntei. Próxima.', press: 'Ultimato? Eu também sei contar o tempo, comandante.', hot: 'O relógio corre para os dois lados. Lembre-se disso.' },
+  volatil: {
+    step: ['', 'Ninguém aqui queria que isso acontecesse assim! Vocês não entendem!', 'Desculpa. Eu não devia ter gritado. É que está todo mundo olhando para mim.',
+      'Você é o único que fala comigo como gente. Fica na linha, tá?', 'Se eu soltar os mais velhos primeiro… vocês garantem que ninguém entra?', 'Tá. Tá bom. Me diz como eu saio daqui sem ninguém se machucar.'],
+    fail: 'Para de falar comigo como se eu fosse idiota!', press: 'É assim? Então ninguém sai daqui!', hot: 'Eu juro que eu não sei o que vou fazer se alguém se mexer aí fora!' },
+  ideologico: {
+    step: ['', 'Isso não é sobre dinheiro. Nunca foi. Vocês vão ouvir o que eu tenho a dizer.', 'Você diz que entende. Os outros também diziam.',
+      'Se a sua palavra vale alguma coisa, deixe a imprensa ler a minha carta.', 'Não aceito trocas. Aceito compromissos públicos.', 'Eu saio de cabeça erguida, diante das câmeras, ou não saio.'],
+    fail: 'Mais uma oferta de quem não ouviu nada.', press: 'Ameaças só provam o que eu venho dizendo.', hot: 'Se for preciso, que a cidade inteira veja como isso termina.' },
+  desesperado: {
+    step: ['', 'Eu não tenho mais para onde ir. Você entende isso? Para onde?', 'Minha filha… ela não pode me ver assim no jornal.',
+      'Você ainda está aí? Não desliga. Por favor, não desliga.', 'Se eu entregar a arma… o que acontece comigo? A verdade.', 'Tá. Eu vou sair. Mas fala para eles não atirarem. Promete.'],
+    fail: 'Não, não, não. Isso é armadilha.', press: 'Então acaba logo com isso! É isso que vocês querem?', hot: 'Eu não volto para a cadeia. Não volto.' }
+};
+/* Cena do canal em cada degrau (o que o jogador vê antes de escolher a postura) */
+const STEP_SCENE = ['',
+  'O telefone da agência toca pela quinta vez até alguém atender. Do outro lado, uma respiração pesada antes de qualquer palavra.',
+  'A voz do outro lado oscila entre raiva e algo que parece medo. Ele ainda não confia, mas já não desliga na sua cara.',
+  'Ele chama o seu negociador pelo nome. Pede café para os reféns e agradece quando chega. É uma relação, frágil, mas é.',
+  'O líder começa a perguntar sobre o depois: o que acontece com ele, quem garante, como seria a saída. É a hora de propor.',
+  'Os detalhes da saída estão sobre a mesa: ordem, porta, quem recebe. Falta apenas que a tensão lá dentro baixe o bastante.'];
+const NO_CONTACT = 'Ninguém atendeu o telefone da agência ainda. Enquanto não houver canal, o líder está sozinho com a própria raiva, e você não sabe nada sobre ele.';
+
+function leaderSays(kind) {
+  const P = LEADER[G.profile];
+  if (kind === 'press') return P.press;
+  if (kind === 'fail') return G.agit > 75 ? P.hot : P.fail;
+  return G.agit > 80 ? P.hot : P.step[G.nego.step];
+}
+
+/* ---------- Ligações de stakeholders (quem é ignorado liga) ---------- */
+const CALLS = {
+  imprensa: ['Comandante, a TV Porto Alto vai ao ar em dez minutos com ou sem uma palavra sua. Prefere que a gente especule?', 'Nossas fontes dizem que há feridos. Se não for verdade, este é o momento de negar.'],
+  prefeito: ['O gabinete quer saber por que ninguém nos atualiza. Eu não vou descobrir pela televisão o que acontece na minha cidade.', 'Comandante, a paciência acabou. Quero um prazo, e quero agora.'],
+  banco: ['A diretoria do Meridiano precisa saber o que está sendo feito para proteger a agência. O conselho está ligando de hora em hora.', 'Se o cofre cair, o seguro vai perguntar onde estava o comando. Eu também.'],
+  familias: ['Uma mãe na barreira está pedindo para falar com alguém. Ela só quer saber se a filha está viva.', 'As famílias estão em frente ao isolamento há horas sem nenhuma informação. Estão começando a gritar com os policiais.']
+};
+const CALLER = { imprensa: 'Editora-chefe da TV Porto Alto', prefeito: 'Chefe de gabinete do prefeito', banco: 'Diretor regional do Meridiano', familias: 'Coordenação do acolhimento' };
+
+/* ---------- Abertura de cada rodada: hora do dia + o que já aconteceu ---------- */
+const DAYLIGHT = ['',
+  'O sol de começo de tarde bate na fachada espelhada do Meridiano.',
+  'O trânsito do centro foi desviado e a Avenida Principal ficou estranhamente silenciosa.',
+  'A sombra dos prédios começa a cobrir a calçada da agência.',
+  'O sol baixa entre os prédios e as sombras alongam a Avenida Principal.',
+  'Fim de tarde. Quem sai do trabalho para no isolamento para olhar.',
+  'O céu fica cor de laranja e os holofotes da imprensa se acendem.',
+  'A luz acabou lá fora. Os giroflex das viaturas pintam a fachada de vermelho e azul.',
+  'Noite. O jornal das 20h já tem a imagem da porta da agência na tela.'];
+
+function roundIntro() {
+  const n = G.nego, H = G.hostages, s = [DAYLIGHT[G.round] || ''];
+  if (!n.contact) s.push(G.round === 1 ? 'Ninguém sabe ao certo quantos são, o que querem ou por onde pretendem sair.' : 'O telefone da agência continua sem resposta: o líder segue sozinho com a própria raiva, e você segue sem ouvir a voz dele.');
+  else s.push(`O canal com o líder está aberto, no degrau ${n.step} de 5 (${STEPS[n.step - 1].nome}).${n.step >= 4 ? ' Pela primeira vez, ele fala em “depois”.' : ''}`);
+  const out = HOSTAGES - H.inside, inside = H.inside - H.dead;
+  if (H.dead) s.push(`A sala de comando ainda não se recuperou: ${H.dead === 1 ? 'uma vida foi perdida' : H.dead + ' vidas foram perdidas'}. Lá dentro restam ${inside} pessoas.`);
+  else if (out > 0) s.push(`${out} ${out === 1 ? 'refém já saiu' : 'reféns já saíram'}. Lá dentro ainda há ${inside} pessoas esperando por você.`);
+  else s.push(`Lá dentro, ${inside} pessoas esperam sem saber o que acontece do lado de fora.`);
+  if (G.round >= 6) s.push('O prefeito quer um desfecho. A cidade quer um desfecho. Desfecho é diferente de solução, e é você quem escolhe qual dos dois entrega.');
+  else if (G.media > 65) s.push('A cobertura ao vivo não para: cada minuto sem resposta vira especulação na tela.');
+  if (G.round === MAX_ROUNDS) s.push('Última rodada. Depois dela, os assaltantes impõem o ultimato final.');
+  return s.join(' ');
+}
+
+/* ---------- Manchetes da TV (o ticker do cerco) ---------- */
+function headlines() {
+  const H = G.hostages, out = [], n = G.nego, out0 = HOSTAGES - H.inside;
+  out.push(`AO VIVO · Assalto com reféns na Agência Central do Meridiano entra na ${Math.max(1, Math.round(G.round * ROUND_MIN / 60))}ª hora de cerco`);
+  if (H.dead) out.push(`URGENTE · Polícia confirma ${H.dead === 1 ? 'a morte de um refém' : H.dead + ' reféns mortos'} na Agência Central`);
+  else if (out0 > 0) out.push(`${out0} ${out0 === 1 ? 'refém é libertado' : 'reféns são libertados'}; ${H.inside - H.dead} continuam no interior`);
+  if (G.media > 75) out.push('Comentaristas questionam o silêncio do comando: “a cidade merece explicações”');
+  else if (G.media > 50) out.push('Repórteres furam o isolamento na Rua Marechal Deodoro em busca de imagens');
+  else out.push('Comando da força-tarefa mantém isolamento de três quarteirões no centro');
+  if (n.contact && n.step >= 3) out.push('Fontes: negociação com o líder do grupo avança');
+  if (G.usedEvents.includes('heli')) out.push('Rede Litoral transmite imagens aéreas das equipes em posição');
+  if (G.usedEvents.includes('live')) out.push('Transmissão feita por refém já passa de cem mil visualizações');
+  if (G.stk.familias.sat < 35) out.push('Famílias protestam na barreira: “ninguém nos diz nada”');
+  if (G.stk.prefeito.sat < 35) out.push('Prefeito cobra resultados: “não aceito esta crise no horário nobre”');
+  if (G.deadlineLeft > 0) out.push('Jornal das 20h confirma abertura ao vivo em frente à agência');
+  return out.slice(0, 5);
+}
+
+/* ---------- Ligação da rodada: o stakeholder mais negligenciado telefona ---------- */
+function stakeCall() {
+  const k = STK_KEYS.slice().sort((a, b) => (G.stk[b].sem * 10 - G.stk[b].sat) - (G.stk[a].sem * 10 - G.stk[a].sat))[0], s = G.stk[k];
+  if (G.round < 2 || (s.sem < 2 && s.sat >= 40)) return null;
+  return { k, who: CALLER[k], t: CALLS[k][s.sat < 35 || s.sem >= 3 ? 1 : 0] };
+}
+
+/* ---------- Mesa de comando: a equipe aconselha, e nem sempre concorda ----------
+   Cada conselheiro só enxerga a sua parte do problema (informação distribuída) e puxa para o próprio ofício (viés). */
+function council() {
+  const av = avail(), out = [], used = new Set(), K = G.K;
+  const best = (k, min) => av.filter(id => !used.has(id) && !agentById(id).generic).sort((a, b) => stat(b, k) - stat(a, k)).find(id => stat(id, k) >= min);
+  const say = (id, stance, t) => { used.add(id); out.push({ id, nome: agentById(id).nome, trait: agentById(id).trait, stance, t }); };
+  // negociação
+  const neg = G.nego.negotiator && av.includes(G.nego.negotiator) && stat(G.nego.negotiator, 'neg') >= 6 ? G.nego.negotiator : best('neg', 6);
+  if (neg) {
+    if (!G.nego.contact) say(neg, 'esperar', 'Precisamos abrir o canal já. Cada rodada sem contato é uma rodada em que ele fica sozinho com a raiva dele, e nós sem saber quem ele é.');
+    else if (G.agit > 70) say(neg, 'esperar', 'Ele está no limite. Nada de pressão agora: escuta, rótulo de emoção e tempo. Qualquer movimento brusco aí fora vai parecer ameaça.');
+    else if (G.nego.step >= 4) say(neg, 'esperar', `Estamos no degrau ${G.nego.step}. Ele já fala em saída. Uma entrada agora jogaria fora tudo o que construímos.`);
+    else say(neg, 'esperar', `Degrau ${G.nego.step}. Não pule etapas: consolidar ${STEPS[G.nego.step - 1].nome.toLowerCase()} agora vale mais do que correr para a proposta.`);
+  }
+  // tática
+  const tat = best('tat', 7);
+  if (tat) {
+    const ip = intervProb(), topEv = Object.entries(G.ev).sort((a, b) => b[1] - a[1])[0];
+    const weak = G.routes.filter(z => !K.cleared.includes(z)).map(z => [z, zoneCoverage(z)]).sort((a, b) => a[1] - b[1])[0];
+    if (tat === 'andre' || ip >= .55) say(tat, 'intervir', `A prontidão está em ${Math.round(intervPower())}%. ${ip >= .55 ? 'Se for para entrar, é agora, antes que eles se organizem.' : 'Já esperamos demais. Cada minuto de conversa é um minuto para eles se prepararem.'}`);
+    else if (topEv && topEv[1] >= 1.5 && zoneCoverage(topEv[0]) < ADEQ) say(tat, 'reforçar', `Os relatos apontam para ${ZONE[topEv[0]].nome} e lá a cobertura é de ${zoneCoverage(topEv[0])}%. Eu mandaria gente para lá.`);
+    else if (weak && weak[1] < 30) say(tat, 'reforçar', `${ZONE[weak[0]].nome} está praticamente descoberta (${weak[1]}%). Se a saída for por lá, ninguém segura.`);
+    else say(tat, 'reforçar', 'O perímetro aguenta por ora. Eu não mexeria em ninguém sem um motivo: reposicionar custa eficiência.');
+  }
+  // inteligência
+  const intl = best('int', 7);
+  if (intl) {
+    if (!K.profile && G.nego.contact) say(intl, 'investigar', 'Estamos negociando sem saber com quem. O perfil do líder decide qual postura funciona.');
+    else if (!K.route) say(intl, 'investigar', 'Ainda não sabemos a rota. Ou investigamos, ou aceitamos que o perímetro é uma aposta.');
+    else if (!K.hostages) say(intl, 'investigar', 'Não sabemos como estão os reféns. A sala de acolhimento das famílias resolve isso barato, e ninguém deveria decidir uma entrada sem essa informação.');
+    else if (!K.count) say(intl, 'investigar', 'Falta confirmar quantos estão armados. É a variável que mais pesa numa intervenção.');
+  }
+  // comunicação
+  const com = best('com', 7);
+  if (com && out.length < 3) {
+    const k = STK_KEYS.slice().sort((a, b) => G.stk[b].sem - G.stk[a].sem || G.stk[a].sat - G.stk[b].sat)[0];
+    if (G.stk[k].sem >= 1 || G.stk[k].sat < 50) say(com, 'comunicar', `${STK[k].nome} está ${G.stk[k].sem ? `há ${G.stk[k].sem} rodada${G.stk[k].sem > 1 ? 's' : ''} sem notícia nossa` : 'insatisfeito'} (${Math.round(G.stk[k].sat)}). Quem não ouve de nós ouve da televisão.`);
+  }
+  const lim = G.round <= 2 ? 3 : 2;
+  // garante que o conflito apareça: se alguém defende entrar, mantém quem defende esperar
+  out.sort((a, b) => (b.stance === 'intervir') - (a.stance === 'intervir'));
+  const res = out.slice(0, lim);
+  if (out.some(o => o.stance === 'intervir') && !res.some(o => o.stance === 'esperar')) { const w = out.find(o => o.stance === 'esperar'); if (w) res[res.length - 1] = w; }
+  return res;
+}
 /* =====================================================================
    MOTOR DE RESOLUÇÃO
    ===================================================================== */
@@ -655,10 +958,11 @@ function newGame(diffKey, opts = {}) {
     profile: prof, agit: PROFILES[prof].start + (diffKey === 'caotico' ? 5 : diffKey === 'protocolar' ? -5 : 0),
     routes, route, routeNow: route, assail: ri(D.assail[0], D.assail[1]), accomplice: rnd() < .3,
     hostages: { inside: HOSTAGES, freed: 0, hurt: 0, dead: 0 }, pendingDeath: null,
+    hl: HOSTAGE_LIST.map(h => ({ id: h.id, in: true, st: 'ok' })), hPref: {}, quietRound: 0,
     vault: 20, lastVaultDelta: 0, media: 15, pressure: D.pbase + 8, calm: 0, stress: 0,
-    nego: { step: 1, contact: false, negotiator: null, skips: 0, tries: 0, concessions: 0, lastTech: 0, failStreak: 0, maxStep: 1, signalShown: false },
+    nego: { step: 1, contact: false, negotiator: null, skips: 0, tries: 0, concessions: 0, lastTech: 0, failStreak: 0, maxStep: 1, signalShown: false, last: null },
     stk: Object.fromEntries(STK_KEYS.map(k => [k, { sat: D.stk, sem: 0, lost: false }])),
-    K: { profile: false, profileHint: null, route: null, cleared: [], count: false, countHint: null, vault: false, hostages: false, accomplice: false, zrev: {} },
+    K: { profile: false, profileHint: null, route: null, cleared: [], count: false, countHint: null, vault: false, hostages: false, accomplice: false, zrev: {}, at: {} },
     ev: {}, pendingIntel: [], hints: [], radio: [], log: [], hist: [], p1intel: {},
     exposed: 0, powerCut: 0, fatCrit: false, support: {}, supportUsed: 0, deadlineLeft: 0, deadlineFired: false,
     mayorPromise: false, vehicleGiven: false, defector: false, attended: {}, commMedia: 0, usedEvents: [],
@@ -680,8 +984,14 @@ function loadSave() {
     const raw = localStorage.getItem(SAVE_KEY); if (!raw) return null;
     const s = JSON.parse(raw);
     if (!validSave(s)) { localStorage.removeItem(SAVE_KEY); return null; }
-    return s;
+    return migrateSave(s);
   } catch (e) { try { localStorage.removeItem(SAVE_KEY); } catch (_) {} return null; }
+}
+/* Saves da versão anterior (sem a camada narrativa) ganham os campos novos sem perder a partida. */
+function migrateSave(s) {
+  s.K.at = s.K.at || {}; s.hPref = s.hPref || {}; s.quietRound = s.quietRound || 0;
+  if (!Array.isArray(s.hl) || s.hl.length !== HOSTAGE_LIST.length) { s.hl = HOSTAGE_LIST.map(h => ({ id: h.id, in: true, st: 'ok' })); const g = G; G = s; syncHL(null); G = g; }
+  return s;
 }
 function clearSave() { try { localStorage.removeItem(SAVE_KEY); } catch (e) {} }
 function validSave(s) {
@@ -805,8 +1115,16 @@ function intervPower() {
   if (G.powerCut > 0) p += 15;
   return clamp(p, 0, 100);
 }
+/* Entrar às cegas: sem saber quantos estão armados e onde estão os reféns, a intervenção perde precisão. */
+function blindParts() {
+  const K = G.K, out = [];
+  if (!K.count) out.push({ k: 'count', v: -.07, txt: 'não sabe quantos estão armados' });
+  if (!K.hostages) out.push({ k: 'hostages', v: -.07, txt: 'não sabe onde e como estão os reféns' });
+  return out;
+}
 function intervProb(extra = 0) {
-  const pr = .12 + .45 * intervPower() / 100 + .33 * infoFrac() - .30 * G.agit / 100 + (G.powerCut > 0 ? .04 : 0) + (D_().ivp || 0) + extra;
+  const blind = blindParts().reduce((s, b) => s + b.v, 0);
+  const pr = .12 + .45 * intervPower() / 100 + .33 * infoFrac() + blind - .30 * G.agit / 100 + (G.powerCut > 0 ? .04 : 0) + (D_().ivp || 0) + extra;
   return clamp(pr, .05, .95);
 }
 const hostagesLeft = () => G.hostages.inside;
@@ -823,6 +1141,40 @@ function addDead(n) {
   return n;
 }
 function stake(k, v) { const s = G.stk[k]; s.sat = clamp(s.sat + v, 0, 100); }
+
+/* ---------------- Reféns com nome ----------------
+   O motor conta (inside/hurt/dead); esta camada decide QUEM. Reconciliação estável:
+   mortes saem primeiro dos feridos, ferimentos e libertações respeitam G.hPref (eventos com pessoa definida). */
+function syncHL(R) {
+  const L = G.hl, H = G.hostages, ch = [], pref = G.hPref || {};
+  const pickOne = (cands, pid) => cands.find(h => h.id === pid) || cands[Math.floor(rnd() * cands.length)];
+  let dead = L.filter(h => h.st === 'dead').length;
+  while (dead < H.dead) {
+    let c = L.filter(h => h.in && h.st === 'hurt'); if (!c.length) c = L.filter(h => h.st === 'hurt'); if (!c.length) c = L.filter(h => h.st === 'ok');
+    if (!c.length) break; const h = pickOne(c, pref.dead); h.st = 'dead'; h.in = true; dead++; ch.push({ id: h.id, what: 'dead' });
+  }
+  let hurt = L.filter(h => h.st === 'hurt').length;
+  while (hurt < H.hurt) {
+    let c = L.filter(h => h.in && h.st === 'ok'); if (!c.length) c = L.filter(h => h.st === 'ok');
+    if (!c.length) break; const h = pickOne(c, pref.hurt); h.st = 'hurt'; hurt++; ch.push({ id: h.id, what: 'hurt' });
+  }
+  while (hurt > H.hurt) { const h = L.find(x => x.st === 'hurt'); if (!h) break; h.st = 'ok'; hurt--; }
+  let ins = L.filter(h => h.in).length;
+  while (ins > H.inside) {
+    let c = L.filter(h => h.in && h.st === 'ok'); if (!c.length) c = L.filter(h => h.in && h.st === 'hurt');
+    if (!c.length) break; const h = pickOne(c, pref.free); h.in = false; ins--; ch.push({ id: h.id, what: 'free' });
+  }
+  G.hPref = {};
+  if (R) R.hchg = (R.hchg || []).concat(ch);
+  return ch;
+}
+const hlNames = ids => { const n = ids.map(firstName); return n.length <= 1 ? (n[0] || '') : n.slice(0, -1).join(', ') + ' e ' + n[n.length - 1]; };
+/* Quando cada variável oculta foi descoberta (para a revelação final) */
+function trackKnown() {
+  const K = G.K, at = K.at || (K.at = {});
+  [['profile', K.profile], ['route', !!K.route], ['count', K.count], ['vault', K.vault], ['hostages', K.hostages], ['accomplice', K.accomplice]]
+    .forEach(([k, v]) => { if (v && at[k] == null) at[k] = G.round; });
+}
 const addAgit = v => { G.agit = clamp(G.agit + v, 0, 100); };
 const addMedia = v => { G.media = clamp(G.media + v, 0, 100); };
 
@@ -901,7 +1253,9 @@ function computeScore() {
   const eficiencia = clamp(.6 * Math.min(1, Math.max(0, G.credits) / 300) + .4 * (1 - (G.round - 1) / MAX_ROUNDS * .8), 0, 1);
   const confianca = confidence();
   const raw = (vidas * .40 + captura * .20 + valores * .15 + eficiencia * .10 + confianca * .15) * 100;
-  const cap = H.dead >= 4 ? 64 : H.dead >= 2 ? 79 : H.dead >= 1 ? 89 : 100;
+  // Tetos: vidas perdidas e uma intervenção fracassada nunca contam como boa condução (perspectiva de quem protege).
+  const failed = (E.type === 'intervencao' && E.variant === 'fracasso') || (E.type === 'prazo' && E.sub === 'fracasso');
+  const cap = Math.min(H.dead >= 4 ? 49 : H.dead >= 2 ? 64 : H.dead >= 1 ? 79 : 100, failed ? 49 : 100);
   const total = Math.min(raw, cap);
   G.score = { vidas, captura, valores, eficiencia, confianca, raw, total, cap, capped: raw > cap, grade: gradeOf(total) };
   return G.score;
@@ -992,14 +1346,28 @@ function resolveIntel(id, phase1) {
   const def = INTEL.find(i => i.id === id), K = G.K, ok = rnd() < intelProb(phase1);
   G.stats.intel++;
   const res = { id, nome: def.nome, ok, text: '' };
-  if (!ok) { res.text = 'Resultado inconclusivo: o sinal veio ruidoso e nada foi confirmado. O custo foi pago e a incerteza continua.'; return res; }
+  if (!ok) { res.text = 'Resultado inconclusivo: o sinal veio ruidoso e nada foi confirmado. O custo foi pago e a incerteza continua.'; res.impact = 'Nada muda no painel. É o risco de comprar informação: você paga pela tentativa, não pela resposta.'; return res; }
+  const before = { ip: intervProb(), band: ivBand() };
   if (id === 'perfil') { K.profile = true; K.profileHint = null; res.text = `Perfil confirmado: ${PR_().nome}. ${PR_().desc} ${PR_().tip}`; }
   if (id === 'rota') { K.route = G.routeNow; res.text = `O líder planeja sair por: ${ZONE[K.route].nome}. Atenção: planos mudam quando o líder percebe cerco forte.`; }
   if (id === 'efetivo') { K.count = true; K.countHint = null; res.text = `Há ${G.assail} pessoas armadas no interior da agência.`; }
   if (id === 'cofre') { K.vault = true; res.text = `Cofre em ${Math.round(G.vault)}% de progresso. Na velocidade atual, abre em ${etaVault()}.`; }
   if (id === 'refens') { K.hostages = true; const H = G.hostages; res.text = `Reféns: ${H.inside - H.hurt - H.dead} ilesos, ${H.hurt} feridos, ${H.dead} mortos. ${H.hurt ? 'Os feridos precisam de atendimento.' : 'Sem ferimentos graves.'}`; }
   if (id === 'cumplice') { K.accomplice = true; res.text = G.accomplice ? 'Confirmado: há um cúmplice externo coordenando a fuga. A rota está reforçada.' : 'Nenhum contato externo detectado. O grupo age sozinho.'; }
+  res.impact = intelImpact(id, before);
   return res;
+}
+/* "Aha": o que a informação muda na próxima decisão (valor da informação, Howard 1966) */
+const ivBand = () => .16 * (1 - infoFrac());
+const pctRange = (p, b) => `${Math.round(clamp(p - b, 0, 1) * 100)}–${Math.round(clamp(p + b, 0, 1) * 100)}%`;
+function intelImpact(id, before) {
+  const P = PR_(), K = G.K;
+  if (id === 'perfil') return `Com esse perfil, rende mais ${P.mult.emp >= P.mult.rat ? 'escuta, empatia e rapport' : 'critério objetivo e proposta concreta'}. ${G.nego.contact ? 'A agitação do líder passa a aparecer com o valor exato no painel.' : 'Abra o canal de negociação para medir a agitação com precisão.'}`;
+  if (id === 'rota') { const c = zoneCoverage(K.route); return `Cobertura atual em ${ZONE[K.route].nome}: ${c}% (${c >= ADEQ ? 'adequada' : c >= 30 ? 'parcial' : 'descoberta'}). ${c >= ADEQ ? 'A sua aposta no perímetro estava certa.' : 'Reforçar essa zona agora é a aposta mais barata que você tem.'}`; }
+  if (id === 'efetivo' || id === 'refens') return `Chance estimada de uma intervenção: ${pctRange(before.ip, before.band)} antes, ${pctRange(intervProb(), ivBand())} agora. Saber estreita a faixa e tira a intervenção do escuro.`;
+  if (id === 'cofre') return `O tempo do cofre deixa de ser palpite: ${etaVault() === 'agora' ? 'ele está prestes a ceder' : 'previsão de abertura em ' + etaVault()}. Agentes na Entrada desaceleram o trabalho, mas irritam o líder.`;
+  if (id === 'cumplice') return G.accomplice ? 'Na fuga, cada ponto de cobertura na rota vale cerca de 20% menos. Um jammer de comunicação neutraliza boa parte disso.' : 'Uma ameaça a menos: a rota de fuga não tem reforço externo.';
+  return '';
 }
 function etaVault() {
   const vm = PR_().vault * D_().vault, n = agentsIn('entrada').length, delta = Math.max(0, 10 * vm - 4 * n);
@@ -1033,6 +1401,7 @@ function confirmPerimeter() {
     else log.push(`Câmera térmica em ${ZONE[z].nome}: nenhuma presença suspeita na zona.`);
   }
   G.stats.initCov = Object.fromEntries(ZONES.map(z => [z.id, zoneCoverage(z.id)]));
+  trackKnown();
   G.stats.routeKnownAtStart = !!G.K.route;
   G.perimLog = log;
 }
@@ -1072,9 +1441,10 @@ function startRound() {
   G.pendingIntel.filter(o => o.due <= G.round).forEach(o => up.intel.push(resolveIntel(o.id, false)));
   G.pendingIntel = G.pendingIntel.filter(o => o.due > G.round);
   up.reports = genReports();
-  G.stats.reports = (G.stats.reports || 0) + up.reports.length; G.stats.noise = (G.stats.noise || 0) + up.reports.filter(r => r.kind === 'ruido').length;
+  G.stats.reports = (G.stats.reports || 0) + up.reports.length; G.stats.noise = (G.stats.noise || 0) + up.reports.filter(r => r.kind === 'ruido').length; G.stats.sig = (G.stats.sig || 0) + up.reports.filter(r => r.kind === 'rota').length;
   if (G.team.includes('renata') && G.round === 3 && !isAway('renata')) up.hint = '[Cap. Alves reconhece um padrão] ' + revealHint();
   up.radio = radioLines();
+  up.intro = roundIntro(); up.council = council(); up.call = stakeCall(); up.quiet = G.quietRound === G.round;
   G.radio = up.radio.concat(G.radio).slice(0, 12);
   G.update = up; G.stage = 'update'; G.queue = [];
   G.attended = {}; G.commMedia = 0;
@@ -1103,8 +1473,9 @@ function removeDecision(id) {
   G.credits += queueCost(G.queue[i]); G.queue.splice(i, 1);
 }
 
-const L = (R, tone, ic, text) => R.lines.push({ tone, ic, text });
+const L = (R, tone, ic, text) => R.lines.push({ tone, ic, text, sec: R.sec || 'dec' });
 function snap() {
+  trackKnown();
   return { agit: G.agit, media: G.media, vault: G.vault, credits: G.credits, hurt: G.hostages.hurt, dead: G.hostages.dead, step: G.nego.step, p: G.pressure,
     stk: Object.fromEntries(STK_KEYS.map(k => [k, G.stk[k].sat])), cov: Math.round(avgRouteCov()) };
 }
@@ -1114,8 +1485,11 @@ function commMult() {
   let m = .7 + .06 * best; if (G.team.includes('fernanda') && !isAway('fernanda')) m *= 1.3;
   return m;
 }
+const why = (R, k, v, t) => { if (R && R.stkWhy && Math.abs(v) >= .5) (R.stkWhy[k] = R.stkWhy[k] || []).push({ v, t }); };
 function applyComm(cid, R) {
   const m = commMult(), c = COMMS.find(x => x.id === cid); G.stats.comms++;
+  if (cid === 'geral') STK_KEYS.forEach(k => why(R, k, 4 * m, 'comunicado geral'));
+  else why(R, c.s, 10 * m * (cid === 'coletiva' ? 1.2 : 1), c.nome.toLowerCase());
   if (cid === 'geral') { STK_KEYS.forEach(k => { stake(k, 4 * m); G.attended[k] = true; }); G.commMedia += -3; L(R, 'good', 'news', 'Comunicado geral publicado: os quatro públicos recebem a mesma nota. Efeito menor em cada um, mas ninguém ficou no escuro.'); return; }
   G.attended[c.s] = true;
   if (cid === 'coletiva') { stake('imprensa', 12 * m); G.commMedia += -5; L(R, 'good', 'mic', 'Coletiva transparente: a imprensa recebe fatos, não rumores. A pressão da mídia cede (−5) e a confiança da imprensa sobe.'); }
@@ -1132,6 +1506,7 @@ function resolveNego(dec, R) {
   if (dec.p.tech === 'press') {
     calm = -P.press; n.lastTech = 0;
     L(R, 'bad', 'alert', `${nm} pressiona o líder com um ultimato. Foi lido como ameaça: a agitação sobe (+${P.press}).`);
+    n.last = { r: G.round, t: leaderSays('press'), tone: 'bad' }; L(R, 'voice', 'phone', `Líder, na linha: “${n.last.t}”`);
     if (n.step >= 3 && rnd() < .25) { n.step--; L(R, 'bad', 'stairs', `A negociação regride ao degrau ${n.step} (${STEPS[n.step - 1].nome}).`); }
     G.stats.press = (G.stats.press || 0) + 1;
     return calm;
@@ -1151,12 +1526,13 @@ function resolveNego(dec, R) {
     else L(R, 'warn', 'stairs', msg);
   }
   n.lastTech = tech;
+  n.last = { r: G.round, t: leaderSays(ok ? 'step' : 'fail'), tone: ok ? 'good' : 'warn' }; L(R, 'voice', 'phone', `Líder, na linha: “${n.last.t}”`);
   if (np.skip) calm = -2; else calm = negoCalm(tech, n.step);
   return calm;
 }
 
 function resolveDecisions() {
-  const R = { lines: [], s0: snap(), decs: [], eventId: null, ev: null, skipEvent: false };
+  const R = { lines: [], s0: snap(), decs: [], eventId: null, ev: null, skipEvent: false, sec: 'dec', stkWhy: {}, hchg: [] };
   G.R = R; const D = D_(), P = PR_();
   const q = G.queue.slice();
   R.decs = q.map(d => ({ front: d.front, kind: d.kind, label: d.label, cost: d.cost || 0 }));
@@ -1202,6 +1578,7 @@ function resolveDecisions() {
   if (nd) calm = resolveNego(nd, R);
   else if (G.nego.contact) L(R, 'info', 'phone', 'Sem negociação nesta rodada: o canal com o líder fica em silêncio e o degrau não se move.');
   // Passivos do motor
+  R.sec = 'mundo';
   // cofre
   const vm = P.vault * D.vault, nEnt = agentsIn('entrada').length, vdelta = Math.max(0, 10 * vm - 4 * nEnt);
   G.vault = clamp(G.vault + vdelta, 0, 100); G.lastVaultDelta = vdelta;
@@ -1210,6 +1587,7 @@ function resolveDecisions() {
   // mídia: 8 + rodada×2 (escalados pela dificuldade) + comunicado
   const mgain = (8 + G.round * 2) * D.media + G.commMedia - (hasGear('jammer') ? 2 : 0) - (G.team.includes('fernanda') ? 0 : 0);
   addMedia(mgain);
+  R.mediaParts = [{ k: 'Escalada natural da cobertura', v: (8 + G.round * 2) * D.media }, { k: 'Seus comunicados', v: G.commMedia }, { k: 'Jammer', v: hasGear('jammer') ? -2 : 0 }];
   L(R, G.media > 70 ? 'warn' : 'info', 'mic', `Pressão da mídia ${mgain >= 0 ? '+' : ''}${Math.round(mgain)} → ${Math.round(G.media)}.`);
   // agitação
   let base = P.base; if (G.profile === 'volatil') base = ri(-5, 8);
@@ -1218,6 +1596,7 @@ function resolveDecisions() {
   let pas = 0; if (G.team.includes('marina') && !isAway('marina')) pas -= 2; if (hasGear('jammer')) pas += 1;
   const dA = base + ext - calm + pas;
   const a0 = G.agit; addAgit(dA);
+  R.agitParts = [{ k: 'Perfil do líder', v: base }, { k: 'Pressão externa (mídia e agentes na Entrada)', v: ext }, { k: 'Negociação', v: -calm }, { k: 'Equipe e equipamentos', v: pas }];
   if (!(G.K.profile && G.nego.contact)) L(R, dA > 0 ? 'warn' : 'good', 'alert', dA > 4 ? 'O tom do líder no canal parece mais tenso.' : dA < -4 ? 'O tom do líder no canal parece mais baixo.' : 'O tom do líder no canal parece estável.');
   else L(R, dA > 0 ? 'warn' : 'good', 'alert', `Agitação do líder ${dA >= 0 ? '+' : ''}${dA.toFixed(1)} (perfil ${base >= 0 ? '+' : ''}${base.toFixed(0)}, pressão externa +${ext.toFixed(1)}${calm ? `, negociação ${calm > 0 ? '−' : '+'}${Math.abs(calm).toFixed(1)}` : ''}${pas ? `, equipe ${pas > 0 ? '+' : ''}${pas}` : ''}).`);
   // impulsivo
@@ -1237,11 +1616,12 @@ function resolveDecisions() {
   }
   if (G.pendingDeath) {
     const pd = G.pendingDeath; pd.left--;
-    if (pd.left <= 0) { G.pendingDeath = null; if (rnd() < pd.p) { addDead(1); L(R, 'bad', 'heart', 'A refém diabética não resistiu. A sala de comando fica em silêncio.'); } else L(R, 'good', 'heart', 'A refém diabética se estabilizou a tempo.'); }
+    if (pd.left <= 0) { G.pendingDeath = null; if (rnd() < pd.p) { G.hPref.dead = pd.who || 'lucia'; addDead(1); L(R, 'bad', 'heart', 'Lúcia Andrade, 67 anos, não resistiu. A sala de comando fica em silêncio.'); } else L(R, 'good', 'heart', 'Dona Lúcia se estabilizou a tempo. Alguém lá dentro conseguiu dar o açúcar que restava na bolsa dela.'); }
   }
   // stakeholders
   stakePassives(R);
   G.pressure = calcPressure();
+  syncHL(R);
   // evento
   const evId = drawEvent();
   if (evId) {
@@ -1256,12 +1636,12 @@ function stakePassives(R) {
   STK_KEYS.forEach(k => {
     const s = G.stk[k];
     if (G.attended[k]) s.sem = 0; else s.sem++;
-    stake(k, -3 * Math.min(s.sem, 3));
+    stake(k, -3 * Math.min(s.sem, 3)); why(R, k, -3 * Math.min(s.sem, 3), `${s.sem} rodada${s.sem > 1 ? 's' : ''} sem atenção`);
   });
-  if (G.media > 70) stake('imprensa', -3);
-  stake('prefeito', -2 - (G.round >= 6 ? 3 : 0) - (G.deadlineLeft > 0 ? 2 : 0));
-  stake('banco', -(G.lastVaultDelta * .4));
-  stake('familias', -1);
+  if (G.media > 70) { stake('imprensa', -3); why(R, 'imprensa', -3, 'cobertura saturada'); }
+  stake('prefeito', -2 - (G.round >= 6 ? 3 : 0) - (G.deadlineLeft > 0 ? 2 : 0)); why(R, 'prefeito', -2 - (G.round >= 6 ? 3 : 0) - (G.deadlineLeft > 0 ? 2 : 0), G.round >= 6 ? 'urgência política (rodada 6+)' : 'impaciência com a duração');
+  stake('banco', -(G.lastVaultDelta * .4)); why(R, 'banco', -(G.lastVaultDelta * .4), 'avanço do cofre');
+  stake('familias', -1); why(R, 'familias', -1, 'angústia da espera');
   const lost = STK_KEYS.filter(k => G.stk[k].sat <= 15 && !G.stk[k].lost);
   lost.forEach(k => {
     G.stk[k].lost = true;
@@ -1279,14 +1659,14 @@ const EVENT_FX = {
     addAgit(15); addMedia(20); stake('imprensa', -8);
     const h = addHurt(rnd() < (hasGear('kit') ? .15 : .30) ? 1 : 0);
     L(R, 'bad', 'shot', `Disparo acidental: agitação +15 e mídia +20. ${h ? 'Um refém foi atingido.' : 'Por sorte, ninguém foi atingido.'}`); } }] },
-  passamal:  { elig: g => true, choices: [
+  passamal:  { elig: g => g.hl.some(h => h.id === 'lucia' && h.in && h.st === 'ok'), choices: [
     { label: 'Oferecer troca humanitária (insulina)', hint: 'Usa o canal de negociação. Pode libertar a refém.', run: R => {
       const p = clamp(.30 + .06 * negoSkill() + (G.nego.contact ? .10 : 0), .25, .9);
-      if (rnd() < p) { const H = G.hostages; H.inside--; H.freed++; addAgit(-6); stake('familias', 10); L(R, 'good', 'heart', 'A troca humanitária funcionou: a refém sai com a insulina, a agitação cai (−6) e as famílias respiram.'); }
-      else { addAgit(5); const h = addHurt(rnd() < (hasGear('kit') ? .25 : .5) ? 1 : 0); L(R, 'bad', 'heart', `O líder desconfia da troca e recusa. Agitação +5.${h ? ' A refém piora.' : ''}`); } } },
+      if (rnd() < p) { const H = G.hostages; H.inside--; H.freed++; G.hPref.free = 'lucia'; addAgit(-6); stake('familias', 10); L(R, 'good', 'heart', 'A troca humanitária funcionou: Dona Lúcia sai amparada pela porta lateral, com a insulina já na mão. A agitação cai (−6) e as famílias respiram.'); }
+      else { addAgit(5); G.hPref.hurt = 'lucia'; const h = addHurt(rnd() < (hasGear('kit') ? .25 : .5) ? 1 : 0); L(R, 'bad', 'heart', `O líder desconfia da troca e recusa. Agitação +5.${h ? ' Dona Lúcia piora.' : ''}`); } } },
     { label: 'Aguardar e preparar o kit médico', hint: 'Arriscado sem kit médico.', run: R => {
-      const h = addHurt(1); G.pendingDeath = { left: 1, p: hasGear('kit') ? .10 : .40 };
-      L(R, 'warn', 'heart', `A refém passa mal e fica em estado crítico. ${hasGear('kit') ? 'O kit médico está de prontidão.' : 'Sem kit médico, há risco real de morte na próxima rodada.'}`); } }] },
+      G.hPref.hurt = 'lucia'; addHurt(1); G.pendingDeath = { left: 1, p: hasGear('kit') ? .10 : .40, who: 'lucia' };
+      L(R, 'warn', 'heart', `Dona Lúcia passa mal e fica em estado crítico. ${hasGear('kit') ? 'O kit médico está de prontidão.' : 'Sem kit médico, há risco real de morte na próxima rodada.'}`); } }] },
   heli:      { elig: g => true, choices: [
     { label: 'Solicitar restrição do espaço aéreo (30 créditos)', hint: 'Reduz a exposição, custa verba.', cost: 30, run: R => {
       G.credits -= 30; G.spent.ops += 30; addMedia(6); G.exposed = 1; stake('prefeito', 3); stake('imprensa', -6);
@@ -1310,7 +1690,7 @@ const EVENT_FX = {
     { label: 'Pedir confiança no protocolo', hint: 'Honesto, mas pode irritar.', run: R => {
       if (G.stk.prefeito.sat < 50) { stake('prefeito', -5); L(R, 'bad', 'mayor', 'O prefeito já estava insatisfeito e interpreta o pedido como evasiva (−5).'); }
       else { stake('prefeito', 3); L(R, 'good', 'mayor', 'O prefeito aceita o argumento técnico por ora (+3).'); } } }] },
-  live:      { elig: g => g.round >= 3 && !hasGear('jammer'), choices: [
+  live:      { elig: g => g.round >= 3 && !hasGear('jammer') && g.hl.some(h => h.id === 'thiago' && h.in && h.st !== 'dead'), choices: [
     { label: 'Aproveitar a transmissão', hint: 'Revela informação, dispara a mídia.', run: R => {
       addMedia(25); addAgit(6); stake('imprensa', 6); G.K.count = true; G.K.countHint = null; G.K.hostages = true;
       const H = G.hostages; L(R, 'warn', 'live', `Você acompanha a live: ${G.assail} armados no interior e reféns identificados (${H.inside - H.hurt - H.dead} ilesos, ${H.hurt} feridos). Em troca, mídia +25 e agitação +6.`); } },
@@ -1350,7 +1730,7 @@ const EVENT_FX = {
   deadline:  { elig: g => (g.round === 6 || g.round === 7) && !g.deadlineFired, choices: [{ label: 'Entendido', hint: 'O tempo agora tem hora marcada', run: R => {
     G.deadlineLeft = 2; G.deadlineFired = true; stake('prefeito', -5); addMedia(10);
     L(R, 'bad', 'clock', 'O noticiário das 20h vai ao ar em cerca de duas rodadas. O prefeito exige resolução (−5), a mídia sobe +10 e as perdas de prefeito passam a ser dobradas.'); } }] },
-  familia:   { elig: g => g.round >= 2, choices: [
+  familia:   { elig: g => g.round >= 2 && g.hl.some(h => h.id === 'yara' && h.in && h.st !== 'dead'), choices: [
     { label: 'Usar o canal para tranquilizar a refém', hint: 'Humano, mas fora do seu controle.', run: R => {
       stake('familias', 10); addAgit(4); G.K.hostages = true; const H = G.hostages;
       L(R, 'warn', 'family', `A mãe acalma a filha e você ouve o interior pela linha: ${H.hurt} feridos entre os reféns. As famílias aprovam (+10), o líder se irrita por perder o controle do canal (+4).`); } },
@@ -1370,8 +1750,9 @@ const EVENT_FX = {
       else { addAgit(12); if (G.nego.step > 1) G.nego.step--; L(R, 'bad', 'split', `O líder percebe a manobra. Agitação +12 e a negociação regride ao degrau ${G.nego.step}.`); } } },
     { label: 'Ignorar o sinal', hint: 'Sem risco, sem oportunidade.', run: R => { L(R, 'info', 'split', 'Você registra o sinal e não age. O momento passa.'); } }] }
 };
+const HEAVY = ['tiroteio', 'segundo', 'cumplice', 'live', 'infiltrado', 'passamal', 'proposta'];
 function drawEvent() {
-  const D = D_(); if (G.round < 2 || rnd() > D.evChance) return null;
+  const D = D_(); if (G.round < 2 || G.quietRound === G.round || rnd() > D.evChance) return null;
   const avgFat = deployed().length ? deployed().reduce((s, id) => s + (G.fat[id] || 0), 0) / deployed().length : 0;
   const pool = EVENT_DEFS.filter(e => !G.usedEvents.includes(e.id) && EVENT_FX[e.id].elig(G));
   if (!pool.length) return null;
@@ -1383,12 +1764,14 @@ function drawEvent() {
     if (x.id === 'prefeito' && G.round >= 4) w *= 2;
     return w;
   });
-  G.usedEvents.push(e.id); return e.id;
+  G.usedEvents.push(e.id);
+  if (HEAVY.includes(e.id)) G.quietRound = G.round + 1;   // respiro: a rodada seguinte não tem carta de evento
+  return e.id;
 }
 function chooseEvent(idx) {
   const R = G.R, fx = EVENT_FX[G.pendingEvent], ch = fx.choices[idx];
   if (ch.cost && G.credits < ch.cost) return false;
-  R.ev = { id: G.pendingEvent, choice: ch.label };
+  R.ev = { id: G.pendingEvent, choice: ch.label }; R.sec = 'ev';
   ch.run(R); G.pendingEvent = null; G.pressure = calcPressure(); G.stage = 'resolving';
   finishRound(); return true;
 }
@@ -1396,6 +1779,7 @@ function chooseEvent(idx) {
 /* ---------------- Fim de rodada / desfecho ---------------- */
 function finishRound() {
   const R = G.R, D = D_();
+  R.sec = 'fim';
   let out = null;
   if (R.interv) { out = doIntervention(false); }
   // ação desesperada
@@ -1413,6 +1797,7 @@ function finishRound() {
   if (!out && G.round >= 6 && G.stk.prefeito.lost && G.stk.prefeito.sat <= 15) { L(R, 'bad', 'mayor', 'ORDEM POLÍTICA: o prefeito determina a intervenção imediata, contra a sua recomendação técnica.'); out = doIntervention(true); }
   if (!out && G.round >= MAX_ROUNDS) out = doUltimatum();
   // manutenção de fim de rodada
+  syncHL(R);
   R.s1 = snap();
   const rec = { r: G.round, time: fmtTime(G.round), decs: R.decs, lines: R.lines.slice(), ev: R.ev, s0: R.s0, s1: R.s1, interv: !!R.interv };
   G.log.push(rec);
@@ -1487,7 +1872,8 @@ function sil(id, big) {
 /* ---------- Toasts de rádio ---------- */
 function toast(title, text, tone = '') {
   const box = document.getElementById('toasts'); if (!box) return;
-  const el = document.createElement('div'); el.className = 'toast ' + tone;
+  if ([...box.children].some(c => c.dataset.t === text)) return;
+  const el = document.createElement('div'); el.className = 'toast ' + tone; el.dataset.t = text;
   el.innerHTML = `<b>${title}</b>${text}`; box.appendChild(el);
   while (box.children.length > 4) box.removeChild(box.firstChild);
   setTimeout(() => { if (el.parentNode) el.parentNode.removeChild(el); }, 7000);
@@ -1497,11 +1883,13 @@ function radioToasts(list) {
 }
 
 /* ---------- Timer ---------- */
+/* Pacing: as duas primeiras rodadas são de orientação e dão mais tempo para ler o painel. */
+const roundTimer = () => Math.round(D_().timer * (G.round === 1 ? 1.6 : G.round === 2 ? 1.25 : 1));
 function stopTimer() { if (UI.timerId) { clearInterval(UI.timerId); UI.timerId = null; } }
 function startTimer() {
   stopTimer(); UI.timerRound = G.round;
   if (G.noLimit) { UI.deadline = 0; return; }
-  UI.deadline = Date.now() + D_().timer * 1000;
+  UI.deadline = Date.now() + roundTimer() * 1000;
   UI.timerId = setInterval(tick, 250); tick();
 }
 function tick() {
@@ -1637,20 +2025,31 @@ function tutorModal() {
 /* ===================================================================
    BRIEFING
    =================================================================== */
+function tickerHTML(items, label = 'AO VIVO') {
+  const t = items.map(x => `<span>${x}</span>`).join('<i>◆</i>');
+  return `<div class="ticker" role="marquee" aria-label="Manchetes ao vivo: ${items.join('. ')}"><b>${label}</b><div class="tk"><div class="tkin" aria-hidden="true">${t}<i>◆</i>${t}<i>◆</i></div></div></div>`;
+}
+function hostageStrip(cls = '') {
+  return `<div class="hstrip ${cls}" aria-label="Os 17 reféns: ${HOSTAGE_LIST.map(h => h.nome).join(', ')}">${HOSTAGE_LIST.map((h, i) => `<span class="hp" style="--i:${i}" title="${h.nome}, ${h.idade} anos, ${h.papel}${h.nota ? ' (' + h.nota + ')' : ''}">${sil1()}<small>${h.nome.split(' ')[0]}</small></span>`).join('')}</div>`;
+}
+const sil1 = () => '<svg viewBox="0 0 20 26" aria-hidden="true"><circle cx="10" cy="7" r="5"/><path d="M1 26c0-7 4-11 9-11s9 4 9 11z"/></svg>';
 function renderBriefing() {
   const w = [40, 20, 15, 10, 15], names = ['Vidas dos reféns', 'Prisão dos responsáveis', 'Valores recuperados', 'Custos operacionais', 'Confiança pública'];
-  return `<div class="screen brief">
+  return `<div class="screen brief" data-act="skipbrief">
+    ${tickerHTML(['URGENTE · Alarme dispara na Agência Central do Banco Meridiano, no centro de Porto Alto', 'Testemunhas falam em homens armados e clientes presos no interior', 'Polícia isola a Rua Marechal Deodoro; trânsito desviado', 'TV Porto Alto acompanha ao vivo'], 'URGENTE')}
     <div class="day">Sexta-feira</div><div class="time">14h07</div>
     <div class="narr">
       <p>O alarme silencioso da Agência Central do Banco Meridiano acaba de disparar. As primeiras viaturas confirmam: há pelo menos dois homens armados no interior da agência.</p>
-      <p>Dezessete pessoas, entre clientes e funcionários, estão impedidas de sair. Uma equipe da TV Porto Alto já estaciona o caminhão de transmissão na esquina da Rua Marechal Deodoro.</p>
-      <p>O delegado titular está em férias. Você é o próximo na cadeia de comando. A partir de agora, todas as decisões são suas.</p>
-      <p>Você tem mil créditos, doze profissionais disponíveis e um mapa com sete zonas. Não tem tempo, nem informação suficiente, e nenhuma decisão vai agradar a todos.</p>
+      <p>Dezessete pessoas, entre clientes e funcionários, estão impedidas de sair. Uma aposentada que veio pagar contas. Um caixa de 24 anos no segundo mês de emprego. Uma cliente grávida de sete meses.</p>
+      <p>Uma equipe da TV Porto Alto já estaciona o caminhão de transmissão na esquina da Rua Marechal Deodoro. O delegado titular está em férias. Você é o próximo na cadeia de comando. <b>A partir de agora, todas as decisões são suas.</b></p>
     </div>
     <div class="after">
+      <div class="eyebrow" style="margin-top:4px">Quem está lá dentro</div>
+      ${hostageStrip()}
+      <p class="faint" style="font-size:12.5px;margin-top:8px">Você tem mil créditos, doze profissionais de plantão e um mapa com sete zonas. Não tem tempo, nem informação suficiente, e nenhuma decisão vai agradar a todos.</p>
       <div class="eyebrow" style="margin-top:20px">Cinco objetivos em tensão</div>
       <div class="objgrid">${w.map((p, i) => `<div class="obj" style="--w:${p * 2.2}%"><b>${p}%</b><span>${names[i]}</span></div>`).join('')}</div>
-      <div class="row" style="margin-top:26px"><button class="btn primary lg" data-act="tobrief">Assumir o comando</button><span class="faint" style="font-size:12.5px">Próximo: Fase 0, recrutamento da equipe</span></div>
+      <div class="row" style="margin-top:26px"><button class="btn primary lg" data-act="tobrief">Assumir o comando</button><span class="faint" style="font-size:12.5px">Próximo: Fase 0, recrutamento da equipe · clique no texto para pular a animação</span></div>
     </div></div>`;
 }
 
@@ -1669,6 +2068,7 @@ function renderRecruit() {
       ${on ? '<span class="pill green hired">Recrutado</span>' : ''}
       <div class="top"><div class="sil">${sil(a.id)}</div><div><h4>${a.nome}</h4><span class="faint" style="font-size:11.5px">${a.trait}</span></div><span class="cost">${a.custo}</span></div>
       <div class="attrs">${Object.keys(ATTR).map(k => bar(ATTR[k], stat(a.id, k), k === 'tat' ? 'r' : k === 'neg' ? 'g' : k === 'int' ? 'v' : k === 'res' ? 'a' : 'b')).join('')}</div>
+      <p class="bio">${BIOS[a.id] || ''}</p>
       <div class="trait"><b>${a.trait}</b>${a.tdesc}</div></button>`;
   }).join('');
   const gear = EQUIPMENT_HTML();
@@ -1683,7 +2083,7 @@ function renderRecruit() {
     <div class="hud"><div class="hudrow"><span class="brand">PERÍMETRO</span><span class="pill">Fase 0 · Recrutamento</span><span class="spacer"></span><div class="stat"><small>Créditos</small><b style="color:var(--amber)">${fmt(G.credits)}</b></div></div></div>
     <div class="recr">
       <div class="grid" style="gap:18px">
-        <div><div class="eyebrow">Pool de profissionais</div><h2 style="font-size:22px;margin:4px 0 12px">Quem entra na sua força-tarefa?</h2><div class="agents">${agents}</div></div>
+        <div><div class="eyebrow">Pool de profissionais</div><h2 style="font-size:22px;margin:4px 0 6px">Quem entra na sua força-tarefa?</h2><p class="serif muted" style="font-size:15.5px;margin-bottom:12px;max-width:820px">14h12. A Secretaria liberou mil créditos e doze profissionais de plantão. Quem você chamar chega em quinze minutos. O que sobrar é tudo o que você terá para investigar, pedir apoio e pagar horas extras até o fim da noite.</p><div class="agents">${agents}</div></div>
         <div><div class="eyebrow">Catálogo de equipamentos</div><div class="gear" style="margin-top:8px;grid-template-columns:repeat(auto-fill,minmax(300px,1fr))">${gear}</div></div>
       </div>
       <aside class="side">
@@ -1719,7 +2119,7 @@ function renderPerimeter() {
   const intel = INTEL.filter(i => i.fase1).map(i => {
     const r = G.p1intel[i.id], done = r && typeof r === 'object', c = intelCost(i.id), can = G.credits >= c;
     return `<div class="icard ${done && r.ok ? 'done' : ''}"><b>${icon(i.ic, 'ico" style="width:18px;height:18px;vertical-align:-4px;margin-right:6px')}${i.nome}</b><p>${i.desc}</p>
-      ${done ? `<div class="insight ${r.ok ? 'good' : 'warn'}">${icon(r.ok ? 'check' : 'alert', '', 2)}<span>${r.text}</span></div>` : `<button class="btn sm" data-act="p1intel" data-id="${i.id}" ${can ? '' : 'disabled'}>Investigar · ${c} créditos</button>`}</div>`;
+      ${done ? dossierHTML(r) : `<button class="btn sm" data-act="p1intel" data-id="${i.id}" ${can ? '' : 'disabled'}>Investigar · ${c} créditos</button>`}</div>`;
   }).join('');
   const zrows = ZONES.map(z => {
     const cov = zoneCoverage(z.id), sel = UI.sel;
@@ -1747,10 +2147,25 @@ function renderPerimeter() {
       </aside>
     </div></div>`;
 }
+
+/* ---------- Dossiê de inteligência: resposta + o que muda (o "aha") ---------- */
+function dossierHTML(r) {
+  return `<div class="dossier ${r.ok ? 'ok' : 'no'}"><span class="stamp">${r.ok ? 'Confirmado' : 'Inconclusivo'}</span>
+    <b>${r.nome}</b><p>${r.text}</p>${r.impact ? `<div class="impact"><small>O que muda</small>${r.impact}</div>` : ''}</div>`;
+}
+
+/* ---------- Cortes de cena entre fases (não salvos: são só transição) ---------- */
+function cutHTML() {
+  const c = UI.cut; if (!c) return '';
+  return `<div class="cut" role="dialog" aria-modal="true" aria-label="${c.title}"><div class="cutin">
+    <div class="time">${c.time}</div><h2>${c.title}</h2>
+    ${c.lines.map((l, i) => `<p class="${l.radio ? 'radio-q' : ''}" style="animation-delay:${.5 + i * .9}s">${l.t}</p>`).join('')}
+    <div class="row" style="justify-content:center;margin-top:10px"><button class="btn primary lg" data-act="cutgo" style="animation-delay:${.6 + c.lines.length * .9}s">${c.btn}</button></div></div></div>`;
+}
 /* =====================================================================
    INTERFACE — Cerco (fase 2)
    ===================================================================== */
-const ROUND_TITLE = ['', 'Primeiro contato', 'O silêncio do outro lado', 'O cansaço chega', 'Metade do caminho', 'Fim de tarde', 'A cobrança', 'A última luz', 'Ultimato'];
+const ROUND_TITLE = ['', 'A primeira hora', 'O silêncio do outro lado', 'O cansaço chega', 'Metade do caminho', 'Fim de tarde', 'A cobrança', 'A última luz', 'Ultimato'];
 const FRONT_IC = { tatica: 'shield', nego: 'phone', intel: 'eye', com: 'mic' };
 
 function bscValues() {
@@ -1773,7 +2188,7 @@ function hudHTML() {
     ${G.stage === 'panel' ? `<div class="timer" id="clock" role="timer" aria-label="Tempo restante da rodada">${G.noLimit ? '∞' : mmss(Math.max(0, Math.ceil((UI.deadline - Date.now()) / 1000)) || D_().timer)}</div>` : ''}
     <div class="stat"><small>Créditos</small><b style="color:var(--amber)">${fmt(G.credits)}</b></div>
     <div class="bsc" title="Projeção dos cinco objetivos (placar equilibrado)">${b.map(x => `<div>${x.k}<b>${x.unk ? '?' : Math.round(x.v)}</b>${meter(x.v, x.cls)}</div>`).join('')}</div>
-  </div></div>`;
+  </div>${tickerHTML(headlines(), 'TV PORTO ALTO')}</div>`;
 }
 
 /* ---------- Sparkline ---------- */
@@ -1853,7 +2268,7 @@ function endsleyHTML() {
     ${ins(mProj > 85 ? 'warn' : 'info', 'mic', `Sem comunicados, a mídia chega perto de ${mProj} até a rodada ${MAX_ROUNDS}.`)}
     ${ins('info', 'bank', `Cofre: previsão de abertura em ${K.vault ? etaVault() : 'prazo desconhecido (faixa ampla, só a inteligência ou a diretoria do banco precisam)'}.`)}
     ${ins('info', 'stairs', `Negociação: com a melhor postura, a chance de avançar é ${pLabel(pc)}; chegar ao degrau 5 leva cerca de ${roundsLeft || 'zero'} rodada${roundsLeft === 1 ? '' : 's'} se negociar todo turno. ${G.nego.step === 5 ? `Rendição ocorre se a agitação cair abaixo de ${D_().ret}.` : ''}`)}
-    ${ins(ip > .55 ? 'good' : ip > .3 ? 'warn' : 'bad', 'shield', `Intervenção hoje: chance estimada ${pLabel(ip)} (${Math.round(clamp(ip - band, 0, 1) * 100)}–${Math.round(clamp(ip + band, 0, 1) * 100)}%). Quanto menos você sabe, mais larga é a faixa.`)}
+    ${ins(ip > .55 ? 'good' : ip > .3 ? 'warn' : 'bad', 'shield', `Intervenção hoje: chance estimada ${pLabel(ip)} (${Math.round(clamp(ip - band, 0, 1) * 100)}–${Math.round(clamp(ip + band, 0, 1) * 100)}%). Quanto menos você sabe, mais larga é a faixa${blindParts().length ? ', e entrar sem conhecer o interior custa ' + Math.round(-blindParts().reduce((s, b) => s + b.v, 0) * 100) + ' pontos de chance' : ''}.`)}
     ${G.round < 6 ? ins('warn', 'mayor', `A urgência do prefeito aumenta na rodada 6 (faltam ${6 - G.round}).`) : ''}`;
   return `<div class="card lvl"><h3>Painel do comandante · consciência situacional</h3>
     <div class="lvl"><span class="tag"><b>1</b> Percepção · dados brutos</span>${l1}</div>
@@ -1870,7 +2285,20 @@ function colA() {
     return `<div class="trow ${isAway(id) ? 'away' : ''}"><div><b>${shortName(a.nome)}</b><small>${isAway(id) ? `reconvocado (${G.away[id]} rod.)` : ZNAME(z)} · ${a.trait}</small></div>
       <div style="width:84px" title="Fator de fadiga ${f.toFixed(2)}">${meter(f * 100, f > .75 ? 'g' : f > .55 ? 'a' : 'r')}<small class="mono faint" style="font-size:10.5px">eficiência ${Math.round(fp(id) * f * 100)}%</small></div></div>`;
   }).join('');
-  return `<div class="colA"><div class="card"><h3>Equipe e fadiga</h3><div class="team">${team || '<p class="faint">Sem agentes.</p>'}</div></div>${radioCard()}</div>`;
+  return `<div class="colA">${rosterCard()}<div class="card"><h3>Equipe e fadiga</h3><div class="team">${team || '<p class="faint">Sem agentes.</p>'}</div></div>${radioCard()}</div>`;
+}
+/* ---------- Quem está lá dentro: os 17 reféns com nome ---------- */
+function hstate(h) {
+  if (h.st === 'dead') return { c: 'dead', t: 'óbito' };
+  if (!h.in) return { c: 'out', t: h.st === 'hurt' ? 'fora, ferimento' : 'fora' };
+  if (h.st === 'hurt' && G.K.hostages) return { c: 'hurt', t: 'ferimento' };
+  return { c: G.K.hostages ? 'in' : 'in unk', t: G.K.hostages ? 'lá dentro' : 'não confirmado' };
+}
+function rosterCard() {
+  const H = G.hostages, out = G.hl.filter(h => !h.in).length, inside = H.inside - H.dead;
+  return `<div class="card"><h3>Quem está lá dentro <span class="pill ${H.dead ? 'red' : inside < HOSTAGES ? 'green' : ''}">${inside} no interior</span></h3>
+    <div class="roster">${G.hl.map(h => { const d = HOST[h.id], st = hstate(h); return `<span class="rp ${st.c}" title="${d.nome}, ${d.idade} anos, ${d.papel}${d.nota ? ' (' + d.nota + ')' : ''}: ${st.t}"><b>${d.nome.split(' ')[0]}</b><small>${st.c.includes('unk') || st.c === 'in' ? d.idade + ' anos' : st.t}</small></span>`; }).join('')}</div>
+    <p class="faint" style="font-size:11.5px;margin-top:8px">${out ? `${out} fora do banco. ` : ''}${G.K.hostages ? 'Estado dos reféns confirmado.' : 'Borda tracejada: estado não confirmado. Você não sabe quem está ferido lá dentro; a sala de acolhimento ou uma investigação revelam.'}</p></div>`;
 }
 
 /* ---------- Coluna C: decisões ---------- */
@@ -1881,7 +2309,8 @@ function tabTatica() {
   const ags = G.team.filter(id => !isAway(id));
   const noSlot = slotsLeft() <= 0, ivq = G.queue.some(q => q.kind === 'interv');
   const zoneOpts = ZONES.map(z => `<option value="${z.id}">${z.nome} (${zoneCoverage(z.id)}%)</option>`).join('');
-  const ip = intervProb(), band = .16 * (1 - infoFrac());
+  const ip = intervProb(), band = .16 * (1 - infoFrac()), blind = blindParts();
+  const blindTxt = blind.length ? `<br><span style="color:var(--amber)">Às cegas: ${blind.map(b => `−${Math.round(-b.v * 100)}% porque você ${b.txt}`).join('; ')}.</span>` : '<br><span style="color:var(--green)">Você conhece o interior: sem penalidade por entrar às cegas.</span>';
   return `<div class="card flat" style="display:grid;gap:8px"><h3>Reposicionar agente</h3>
       <div class="row" style="gap:8px"><label class="field" style="flex:1;min-width:150px">Agente<select id="repoAgent" data-chg="repoagent"><option value="">escolher…</option>${ags.map(id => `<option value="${id}" ${UI.repoAgent === id ? 'selected' : ''}>${shortName(agentById(id).nome)} · ${ZNAME(G.az[id] || 'reserva')} · fad. ${(G.fat[id] || 0)}</option>`).join('')}</select></label>
       <label class="field" style="flex:1;min-width:150px">Destino<select id="repoZone" data-chg="repozone"><option value="">escolher…</option>${ZONES.map(z => `<option value="${z.id}" ${UI.repoZone === z.id ? 'selected' : ''}>${z.nome}</option>`).join('')}<option value="reserva" ${UI.repoZone === 'reserva' ? 'selected' : ''}>Reserva (descansa)</option></select></label></div>
@@ -1892,8 +2321,8 @@ function tabTatica() {
       <div class="row" style="padding-left:40px;margin-top:-2px"><select id="apoioZone" data-chg="apoiozone" aria-label="Zona do apoio externo"><option value="">zona do apoio…</option>${zoneOpts}</select></div>
       ${opt('pause', 'Pausa de Comando', `“Subir à sacada”: ${G.team.includes('diego') ? 'duas pistas' : 'uma pista'} sobre variáveis ocultas, visão sistêmica e −10 de pressão na equipe. Consome uma decisão; a crise continua andando.`, '', 'addpausa', '', { disabled: noSlot || ivq || G.queue.some(q => q.kind === 'pausa'), pressed: G.queue.some(q => q.kind === 'pausa') })}
       ${opt('tired', 'Horas extras', 'Recupera 2 rodadas de fadiga em campo e encerra a Fadiga crítica.', 60, 'addhoras', '', { disabled: noSlot || ivq || G.credits < 60 || G.queue.some(q => q.kind === 'horas') })}
-      ${UI.ivConfirm ? `<div class="insight bad">${icon('alert', '', 1.8)}<span><b>Ordenar a intervenção agora?</b> Prontidão ${Math.round(intervPower())}%, chance estimada ${pLabel(ip)} (${Math.round(clamp(ip - band, 0, 1) * 100)}–${Math.round(clamp(ip + band, 0, 1) * 100)}%). Ocupa todas as decisões e encerra a crise nesta rodada.</span></div><div class="row"><button class="btn danger" data-act="ivyes">Confirmar intervenção</button><button class="btn ghost" data-act="ivno">Cancelar</button></div>` :
-        opt('shield', 'Intervenção', `Ação direta, o BATNA da força-tarefa. Prontidão ${Math.round(intervPower())}% · chance estimada <b>${pLabel(ip)}</b> (±${Math.round(band * 100)}%). Depende de inteligência, tática e agitação.`, '', 'iv', '', { danger: true, pressed: ivq })}
+      ${UI.ivConfirm ? `<div class="insight bad">${icon('alert', '', 1.8)}<span><b>Ordenar a intervenção agora?</b> Prontidão ${Math.round(intervPower())}%, chance estimada ${pLabel(ip)} (${Math.round(clamp(ip - band, 0, 1) * 100)}–${Math.round(clamp(ip + band, 0, 1) * 100)}%). Ocupa todas as decisões e encerra a crise nesta rodada.${blindTxt}</span></div><div class="row"><button class="btn danger" data-act="ivyes">Confirmar intervenção</button><button class="btn ghost" data-act="ivno">Cancelar</button></div>` :
+        opt('shield', 'Intervenção', `Ação direta, o BATNA da força-tarefa. Prontidão ${Math.round(intervPower())}% · chance estimada <b>${pLabel(ip)}</b> (±${Math.round(band * 100)}%). Depende de inteligência, tática e agitação.${blindTxt}`, '', 'iv', '', { danger: true, pressed: ivq })}
     </div>`;
 }
 function tabNego() {
@@ -1904,7 +2333,11 @@ function tabNego() {
     const np = negoParts(p.t), tag = np.compat ? '<span class="pill green">compatível</span>' : np.skip ? '<span class="pill red">pula etapa</span>' : '<span class="pill">consolidar</span>';
     return opt(p.kind === 'emp' ? 'ear' : 'stairs', `${p.t}. ${p.nome} ${tag}`, `${p.d}<br><span class="faint">Chance de avançar: <b style="color:var(--${pCls(np.p) === 'red' ? 'red' : pCls(np.p) === 'amber' ? 'amber' : pCls(np.p) === 'blue' ? 'blue' : 'green'})">${pLabel(np.p)}</b></span>`, '', 'addnego', `data-t="${p.t}"`, { pressed: !!q && q.p.tech === p.t, disabled: G.queue.some(x => x.kind === 'interv') });
   }).join('');
-  return `<div class="ladder">${ladder}</div>
+  const hot = `<div class="hotline"><div class="eyebrow">${icon('phone', 'ico" style="width:15px;height:15px;vertical-align:-3px;margin-right:6px;color:var(--amber)')}Linha direta</div>
+    <p class="scene">${n.contact ? STEP_SCENE[cur] : NO_CONTACT}</p>
+    ${n.last ? `<blockquote class="${n.last.tone}">“${n.last.t}”<cite>Líder do grupo · rodada ${n.last.r}${G.K.profile ? '' : ' · como ele fala diz quem ele é'}</cite></blockquote>` : ''}
+    <p class="ask">O que seu negociador deve fazer?</p></div>`;
+  return `${hot}<div class="ladder">${ladder}</div>
     <label class="field">Negociador
       <select id="negotiator" data-chg="negotiator">${ags.map(id => `<option value="${id}" ${negId === id ? 'selected' : ''}>${shortName(agentById(id).nome)} · Negoc. ${stat(id, 'neg')}${G.az[id] && G.az[id] !== 'reserva' ? ' (em campo)' : ' (comando)'}</option>`).join('') || '<option>Comandante (você)</option>'}</select></label>
     <p class="faint" style="font-size:11.5px">Postura compatível com o degrau atual: +20%. Pular etapa: −25% e metade da chance, com 20% de regredir. Pressionar sobe a agitação. Fadiga e pressão alta reduzem a habilidade do negociador (hoje ${negoSkill().toFixed(1)}).</p>
@@ -1934,7 +2367,12 @@ function colC() {
   const tabs = [['tatica', 'Tática'], ['nego', 'Negociação'], ['intel', 'Inteligência'], ['com', 'Comunicação']];
   const body = UI.tab === 'tatica' ? tabTatica() : UI.tab === 'nego' ? tabNego() : UI.tab === 'intel' ? tabIntel() : tabCom();
   const q = G.queue.map(d => `<div class="qitem"><span>${icon(FRONT_IC[d.front], 'ico" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px')}${d.label}${d.cost ? ` <span class="mono" style="color:var(--amber)">−${d.cost}</span>` : ''}</span><span class="faint" style="font-size:11px">${d.slots > 1 ? 'toda a rodada' : '1 decisão'}</span><button class="btn sm ghost" data-act="rmq" data-id="${d.id}" aria-label="Remover do plano">✕</button></div>`).join('');
-  return `<div class="colC"><div class="card"><h3>Decisões da rodada <span class="slots" aria-label="${used} de ${n} decisões usadas">${Array.from({ length: n }, (_, i) => `<i class="slot ${i < used ? 'on' : ''}"></i>`).join('')}</span></h3>
+  const guide = G.round === 1 ? `<div class="card guide"><h3>Primeira rodada · como ler esta tela</h3><ol>
+      <li><b>Perceba</b> no centro: mapa, relatos de campo e o que ainda é desconhecido.</li>
+      <li><b>Compreenda e projete</b> logo abaixo: o painel traduz os dados e aponta tendências.</li>
+      <li><b>Decida</b> aqui: até ${n} ações nas quatro abas. Elas entram no plano e só acontecem quando você executa.</li></ol>
+      <p class="faint" style="font-size:11.5px">Nesta rodada e na próxima o relógio dá tempo extra para você se orientar.</p></div>` : '';
+  return `<div class="colC">${guide}<div class="card"><h3>Decisões da rodada <span class="slots" aria-label="${used} de ${n} decisões usadas">${Array.from({ length: n }, (_, i) => `<i class="slot ${i < used ? 'on' : ''}"></i>`).join('')}</span></h3>
       <div class="tabs" role="tablist">${tabs.map(([k, l]) => `<button class="tab" role="tab" data-act="tab" data-t="${k}" aria-selected="${UI.tab === k}">${l}</button>`).join('')}</div>
       <div class="grid" style="gap:10px;margin-top:12px">${body}</div></div>
     <div class="card"><h3>Plano da rodada</h3><div class="queue">${q || '<p class="faint" style="font-size:12.5px">Nenhuma decisão ainda. Você pode executar sem decisões, mas o cofre e a mídia continuam andando.</p>'}</div>
@@ -1950,19 +2388,37 @@ function renderPanel() {
 }
 
 /* ---------- Atualização da rodada ---------- */
+function siegeTrack() {
+  return `<div class="track" aria-label="Linha do tempo do cerco">${Array.from({ length: MAX_ROUNDS }, (_, i) => {
+    const r = i + 1, l = G.log[i], cls = r < G.round ? 'past' : r === G.round ? 'now' : '';
+    return `<div class="tk ${cls}" title="Rodada ${r} · ${fmtTime(r)}${l && l.ev ? ' · ' + EVDEF[l.ev.id].titulo : ''}"><i></i><small>${fmtTime(r)}</small>${l && l.ev ? `<em>${icon(EVDEF[l.ev.id].ic, 'ico" style="width:13px;height:13px')}</em>` : ''}</div>`;
+  }).join('')}</div>`;
+}
+const STANCE = { esperar: ['green', 'pede paciência'], intervir: ['red', 'quer entrar'], 'reforçar': ['blue', 'olha o perímetro'], investigar: ['violet', 'quer saber mais'], comunicar: ['amber', 'olha os stakeholders'] };
+function councilHTML(list) {
+  if (!list || !list.length) return '';
+  const conflict = list.some(c => c.stance === 'intervir') && list.some(c => c.stance === 'esperar');
+  return `<div class="card"><h3>Mesa de comando <span class="faint" style="text-transform:none;letter-spacing:0;font-family:var(--sans);font-size:11.5px">cada um vê uma parte do problema</span></h3>
+    <div class="council">${list.map(c => `<div class="adv"><div class="sil">${sil(c.id, 40)}</div><div><b>${shortName(c.nome)}</b> <span class="pill ${STANCE[c.stance][0]}">${STANCE[c.stance][1]}</span><p>“${c.t}”</p></div></div>`).join('')}</div>
+    ${conflict ? ins('warn', 'split', 'Os conselhos se contradizem. Ninguém na mesa tem a informação inteira: integrar as partes é o seu trabalho.') : ''}</div>`;
+}
 function renderUpdate() {
-  const u = G.update, toc = tocConstraint();
-  const intel = u.intel.map(r => ins(r.ok ? 'good' : 'warn', r.ok ? 'check' : 'alert', `<b>${r.nome}.</b> ${r.text}`)).join('');
+  const u = G.update;
   const reps = u.reports.map(r => `<div class="report"><span class="src">${r.ag} · ${ZONE[r.z].curto}</span><span>${r.txt}. <span class="faint">Confiança ${r.conf}.</span></span></div>`).join('');
   return `${hudHTML()}<div class="resol screen">
-    <div><div class="eyebrow">Atualização · rodada ${G.round} de ${MAX_ROUNDS}</div>
-    <h1 style="font-family:var(--cond);font-size:clamp(30px,4.4vw,52px);letter-spacing:.03em;margin:6px 0 0"><span style="color:var(--amber);font-family:var(--mono)">${u.time}</span> · ${ROUND_TITLE[G.round]}</h1></div>
-    <p class="serif" style="font-size:clamp(17px,1.9vw,21px);line-height:1.6;color:#dfe6f1">${ROUND_INTRO[G.round]}</p>
+    <div class="skyband r${G.round}">${skyline()}<i class="siren r"></i><i class="siren b"></i>
+      <div class="cap"><div class="eyebrow" style="color:#c9d6ea">Atualização · rodada ${G.round} de ${MAX_ROUNDS}</div>
+      <h1><span class="mono" style="color:var(--amber)">${u.time}</span> · ${ROUND_TITLE[G.round]}</h1></div></div>
+    ${siegeTrack()}
+    <p class="serif intro">${u.intro || roundIntro()}</p>
+    ${u.quiet ? ins('good', 'wait', '<b>Calmaria.</b> Por alguns minutos, nada acontece. Pelo rádio, alguém pede café. Depois de uma rodada pesada, este é o momento de pensar, não de reagir: nenhuma carta de evento vai interromper esta rodada.') : ''}
     <div class="card"><h3>Mensagens de rádio</h3><div class="radio" style="max-height:none">${u.radio.map(l => `<p class="${l.c || ''}">${l.t}</p>`).join('')}</div></div>
-    ${u.intel.length ? `<div class="card"><h3>Resultados da inteligência</h3><div class="grid" style="gap:8px">${intel}</div></div>` : ''}
+    ${u.call ? `<div class="call">${icon('call', 'ico')}<div><small>Ligação recebida · ${u.call.who}</small><p>“${u.call.t}”</p></div></div>` : ''}
+    ${u.intel.length ? `<div class="card"><h3>Resultados da inteligência</h3><div class="dossiers">${u.intel.map(dossierHTML).join('')}</div></div>` : ''}
     ${u.hint ? `<div class="card">${ins('info', 'light', u.hint)}</div>` : ''}
+    ${councilHTML(u.council)}
     <div class="card"><h3>Relatos de campo</h3>${reps || '<p class="faint" style="font-size:13px">Nenhum relato novo. Zonas sem agentes não geram relatos.</p>'}</div>
-    <div class="row"><button class="btn primary lg" data-act="takepanel">Assumir o painel</button><span class="faint" style="font-size:12.5px">${G.noLimit ? 'Sem limite de tempo.' : `Você terá ${D_().timer} segundos e ${D_().slots} decisões.`}</span></div></div>`;
+    <div class="row"><button class="btn primary lg" data-act="takepanel">Assumir o painel</button><span class="faint" style="font-size:12.5px">${G.noLimit ? 'Sem limite de tempo.' : `Você terá ${roundTimer()} segundos${G.round <= 2 ? ' (tempo extra de orientação)' : ''} e ${D_().slots} decisões.`}</span></div></div>`;
 }
 
 /* ---------- Resolução / feedback ---------- */
@@ -1971,25 +2427,66 @@ function deltaCell(label, a, b, fmtF, goodUp, cls, noBar) {
   const bad = Math.abs(diff) >= .5 && ((diff > 0) !== goodUp);
   return `<div class="dcell"><div class="top"><span>${label}</span><b class="${Math.abs(diff) < .5 ? '' : bad ? 'up' : 'dn'}">${fmtF(a)} ${arrow} ${fmtF(b)}</b></div>${noBar ? '' : `<div class="meter ${cls}"><i style="width:${clamp(a, 0, 100)}%" data-to="${clamp(b, 0, 100)}"></i></div>`}</div>`;
 }
+/* Causa → efeito: cada fator empurra para cima (vermelho) ou para baixo (verde). Sob névoa, só a direção. */
+function waterfall(title, parts, exact, upBad = true) {
+  const ps = (parts || []).filter(p => Math.abs(p.v) >= .05); if (!ps.length) return '';
+  const mx = Math.max(10, ...ps.map(p => Math.abs(p.v))), tot = ps.reduce((s, p) => s + p.v, 0);
+  const mag = v => Math.abs(v) < 2 ? 'leve' : Math.abs(v) < 6 ? 'moderado' : 'forte';
+  return `<div class="wf"><div class="eyebrow">${title}</div>${ps.map(p => {
+    const w = Math.abs(p.v) / mx * 50, bad = (p.v > 0) === upBad;
+    return `<div class="wfr"><span>${p.k}</span><div class="wfb"><i class="${bad ? 'bad' : 'good'}" style="${p.v > 0 ? 'left:50%' : `left:${50 - w}%`};width:${w}%"></i></div><b class="mono">${exact ? (p.v > 0 ? '+' : '−') + Math.abs(p.v).toFixed(1) : (p.v > 0 ? '↑ ' : '↓ ') + mag(p.v)}</b></div>`;
+  }).join('')}<div class="wfr tot"><span>Resultado</span><div></div><b class="mono">${exact ? (tot >= 0 ? '+' : '−') + Math.abs(tot).toFixed(1) : tot > .5 ? '↑ sobe' : tot < -.5 ? '↓ desce' : '→ estável'}</b></div></div>`;
+}
+function stkWhyHTML(R, a, b) {
+  return STK_KEYS.map(k => {
+    const d = b.stk[k] - a.stk[k], items = (R.stkWhy && R.stkWhy[k]) || [], tracked = items.reduce((s, x) => s + x.v, 0), rest = d - tracked;
+    const all = items.concat(Math.abs(rest) >= 1 ? [{ v: rest, t: 'eventos e ocorrências' }] : []);
+    if (Math.abs(d) < .5 && !all.length) return '';
+    return `<div class="sw"><b>${STK[k].nome}</b> <span class="mono">${Math.round(a.stk[k])} → ${Math.round(b.stk[k])}</span><small>${all.map(x => `<span class="${x.v >= 0 ? 'pos' : 'neg'}">${x.t} ${x.v >= 0 ? '+' : '−'}${Math.abs(x.v).toFixed(0)}</span>`).join(' · ')}</small></div>`;
+  }).join('');
+}
+function hchgHTML(list) {
+  if (!list || !list.length) return '';
+  const by = w => list.filter(c => c.what === w).map(c => c.id);
+  const fr = by('free'), hu = by('hurt'), de = by('dead'), out = [];
+  if (fr.length) out.push(`<div class="hc out">${icon('check', 'ico')}<span><b>Saíram:</b> ${fr.map(id => `${HOST[id].nome} (${HOST[id].idade})`).join(', ')}.</span></div>`);
+  if (hu.length) out.push(`<div class="hc hurt">${icon('heart', 'ico')}<span><b>${G.K.hostages ? 'Feridos:' : 'Ferimentos:'}</b> ${G.K.hostages ? hu.map(id => HOST[id].nome).join(', ') : `${hu.length} ${hu.length > 1 ? 'pessoas feridas' : 'pessoa ferida'} lá dentro, sem identificação confirmada`}.</span></div>`);
+  if (de.length) out.push(`<div class="hc dead">${icon('heart', 'ico')}<span><b>Vidas perdidas:</b> ${de.map(id => `${HOST[id].nome}, ${HOST[id].idade} anos, ${HOST[id].papel}`).join('; ')}.</span></div>`);
+  return `<div class="card"><h3>Reféns nesta rodada</h3><div class="grid" style="gap:6px">${out.join('')}</div></div>`;
+}
+const SECS = [['dec', 'Suas decisões'], ['mundo', 'O mundo reagiu'], ['ev', 'Evento'], ['fim', 'Fim da rodada']];
+function linesBySec(lines, anim = true) {
+  let k = 0;
+  return SECS.map(([sec, t]) => {
+    const ls = lines.filter(l => (l.sec || 'dec') === sec); if (!ls.length) return '';
+    return `<div class="sec"><div class="eyebrow">${t}</div>${ls.map(l => `<div class="res-line ${l.tone}" style="${anim ? `animation-delay:${(k++) * 90}ms` : 'animation:none'}">${icon(l.ic, '', 1.8)}<span>${l.text}</span></div>`).join('')}</div>`;
+  }).join('');
+}
 function renderResult() {
   const R = G.R, a = R.s0, b = R.s1 || snap();
   const pa0 = perceivedAgit(a.agit), pa1 = perceivedAgit(b.agit), pv0 = perceivedVault(a.vault), pv1 = perceivedVault(b.vault);
-  const lines = R.lines.map((l, i) => `<div class="res-line ${l.tone}" style="animation-delay:${i * 90}ms">${icon(l.ic, '', 1.8)}<span>${l.text}</span></div>`).join('');
   const cells = [
     deltaCell('Agitação' + (pa1.exact ? '' : ' (aparente)'), pa0.v, pa1.v, v => pa1.exact ? Math.round(v) : (G.nego.contact ? '≈' + Math.round(v / 5) * 5 : pa1.band === perceivedAgit(a.agit).band ? pa1.band : perceivedAgit(v).band), false, 'r'),
     deltaCell('Pressão da mídia', a.media, b.media, v => Math.round(v), false, 'a'),
     deltaCell('Cofre' + (pv1.exact ? '' : ' (estimado)'), pv0.v, pv1.v, v => Math.round(v) + '%', false, 'b'),
     deltaCell('Degrau da negociação', a.step * 20, b.step * 20, v => Math.round(v / 20) + '/5', true, 'g'),
     deltaCell('Créditos', clamp(a.credits / 10, 0, 100), clamp(b.credits / 10, 0, 100), v => fmt(v * 10), true, 'a'),
-    deltaCell('Pressão da equipe', a.p, b.p, v => Math.round(v), false, 'v'),
-    ...STK_KEYS.map(k => deltaCell(STK[k].nome, a.stk[k], b.stk[k], v => Math.round(v), true, 'g'))
+    deltaCell('Pressão da equipe', a.p, b.p, v => Math.round(v), false, 'v')
   ].join('');
-  const last = !!G.end;
+  const last = !!G.end, exactA = G.nego.contact && G.K.profile;
+  const cause = R.agitParts ? `<div class="card"><h3>Causa e efeito</h3><div class="grid" style="gap:14px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))">
+      ${waterfall('Agitação do líder' + (exactA ? '' : ' (só a direção: sem perfil e canal, você não mede)'), R.agitParts, exactA)}
+      ${waterfall('Pressão da mídia', R.mediaParts, true)}</div>
+      <p class="faint" style="font-size:11.5px;margin-top:8px">Eventos mudam a agitação e a mídia por fora destes fatores.</p></div>` : '';
+  const sw = stkWhyHTML(R, a, b);
   return `${hudHTML()}<div class="resol screen">
     <div><div class="eyebrow">Resolução · rodada ${G.round} de ${MAX_ROUNDS}</div><h1 style="font-family:var(--cond);font-size:clamp(28px,4vw,46px);letter-spacing:.03em;margin:6px 0 0">O que as suas decisões provocaram</h1></div>
-    ${R.decs.length ? `<div class="row">${R.decs.map(d => `<span class="pill blue">${icon(FRONT_IC[d.front], 'ico" style="width:14px;height:14px')}${d.label}</span>`).join('')}</div>` : '<p class="muted">Você aguardou sem decisões nesta rodada.</p>'}
-    <div class="grid" style="gap:8px">${lines}</div>
+    ${R.decs.length ? `<div class="row">${R.decs.map(d => `<span class="pill blue">${icon(FRONT_IC[d.front], 'ico" style="width:14px;height:14px')}${d.label}</span>`).join('')}</div>` : '<p class="muted">Você aguardou sem decisões nesta rodada. A crise não esperou.</p>'}
+    <div class="grid" style="gap:14px">${linesBySec(R.lines)}</div>
+    ${hchgHTML(R.hchg)}
     <div class="card"><h3>Painel de feedback</h3><div class="delta">${cells}</div></div>
+    ${cause}
+    ${sw ? `<div class="card"><h3>Stakeholders: por que mudaram</h3><div class="grid" style="gap:6px">${sw}</div></div>` : ''}
     <div class="row"><button class="btn primary lg" data-act="cont">${last ? 'Ver o desfecho' : G.round >= MAX_ROUNDS ? 'Encerrar' : `Seguir para a rodada ${G.round + 1}`}</button></div></div>`;
 }
 function eventModal() {
@@ -2011,7 +2508,8 @@ const hoursN = () => Math.max(1, Math.round(G.round * ROUND_MIN / 60));
 const plural = (n, s, p) => n === 1 ? s : p;
 function harmSentence() {
   const H = G.hostages;
-  if (H.dead) return `A crise deixou ${H.dead} ${plural(H.dead, 'morto', 'mortos')} entre os reféns${H.hurt ? ` e ${H.hurt} ${plural(H.hurt, 'ferido', 'feridos')}` : ''}.`;
+  const names = G.hl.filter(h => h.st === 'dead').map(h => HOST[h.id].nome);
+  if (H.dead) return `A crise deixou ${H.dead} ${plural(H.dead, 'morto', 'mortos')} entre os reféns${H.hurt ? ` e ${H.hurt} ${plural(H.hurt, 'ferido', 'feridos')}` : ''}${names.length ? `. ${plural(names.length, 'Não voltou para casa', 'Não voltaram para casa')}: ${names.join(', ')}` : ''}.`;
   if (H.hurt) return `${H.hurt} ${plural(H.hurt, 'refém ficou ferido', 'reféns ficaram feridos')}; os demais saíram ilesos.`;
   return `Todos os ${HOSTAGES} reféns saíram ilesos.`;
 }
@@ -2049,6 +2547,28 @@ function outcomeStory() {
   p.push(harmSentence() + ' ' + vaultSentence());
   return { p, title, tag, cls: 'o-' + E.type };
 }
+/* ---------- A verdade por trás da névoa (revelação final) ---------- */
+function truthHTML() {
+  const K = G.K, at = K.at || {}, P = PR_(), H = G.hostages, st = G.stats, E = G.end;
+  const when = k => at[k] != null ? (at[k] === 0 ? 'antes do cerco' : `na rodada ${at[k]}`) : null;
+  const rows = [
+    ['Perfil do líder', P.nome, 'profile', K.profile ? '' : `Com esse perfil, ${P.mult.emp >= P.mult.rat ? 'escuta, empatia e rapport' : 'critério objetivo e proposta concreta'} rendiam mais.`],
+    ['Rota de fuga', ZONE[G.route].nome + (G.routeNow !== G.route ? `, depois ${ZONE[G.routeNow].nome}` : ''), 'route', `Cobertura no início do cerco: ${st.initCov[G.route] || 0}%.`],
+    ['Pessoas armadas', String(G.assail), 'count', ''],
+    ['Cúmplice externo', G.accomplice ? 'Sim' : 'Não', 'accomplice', ''],
+    ['Cofre', Math.round(G.vault) + '%', 'vault', ''],
+    ['Reféns feridos', `${H.hurt} ${plural(H.hurt, 'ferido', 'feridos')} · ${H.dead} ${plural(H.dead, 'morto', 'mortos')}`, 'hostages', '']
+  ];
+  const known = rows.filter(r => when(r[2])).length;
+  const cost = E.type === 'intervencao' || (E.type === 'prazo' && E.variant === 'forcado') ? `A intervenção aconteceu com ${known} de 6 variáveis conhecidas. A chance real de sucesso era de ${Math.round((E.P || 0) * 100)}%.`
+    : E.type === 'fuga' ? `A saída foi por ${ZONE[E.zone].nome}, com ${E.cov}% de cobertura efetiva${when('route') ? '' : ', numa rota que você nunca confirmou'}.`
+    : E.type === 'rendicao' ? `A rendição veio ${when('profile') ? 'com o perfil do líder já identificado' : 'sem que você soubesse com quem falava'}: ${known} de 6 variáveis conhecidas.`
+    : `O prazo esgotou com ${known} de 6 variáveis conhecidas.`;
+  const sig = st.sig || 0, noise = st.noise || 0;
+  return `<div class="card truth"><h3>A verdade por trás da névoa</h3>
+    <div class="trows">${rows.map(([k, v, key, note]) => { const w = when(key); return `<div class="tr ${w ? 'k' : 'u'}"><span>${k}</span><b>${v}</b><small>${w ? '✓ você sabia (' + w + ')' : '✕ você nunca confirmou'}${note ? ' · ' + note : ''}</small></div>`; }).join('')}</div>
+    <p style="margin-top:10px">${cost} ${sig + noise ? `Dos relatos de campo sobre rotas, ${sig} ${plural(sig, 'era sinal verdadeiro', 'eram sinais verdadeiros')} e ${noise} ${plural(noise, 'era ruído', 'eram ruído')}.` : ''}</p></div>`;
+}
 function renderOutcome() {
   const o = outcomeStory(), H = G.hostages;
   return `<div class="screen outcome ${o.cls}">
@@ -2056,6 +2576,7 @@ function renderOutcome() {
     <h1>${o.title}</h1>
     <div class="narr">${o.p.map(t => `<p>${t}</p>`).join('')}</div>
     <div class="kv"><div><small>Reféns ilesos</small><b>${HOSTAGES - H.hurt - H.dead}</b></div><div><small>Feridos</small><b>${H.hurt}</b></div><div><small>Mortos</small><b>${H.dead}</b></div><div><small>Cofre</small><b>${Math.round(G.vault)}%</b></div><div><small>Créditos</small><b>${fmt(G.credits)}</b></div><div><small>Duração</small><b>${hoursN()} h</b></div></div>
+    ${truthHTML()}
     <div class="row"><button class="btn primary lg" data-act="toscore">Ver a pontuação</button></div></div>`;
 }
 
@@ -2107,7 +2628,14 @@ function newsHTML() {
     sub = E.variant === 'escapou' ? 'Cofre foi aberto e rota de fuga não tinha cobertura suficiente, apontam testemunhas' : 'Cobertura da rota foi decisiva para encerrar o cerco ao Banco Meridiano';
   } else { hl = `ULTIMATO TERMINA EM RENDIÇÃO APÓS ${horas} DE CERCO`; sub = 'Prazo esgotado e comando sob pressão: assaltantes cedem na última hora'; }
   const safe = HOSTAGES - H.hurt - H.dead;
-  const quotes = [];
+  const quotes = [], deadIds = G.hl.filter(h => h.st === 'dead').map(h => h.id);
+  const wit = ['lucia', 'joana', 'benedito', 'rafael', 'cecilia', 'jorge'].map(id => G.hl.find(h => h.id === id)).find(h => h && h.st !== 'dead') || G.hl.find(h => h.st !== 'dead');
+  const wq = E.type === 'rendicao' ? 'Quando ele largou o telefone e disse “acabou”, ninguém acreditou. Ficamos sentados um tempo, sem coragem de levantar.'
+    : E.type === 'fuga' ? 'Eles saíram correndo e deixaram a gente lá dentro. Ficamos sem saber se podíamos levantar.'
+    : E.type === 'prazo' && E.variant === 'cedeu' ? 'As últimas horas foram as piores. Ele não parava de olhar o relógio.'
+    : v === 'limpa' ? 'Foi tudo muito rápido. Num minuto ouvi gritos, no outro alguém segurava a minha mão e dizia que tinha acabado.'
+    : 'Eu só pensava na minha família. Ainda não consigo falar sobre o resto.';
+  if (wit) quotes.push(`<blockquote>“${wq}”<cite>${HOST[wit.id].nome}, ${HOST[wit.id].idade}, ${HOST[wit.id].papel}</cite></blockquote>`);
   const pk = G.stk.prefeito.sat, fk = G.stk.familias.sat, bk = G.stk.banco.sat;
   quotes.push(`<blockquote>${pk >= 70 ? '“A cidade esteve bem protegida. Agradeço ao comando por não ter cedido à pressa.”' : pk >= 40 ? '“Poderia ter sido mais rápido, mas o resultado final é o que importa.”' : '“Vamos exigir uma apuração completa sobre a condução deste incidente.”'}<cite>Prefeito de Porto Alto</cite></blockquote>`);
   quotes.push(`<blockquote>${H.dead ? '“Nada devolve quem perdemos. Queremos respostas, e queremos que isso nunca mais se repita.”' : H.hurt ? '“Nossos parentes estão vivos, mas feridos. Esperamos que cada um receba o cuidado que merece.”' : fk >= 60 ? '“Só queríamos abraçá-los. Obrigada a quem ficou lá fora o tempo todo.”' : '“Ficamos horas sem informação. A gente só queria saber se eles estavam bem.”'}<cite>Representante das famílias</cite></blockquote>`);
@@ -2120,7 +2648,7 @@ function newsHTML() {
     <span class="extra">EDIÇÃO EXTRA</span>
     <h1 class="hl">${hl}</h1><p class="sub">${sub}</p>
     <div class="cols">
-      <p>PORTO ALTO — A crise que paralisou o centro da cidade na tarde desta sexta-feira terminou às ${t}, depois de ${hrs} ${plural(hrs, 'hora', 'horas')} de cerco à Agência Central do Banco Meridiano. Dos ${HOSTAGES} reféns, ${safe} ${plural(safe, 'saiu ileso', 'saíram ilesos')}${H.hurt ? `, ${H.hurt} ${plural(H.hurt, 'ficou ferido', 'ficaram feridos')}` : ''}${H.dead ? ` e ${H.dead} ${plural(H.dead, 'morreu', 'morreram')}` : ''}.</p>
+      <p>PORTO ALTO — A crise que paralisou o centro da cidade na tarde desta sexta-feira terminou às ${t}, depois de ${hrs} ${plural(hrs, 'hora', 'horas')} de cerco à Agência Central do Banco Meridiano. Dos ${HOSTAGES} reféns, ${safe} ${plural(safe, 'saiu ileso', 'saíram ilesos')}${H.hurt ? `, ${H.hurt} ${plural(H.hurt, 'ficou ferido', 'ficaram feridos')}` : ''}${H.dead ? ` e ${H.dead} ${plural(H.dead, 'morreu', 'morreram')}` : ''}.${deadIds.length ? ` A polícia confirmou ${plural(deadIds.length, 'a morte de', 'as mortes de')} ${deadIds.map(id => `${HOST[id].nome}, ${HOST[id].idade} anos`).join('; ')}.` : ''}</p>
       <p>${E.type === 'rendicao' ? `Segundo a polícia, a negociação foi decisiva. A conversa com o líder do grupo chegou ao degrau ${nsteps} de um processo de cinco etapas, da escuta ativa ao acordo sobre a saída, e a rendição foi acertada sem disparos.` : E.type === 'fuga' ? `Os assaltantes tentaram deixar o local por ${z}${E.adapted ? ' depois de mudarem o plano inicial' : ''}. ${E.variant === 'barrada' ? `A cobertura da zona, de ${E.cov}%, impediu a saída.` : E.variant === 'perseguicao' ? 'A perseguição foi encerrada na Avenida Principal.' : `A cobertura da zona era de ${E.cov}% e não impediu a fuga.`}` : E.type === 'prazo' ? `Ao fim do prazo estipulado pelos assaltantes, ${E.variant === 'cedeu' ? 'o líder do grupo aceitou se render, depois de uma negociação que chegou ao degrau ' + nsteps : 'o comando autorizou a entrada na agência'}.` : `A operação foi autorizada na rodada ${G.round}${E.forced ? ', sob determinação do gabinete do prefeito' : ''}. ${v === 'limpa' ? 'Segundo fontes, a informação reunida antes da entrada foi decisiva para o resultado.' : v === 'fracasso' ? 'Fontes do isolamento afirmam que faltou informação sobre o interior.' : 'Houve resistência no interior e a situação levou alguns minutos para ser contida.'}`}</p>
       <p>${vaultSentence()} A operação consumiu ${Math.round((1000 - G.credits) / 10)}% da verba disponível${G.credits < 100 ? ', deixando o comando praticamente sem margem' : ''}.</p>
       ${quotes.join('')}
@@ -2233,6 +2761,8 @@ ACT.continue = () => { const s = loadSave(); if (!s) { render(); return; } G = s
 ACT.howto = () => { UI.tutor = true; render(); };
 ACT.closehowto = () => { UI.tutor = false; render(); };
 ACT.tobrief = () => setPhase('recruit');
+ACT.skipbrief = () => { $app.classList.add('noanim'); };
+ACT.cutgo = () => { const c = UI.cut; UI.cut = null; render(); if (c && c.after) c.after(); };
 ACT.hire = d => {
   const a = agentById(d.id);
   if (G.team.includes(d.id)) { G.team = G.team.filter(x => x !== d.id); G.credits += a.custo; G.spent.rec -= a.custo; delete G.az[d.id]; }
@@ -2252,7 +2782,13 @@ ACT.torecruit = () => {
     if (!UI.emptyConfirm) { UI.emptyConfirm = true; render(); return; }
     G.team = ['g1', 'g2']; G.stats.noRecruit = true; G.team.forEach(id => G.az[id] = 'reserva');
   }
-  UI.emptyConfirm = false; UI.sel = null; G.pressure = calcPressure(); autoPlace(); setPhase('perimeter');
+  UI.emptyConfirm = false; UI.sel = null; G.pressure = calcPressure(); autoPlace();
+  const lead = G.team.slice().sort((a, b) => stat(b, 'tat') - stat(a, 'tat'))[0];
+  UI.cut = { time: '14h22', title: 'A equipe chega ao local', btn: 'Montar o perímetro', lines: [
+    { t: `${G.team.length} ${G.team.length === 1 ? 'profissional desce' : 'profissionais descem'} das viaturas na Rua Marechal Deodoro. O quarteirão já está isolado com fita, e a fita já tem uma plateia.` },
+    { t: `[RÁDIO] ${agentById(lead).nome} para o comando: “Equipe no local. Aguardo a distribuição pelas zonas. O banco tem mais saídas do que parece.” Câmbio.`, radio: true },
+    { t: 'Quatro das sete zonas ao redor da agência podem ser rotas de fuga. Você não sabe quais.' }] };
+  setPhase('perimeter');
 };
 CHG.camplus = (v, d, el) => { G.camAdj.plus = v; if (G.camAdj.minus === v) G.camAdj.minus = Object.keys(ATTR).find(k => k !== v); saveGame(); render(); };
 CHG.camminus = (v) => { G.camAdj.minus = v; if (G.camAdj.plus === v) G.camAdj.plus = Object.keys(ATTR).find(k => k !== v); saveGame(); render(); };
@@ -2265,7 +2801,16 @@ ACT.place = d => {
 };
 ACT.autoplace = () => { autoPlace(); UI.sel = null; saveGame(); render(); };
 ACT.p1intel = d => { const r = phase1Intel(d.id); if (!r) { warn('Créditos insuficientes.'); return; } saveGame(); render(); };
-ACT.tosiege = () => { confirmPerimeter(); G.phase = 'siege'; UI.pickZone = null; startRound(); render(); radioToasts(G.update.radio); (G.perimLog || []).forEach((t, i) => setTimeout(() => toast('RECONHECIMENTO', t, 'good'), 600 + i * 1200)); };
+ACT.tosiege = () => {
+  confirmPerimeter(); G.phase = 'siege'; UI.pickZone = null; startRound();
+  const adq = adequateCount();
+  UI.cut = { time: '14h37', title: 'Perímetro fechado', btn: 'Começar o cerco', lines: [
+    { t: `As equipes assumem as posições. ${adq} de 7 zonas têm cobertura adequada; nas outras, você está apostando.` },
+    { t: 'Dentro da agência, o telefone começa a tocar. É a linha que você mandou ligar.' },
+    { t: '[RÁDIO] Comando, todas as equipes em posição. A partir de agora o relógio é seu. Câmbio.', radio: true }],
+    after: () => { radioToasts(G.update.radio); (G.perimLog || []).forEach((t, i) => setTimeout(() => toast('RECONHECIMENTO', t, 'good'), 600 + i * 1200)); } };
+  render();
+};
 
 ACT.takepanel = () => { G.stage = 'panel'; UI.tab = 'tatica'; UI.ivConfirm = false; UI.pickZone = null; saveGame(); render(); };
 ACT.tab = d => { UI.tab = d.t; render(); };
@@ -2294,7 +2839,7 @@ ACT.execute = () => {
 };
 ACT.evchoice = d => { if (G.stage !== 'event') return; if (!chooseEvent(+d.i)) { warn('Créditos insuficientes para essa escolha.'); return; } render(); };
 ACT.cont = () => {
-  if (G.end) { G.phase = 'outcome'; saveGame(); render(); return; }
+  if (G.end) { const tb = document.getElementById('toasts'); if (tb) tb.innerHTML = ''; G.phase = 'outcome'; saveGame(); render(); return; }
   startRound(); render(); radioToasts(G.update.radio);
 };
 ACT.toscore = () => { G.phase = 'post'; UI.post = 'score'; saveGame(); render(); };
@@ -2316,8 +2861,9 @@ function render() {
   else if (G.phase === 'siege') html = G.stage === 'update' ? renderUpdate() : G.stage === 'panel' ? renderPanel() : G.stage === 'event' ? renderEventStage() : renderResult();
   else if (G.phase === 'outcome') html = renderOutcome();
   else html = renderPost();
-  $app.innerHTML = html;
+  $app.innerHTML = html + cutHTML();
   const key = G ? G.phase + ':' + (G.stage || '') + ':' + G.round + ':' + UI.post : 'menu';
+  if (key !== lastKey) $app.classList.remove('noanim');
   $app.classList.toggle('still', key === lastKey);
   if (key !== lastKey) { window.scrollTo(0, 0); lastKey = key; }
   const inSiege = G && G.phase === 'siege';

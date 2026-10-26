@@ -37,10 +37,11 @@ function newGame(diffKey, opts = {}) {
     profile: prof, agit: PROFILES[prof].start + (diffKey === 'caotico' ? 5 : diffKey === 'protocolar' ? -5 : 0),
     routes, route, routeNow: route, assail: ri(D.assail[0], D.assail[1]), accomplice: rnd() < .3,
     hostages: { inside: HOSTAGES, freed: 0, hurt: 0, dead: 0 }, pendingDeath: null,
+    hl: HOSTAGE_LIST.map(h => ({ id: h.id, in: true, st: 'ok' })), hPref: {}, quietRound: 0,
     vault: 20, lastVaultDelta: 0, media: 15, pressure: D.pbase + 8, calm: 0, stress: 0,
-    nego: { step: 1, contact: false, negotiator: null, skips: 0, tries: 0, concessions: 0, lastTech: 0, failStreak: 0, maxStep: 1, signalShown: false },
+    nego: { step: 1, contact: false, negotiator: null, skips: 0, tries: 0, concessions: 0, lastTech: 0, failStreak: 0, maxStep: 1, signalShown: false, last: null },
     stk: Object.fromEntries(STK_KEYS.map(k => [k, { sat: D.stk, sem: 0, lost: false }])),
-    K: { profile: false, profileHint: null, route: null, cleared: [], count: false, countHint: null, vault: false, hostages: false, accomplice: false, zrev: {} },
+    K: { profile: false, profileHint: null, route: null, cleared: [], count: false, countHint: null, vault: false, hostages: false, accomplice: false, zrev: {}, at: {} },
     ev: {}, pendingIntel: [], hints: [], radio: [], log: [], hist: [], p1intel: {},
     exposed: 0, powerCut: 0, fatCrit: false, support: {}, supportUsed: 0, deadlineLeft: 0, deadlineFired: false,
     mayorPromise: false, vehicleGiven: false, defector: false, attended: {}, commMedia: 0, usedEvents: [],
@@ -62,8 +63,14 @@ function loadSave() {
     const raw = localStorage.getItem(SAVE_KEY); if (!raw) return null;
     const s = JSON.parse(raw);
     if (!validSave(s)) { localStorage.removeItem(SAVE_KEY); return null; }
-    return s;
+    return migrateSave(s);
   } catch (e) { try { localStorage.removeItem(SAVE_KEY); } catch (_) {} return null; }
+}
+/* Saves da versão anterior (sem a camada narrativa) ganham os campos novos sem perder a partida. */
+function migrateSave(s) {
+  s.K.at = s.K.at || {}; s.hPref = s.hPref || {}; s.quietRound = s.quietRound || 0;
+  if (!Array.isArray(s.hl) || s.hl.length !== HOSTAGE_LIST.length) { s.hl = HOSTAGE_LIST.map(h => ({ id: h.id, in: true, st: 'ok' })); const g = G; G = s; syncHL(null); G = g; }
+  return s;
 }
 function clearSave() { try { localStorage.removeItem(SAVE_KEY); } catch (e) {} }
 function validSave(s) {
@@ -187,8 +194,16 @@ function intervPower() {
   if (G.powerCut > 0) p += 15;
   return clamp(p, 0, 100);
 }
+/* Entrar às cegas: sem saber quantos estão armados e onde estão os reféns, a intervenção perde precisão. */
+function blindParts() {
+  const K = G.K, out = [];
+  if (!K.count) out.push({ k: 'count', v: -.07, txt: 'não sabe quantos estão armados' });
+  if (!K.hostages) out.push({ k: 'hostages', v: -.07, txt: 'não sabe onde e como estão os reféns' });
+  return out;
+}
 function intervProb(extra = 0) {
-  const pr = .12 + .45 * intervPower() / 100 + .33 * infoFrac() - .30 * G.agit / 100 + (G.powerCut > 0 ? .04 : 0) + (D_().ivp || 0) + extra;
+  const blind = blindParts().reduce((s, b) => s + b.v, 0);
+  const pr = .12 + .45 * intervPower() / 100 + .33 * infoFrac() + blind - .30 * G.agit / 100 + (G.powerCut > 0 ? .04 : 0) + (D_().ivp || 0) + extra;
   return clamp(pr, .05, .95);
 }
 const hostagesLeft = () => G.hostages.inside;
@@ -205,6 +220,40 @@ function addDead(n) {
   return n;
 }
 function stake(k, v) { const s = G.stk[k]; s.sat = clamp(s.sat + v, 0, 100); }
+
+/* ---------------- Reféns com nome ----------------
+   O motor conta (inside/hurt/dead); esta camada decide QUEM. Reconciliação estável:
+   mortes saem primeiro dos feridos, ferimentos e libertações respeitam G.hPref (eventos com pessoa definida). */
+function syncHL(R) {
+  const L = G.hl, H = G.hostages, ch = [], pref = G.hPref || {};
+  const pickOne = (cands, pid) => cands.find(h => h.id === pid) || cands[Math.floor(rnd() * cands.length)];
+  let dead = L.filter(h => h.st === 'dead').length;
+  while (dead < H.dead) {
+    let c = L.filter(h => h.in && h.st === 'hurt'); if (!c.length) c = L.filter(h => h.st === 'hurt'); if (!c.length) c = L.filter(h => h.st === 'ok');
+    if (!c.length) break; const h = pickOne(c, pref.dead); h.st = 'dead'; h.in = true; dead++; ch.push({ id: h.id, what: 'dead' });
+  }
+  let hurt = L.filter(h => h.st === 'hurt').length;
+  while (hurt < H.hurt) {
+    let c = L.filter(h => h.in && h.st === 'ok'); if (!c.length) c = L.filter(h => h.st === 'ok');
+    if (!c.length) break; const h = pickOne(c, pref.hurt); h.st = 'hurt'; hurt++; ch.push({ id: h.id, what: 'hurt' });
+  }
+  while (hurt > H.hurt) { const h = L.find(x => x.st === 'hurt'); if (!h) break; h.st = 'ok'; hurt--; }
+  let ins = L.filter(h => h.in).length;
+  while (ins > H.inside) {
+    let c = L.filter(h => h.in && h.st === 'ok'); if (!c.length) c = L.filter(h => h.in && h.st === 'hurt');
+    if (!c.length) break; const h = pickOne(c, pref.free); h.in = false; ins--; ch.push({ id: h.id, what: 'free' });
+  }
+  G.hPref = {};
+  if (R) R.hchg = (R.hchg || []).concat(ch);
+  return ch;
+}
+const hlNames = ids => { const n = ids.map(firstName); return n.length <= 1 ? (n[0] || '') : n.slice(0, -1).join(', ') + ' e ' + n[n.length - 1]; };
+/* Quando cada variável oculta foi descoberta (para a revelação final) */
+function trackKnown() {
+  const K = G.K, at = K.at || (K.at = {});
+  [['profile', K.profile], ['route', !!K.route], ['count', K.count], ['vault', K.vault], ['hostages', K.hostages], ['accomplice', K.accomplice]]
+    .forEach(([k, v]) => { if (v && at[k] == null) at[k] = G.round; });
+}
 const addAgit = v => { G.agit = clamp(G.agit + v, 0, 100); };
 const addMedia = v => { G.media = clamp(G.media + v, 0, 100); };
 
@@ -283,7 +332,9 @@ function computeScore() {
   const eficiencia = clamp(.6 * Math.min(1, Math.max(0, G.credits) / 300) + .4 * (1 - (G.round - 1) / MAX_ROUNDS * .8), 0, 1);
   const confianca = confidence();
   const raw = (vidas * .40 + captura * .20 + valores * .15 + eficiencia * .10 + confianca * .15) * 100;
-  const cap = H.dead >= 4 ? 64 : H.dead >= 2 ? 79 : H.dead >= 1 ? 89 : 100;
+  // Tetos: vidas perdidas e uma intervenção fracassada nunca contam como boa condução (perspectiva de quem protege).
+  const failed = (E.type === 'intervencao' && E.variant === 'fracasso') || (E.type === 'prazo' && E.sub === 'fracasso');
+  const cap = Math.min(H.dead >= 4 ? 49 : H.dead >= 2 ? 64 : H.dead >= 1 ? 79 : 100, failed ? 49 : 100);
   const total = Math.min(raw, cap);
   G.score = { vidas, captura, valores, eficiencia, confianca, raw, total, cap, capped: raw > cap, grade: gradeOf(total) };
   return G.score;
@@ -374,14 +425,28 @@ function resolveIntel(id, phase1) {
   const def = INTEL.find(i => i.id === id), K = G.K, ok = rnd() < intelProb(phase1);
   G.stats.intel++;
   const res = { id, nome: def.nome, ok, text: '' };
-  if (!ok) { res.text = 'Resultado inconclusivo: o sinal veio ruidoso e nada foi confirmado. O custo foi pago e a incerteza continua.'; return res; }
+  if (!ok) { res.text = 'Resultado inconclusivo: o sinal veio ruidoso e nada foi confirmado. O custo foi pago e a incerteza continua.'; res.impact = 'Nada muda no painel. É o risco de comprar informação: você paga pela tentativa, não pela resposta.'; return res; }
+  const before = { ip: intervProb(), band: ivBand() };
   if (id === 'perfil') { K.profile = true; K.profileHint = null; res.text = `Perfil confirmado: ${PR_().nome}. ${PR_().desc} ${PR_().tip}`; }
   if (id === 'rota') { K.route = G.routeNow; res.text = `O líder planeja sair por: ${ZONE[K.route].nome}. Atenção: planos mudam quando o líder percebe cerco forte.`; }
   if (id === 'efetivo') { K.count = true; K.countHint = null; res.text = `Há ${G.assail} pessoas armadas no interior da agência.`; }
   if (id === 'cofre') { K.vault = true; res.text = `Cofre em ${Math.round(G.vault)}% de progresso. Na velocidade atual, abre em ${etaVault()}.`; }
   if (id === 'refens') { K.hostages = true; const H = G.hostages; res.text = `Reféns: ${H.inside - H.hurt - H.dead} ilesos, ${H.hurt} feridos, ${H.dead} mortos. ${H.hurt ? 'Os feridos precisam de atendimento.' : 'Sem ferimentos graves.'}`; }
   if (id === 'cumplice') { K.accomplice = true; res.text = G.accomplice ? 'Confirmado: há um cúmplice externo coordenando a fuga. A rota está reforçada.' : 'Nenhum contato externo detectado. O grupo age sozinho.'; }
+  res.impact = intelImpact(id, before);
   return res;
+}
+/* "Aha": o que a informação muda na próxima decisão (valor da informação, Howard 1966) */
+const ivBand = () => .16 * (1 - infoFrac());
+const pctRange = (p, b) => `${Math.round(clamp(p - b, 0, 1) * 100)}–${Math.round(clamp(p + b, 0, 1) * 100)}%`;
+function intelImpact(id, before) {
+  const P = PR_(), K = G.K;
+  if (id === 'perfil') return `Com esse perfil, rende mais ${P.mult.emp >= P.mult.rat ? 'escuta, empatia e rapport' : 'critério objetivo e proposta concreta'}. ${G.nego.contact ? 'A agitação do líder passa a aparecer com o valor exato no painel.' : 'Abra o canal de negociação para medir a agitação com precisão.'}`;
+  if (id === 'rota') { const c = zoneCoverage(K.route); return `Cobertura atual em ${ZONE[K.route].nome}: ${c}% (${c >= ADEQ ? 'adequada' : c >= 30 ? 'parcial' : 'descoberta'}). ${c >= ADEQ ? 'A sua aposta no perímetro estava certa.' : 'Reforçar essa zona agora é a aposta mais barata que você tem.'}`; }
+  if (id === 'efetivo' || id === 'refens') return `Chance estimada de uma intervenção: ${pctRange(before.ip, before.band)} antes, ${pctRange(intervProb(), ivBand())} agora. Saber estreita a faixa e tira a intervenção do escuro.`;
+  if (id === 'cofre') return `O tempo do cofre deixa de ser palpite: ${etaVault() === 'agora' ? 'ele está prestes a ceder' : 'previsão de abertura em ' + etaVault()}. Agentes na Entrada desaceleram o trabalho, mas irritam o líder.`;
+  if (id === 'cumplice') return G.accomplice ? 'Na fuga, cada ponto de cobertura na rota vale cerca de 20% menos. Um jammer de comunicação neutraliza boa parte disso.' : 'Uma ameaça a menos: a rota de fuga não tem reforço externo.';
+  return '';
 }
 function etaVault() {
   const vm = PR_().vault * D_().vault, n = agentsIn('entrada').length, delta = Math.max(0, 10 * vm - 4 * n);
@@ -415,6 +480,7 @@ function confirmPerimeter() {
     else log.push(`Câmera térmica em ${ZONE[z].nome}: nenhuma presença suspeita na zona.`);
   }
   G.stats.initCov = Object.fromEntries(ZONES.map(z => [z.id, zoneCoverage(z.id)]));
+  trackKnown();
   G.stats.routeKnownAtStart = !!G.K.route;
   G.perimLog = log;
 }
@@ -454,9 +520,10 @@ function startRound() {
   G.pendingIntel.filter(o => o.due <= G.round).forEach(o => up.intel.push(resolveIntel(o.id, false)));
   G.pendingIntel = G.pendingIntel.filter(o => o.due > G.round);
   up.reports = genReports();
-  G.stats.reports = (G.stats.reports || 0) + up.reports.length; G.stats.noise = (G.stats.noise || 0) + up.reports.filter(r => r.kind === 'ruido').length;
+  G.stats.reports = (G.stats.reports || 0) + up.reports.length; G.stats.noise = (G.stats.noise || 0) + up.reports.filter(r => r.kind === 'ruido').length; G.stats.sig = (G.stats.sig || 0) + up.reports.filter(r => r.kind === 'rota').length;
   if (G.team.includes('renata') && G.round === 3 && !isAway('renata')) up.hint = '[Cap. Alves reconhece um padrão] ' + revealHint();
   up.radio = radioLines();
+  up.intro = roundIntro(); up.council = council(); up.call = stakeCall(); up.quiet = G.quietRound === G.round;
   G.radio = up.radio.concat(G.radio).slice(0, 12);
   G.update = up; G.stage = 'update'; G.queue = [];
   G.attended = {}; G.commMedia = 0;
@@ -485,8 +552,9 @@ function removeDecision(id) {
   G.credits += queueCost(G.queue[i]); G.queue.splice(i, 1);
 }
 
-const L = (R, tone, ic, text) => R.lines.push({ tone, ic, text });
+const L = (R, tone, ic, text) => R.lines.push({ tone, ic, text, sec: R.sec || 'dec' });
 function snap() {
+  trackKnown();
   return { agit: G.agit, media: G.media, vault: G.vault, credits: G.credits, hurt: G.hostages.hurt, dead: G.hostages.dead, step: G.nego.step, p: G.pressure,
     stk: Object.fromEntries(STK_KEYS.map(k => [k, G.stk[k].sat])), cov: Math.round(avgRouteCov()) };
 }
@@ -496,8 +564,11 @@ function commMult() {
   let m = .7 + .06 * best; if (G.team.includes('fernanda') && !isAway('fernanda')) m *= 1.3;
   return m;
 }
+const why = (R, k, v, t) => { if (R && R.stkWhy && Math.abs(v) >= .5) (R.stkWhy[k] = R.stkWhy[k] || []).push({ v, t }); };
 function applyComm(cid, R) {
   const m = commMult(), c = COMMS.find(x => x.id === cid); G.stats.comms++;
+  if (cid === 'geral') STK_KEYS.forEach(k => why(R, k, 4 * m, 'comunicado geral'));
+  else why(R, c.s, 10 * m * (cid === 'coletiva' ? 1.2 : 1), c.nome.toLowerCase());
   if (cid === 'geral') { STK_KEYS.forEach(k => { stake(k, 4 * m); G.attended[k] = true; }); G.commMedia += -3; L(R, 'good', 'news', 'Comunicado geral publicado: os quatro públicos recebem a mesma nota. Efeito menor em cada um, mas ninguém ficou no escuro.'); return; }
   G.attended[c.s] = true;
   if (cid === 'coletiva') { stake('imprensa', 12 * m); G.commMedia += -5; L(R, 'good', 'mic', 'Coletiva transparente: a imprensa recebe fatos, não rumores. A pressão da mídia cede (−5) e a confiança da imprensa sobe.'); }
@@ -514,6 +585,7 @@ function resolveNego(dec, R) {
   if (dec.p.tech === 'press') {
     calm = -P.press; n.lastTech = 0;
     L(R, 'bad', 'alert', `${nm} pressiona o líder com um ultimato. Foi lido como ameaça: a agitação sobe (+${P.press}).`);
+    n.last = { r: G.round, t: leaderSays('press'), tone: 'bad' }; L(R, 'voice', 'phone', `Líder, na linha: “${n.last.t}”`);
     if (n.step >= 3 && rnd() < .25) { n.step--; L(R, 'bad', 'stairs', `A negociação regride ao degrau ${n.step} (${STEPS[n.step - 1].nome}).`); }
     G.stats.press = (G.stats.press || 0) + 1;
     return calm;
@@ -533,12 +605,13 @@ function resolveNego(dec, R) {
     else L(R, 'warn', 'stairs', msg);
   }
   n.lastTech = tech;
+  n.last = { r: G.round, t: leaderSays(ok ? 'step' : 'fail'), tone: ok ? 'good' : 'warn' }; L(R, 'voice', 'phone', `Líder, na linha: “${n.last.t}”`);
   if (np.skip) calm = -2; else calm = negoCalm(tech, n.step);
   return calm;
 }
 
 function resolveDecisions() {
-  const R = { lines: [], s0: snap(), decs: [], eventId: null, ev: null, skipEvent: false };
+  const R = { lines: [], s0: snap(), decs: [], eventId: null, ev: null, skipEvent: false, sec: 'dec', stkWhy: {}, hchg: [] };
   G.R = R; const D = D_(), P = PR_();
   const q = G.queue.slice();
   R.decs = q.map(d => ({ front: d.front, kind: d.kind, label: d.label, cost: d.cost || 0 }));
@@ -584,6 +657,7 @@ function resolveDecisions() {
   if (nd) calm = resolveNego(nd, R);
   else if (G.nego.contact) L(R, 'info', 'phone', 'Sem negociação nesta rodada: o canal com o líder fica em silêncio e o degrau não se move.');
   // Passivos do motor
+  R.sec = 'mundo';
   // cofre
   const vm = P.vault * D.vault, nEnt = agentsIn('entrada').length, vdelta = Math.max(0, 10 * vm - 4 * nEnt);
   G.vault = clamp(G.vault + vdelta, 0, 100); G.lastVaultDelta = vdelta;
@@ -592,6 +666,7 @@ function resolveDecisions() {
   // mídia: 8 + rodada×2 (escalados pela dificuldade) + comunicado
   const mgain = (8 + G.round * 2) * D.media + G.commMedia - (hasGear('jammer') ? 2 : 0) - (G.team.includes('fernanda') ? 0 : 0);
   addMedia(mgain);
+  R.mediaParts = [{ k: 'Escalada natural da cobertura', v: (8 + G.round * 2) * D.media }, { k: 'Seus comunicados', v: G.commMedia }, { k: 'Jammer', v: hasGear('jammer') ? -2 : 0 }];
   L(R, G.media > 70 ? 'warn' : 'info', 'mic', `Pressão da mídia ${mgain >= 0 ? '+' : ''}${Math.round(mgain)} → ${Math.round(G.media)}.`);
   // agitação
   let base = P.base; if (G.profile === 'volatil') base = ri(-5, 8);
@@ -600,6 +675,7 @@ function resolveDecisions() {
   let pas = 0; if (G.team.includes('marina') && !isAway('marina')) pas -= 2; if (hasGear('jammer')) pas += 1;
   const dA = base + ext - calm + pas;
   const a0 = G.agit; addAgit(dA);
+  R.agitParts = [{ k: 'Perfil do líder', v: base }, { k: 'Pressão externa (mídia e agentes na Entrada)', v: ext }, { k: 'Negociação', v: -calm }, { k: 'Equipe e equipamentos', v: pas }];
   if (!(G.K.profile && G.nego.contact)) L(R, dA > 0 ? 'warn' : 'good', 'alert', dA > 4 ? 'O tom do líder no canal parece mais tenso.' : dA < -4 ? 'O tom do líder no canal parece mais baixo.' : 'O tom do líder no canal parece estável.');
   else L(R, dA > 0 ? 'warn' : 'good', 'alert', `Agitação do líder ${dA >= 0 ? '+' : ''}${dA.toFixed(1)} (perfil ${base >= 0 ? '+' : ''}${base.toFixed(0)}, pressão externa +${ext.toFixed(1)}${calm ? `, negociação ${calm > 0 ? '−' : '+'}${Math.abs(calm).toFixed(1)}` : ''}${pas ? `, equipe ${pas > 0 ? '+' : ''}${pas}` : ''}).`);
   // impulsivo
@@ -619,11 +695,12 @@ function resolveDecisions() {
   }
   if (G.pendingDeath) {
     const pd = G.pendingDeath; pd.left--;
-    if (pd.left <= 0) { G.pendingDeath = null; if (rnd() < pd.p) { addDead(1); L(R, 'bad', 'heart', 'A refém diabética não resistiu. A sala de comando fica em silêncio.'); } else L(R, 'good', 'heart', 'A refém diabética se estabilizou a tempo.'); }
+    if (pd.left <= 0) { G.pendingDeath = null; if (rnd() < pd.p) { G.hPref.dead = pd.who || 'lucia'; addDead(1); L(R, 'bad', 'heart', 'Lúcia Andrade, 67 anos, não resistiu. A sala de comando fica em silêncio.'); } else L(R, 'good', 'heart', 'Dona Lúcia se estabilizou a tempo. Alguém lá dentro conseguiu dar o açúcar que restava na bolsa dela.'); }
   }
   // stakeholders
   stakePassives(R);
   G.pressure = calcPressure();
+  syncHL(R);
   // evento
   const evId = drawEvent();
   if (evId) {
@@ -638,12 +715,12 @@ function stakePassives(R) {
   STK_KEYS.forEach(k => {
     const s = G.stk[k];
     if (G.attended[k]) s.sem = 0; else s.sem++;
-    stake(k, -3 * Math.min(s.sem, 3));
+    stake(k, -3 * Math.min(s.sem, 3)); why(R, k, -3 * Math.min(s.sem, 3), `${s.sem} rodada${s.sem > 1 ? 's' : ''} sem atenção`);
   });
-  if (G.media > 70) stake('imprensa', -3);
-  stake('prefeito', -2 - (G.round >= 6 ? 3 : 0) - (G.deadlineLeft > 0 ? 2 : 0));
-  stake('banco', -(G.lastVaultDelta * .4));
-  stake('familias', -1);
+  if (G.media > 70) { stake('imprensa', -3); why(R, 'imprensa', -3, 'cobertura saturada'); }
+  stake('prefeito', -2 - (G.round >= 6 ? 3 : 0) - (G.deadlineLeft > 0 ? 2 : 0)); why(R, 'prefeito', -2 - (G.round >= 6 ? 3 : 0) - (G.deadlineLeft > 0 ? 2 : 0), G.round >= 6 ? 'urgência política (rodada 6+)' : 'impaciência com a duração');
+  stake('banco', -(G.lastVaultDelta * .4)); why(R, 'banco', -(G.lastVaultDelta * .4), 'avanço do cofre');
+  stake('familias', -1); why(R, 'familias', -1, 'angústia da espera');
   const lost = STK_KEYS.filter(k => G.stk[k].sat <= 15 && !G.stk[k].lost);
   lost.forEach(k => {
     G.stk[k].lost = true;
@@ -661,14 +738,14 @@ const EVENT_FX = {
     addAgit(15); addMedia(20); stake('imprensa', -8);
     const h = addHurt(rnd() < (hasGear('kit') ? .15 : .30) ? 1 : 0);
     L(R, 'bad', 'shot', `Disparo acidental: agitação +15 e mídia +20. ${h ? 'Um refém foi atingido.' : 'Por sorte, ninguém foi atingido.'}`); } }] },
-  passamal:  { elig: g => true, choices: [
+  passamal:  { elig: g => g.hl.some(h => h.id === 'lucia' && h.in && h.st === 'ok'), choices: [
     { label: 'Oferecer troca humanitária (insulina)', hint: 'Usa o canal de negociação. Pode libertar a refém.', run: R => {
       const p = clamp(.30 + .06 * negoSkill() + (G.nego.contact ? .10 : 0), .25, .9);
-      if (rnd() < p) { const H = G.hostages; H.inside--; H.freed++; addAgit(-6); stake('familias', 10); L(R, 'good', 'heart', 'A troca humanitária funcionou: a refém sai com a insulina, a agitação cai (−6) e as famílias respiram.'); }
-      else { addAgit(5); const h = addHurt(rnd() < (hasGear('kit') ? .25 : .5) ? 1 : 0); L(R, 'bad', 'heart', `O líder desconfia da troca e recusa. Agitação +5.${h ? ' A refém piora.' : ''}`); } } },
+      if (rnd() < p) { const H = G.hostages; H.inside--; H.freed++; G.hPref.free = 'lucia'; addAgit(-6); stake('familias', 10); L(R, 'good', 'heart', 'A troca humanitária funcionou: Dona Lúcia sai amparada pela porta lateral, com a insulina já na mão. A agitação cai (−6) e as famílias respiram.'); }
+      else { addAgit(5); G.hPref.hurt = 'lucia'; const h = addHurt(rnd() < (hasGear('kit') ? .25 : .5) ? 1 : 0); L(R, 'bad', 'heart', `O líder desconfia da troca e recusa. Agitação +5.${h ? ' Dona Lúcia piora.' : ''}`); } } },
     { label: 'Aguardar e preparar o kit médico', hint: 'Arriscado sem kit médico.', run: R => {
-      const h = addHurt(1); G.pendingDeath = { left: 1, p: hasGear('kit') ? .10 : .40 };
-      L(R, 'warn', 'heart', `A refém passa mal e fica em estado crítico. ${hasGear('kit') ? 'O kit médico está de prontidão.' : 'Sem kit médico, há risco real de morte na próxima rodada.'}`); } }] },
+      G.hPref.hurt = 'lucia'; addHurt(1); G.pendingDeath = { left: 1, p: hasGear('kit') ? .10 : .40, who: 'lucia' };
+      L(R, 'warn', 'heart', `Dona Lúcia passa mal e fica em estado crítico. ${hasGear('kit') ? 'O kit médico está de prontidão.' : 'Sem kit médico, há risco real de morte na próxima rodada.'}`); } }] },
   heli:      { elig: g => true, choices: [
     { label: 'Solicitar restrição do espaço aéreo (30 créditos)', hint: 'Reduz a exposição, custa verba.', cost: 30, run: R => {
       G.credits -= 30; G.spent.ops += 30; addMedia(6); G.exposed = 1; stake('prefeito', 3); stake('imprensa', -6);
@@ -692,7 +769,7 @@ const EVENT_FX = {
     { label: 'Pedir confiança no protocolo', hint: 'Honesto, mas pode irritar.', run: R => {
       if (G.stk.prefeito.sat < 50) { stake('prefeito', -5); L(R, 'bad', 'mayor', 'O prefeito já estava insatisfeito e interpreta o pedido como evasiva (−5).'); }
       else { stake('prefeito', 3); L(R, 'good', 'mayor', 'O prefeito aceita o argumento técnico por ora (+3).'); } } }] },
-  live:      { elig: g => g.round >= 3 && !hasGear('jammer'), choices: [
+  live:      { elig: g => g.round >= 3 && !hasGear('jammer') && g.hl.some(h => h.id === 'thiago' && h.in && h.st !== 'dead'), choices: [
     { label: 'Aproveitar a transmissão', hint: 'Revela informação, dispara a mídia.', run: R => {
       addMedia(25); addAgit(6); stake('imprensa', 6); G.K.count = true; G.K.countHint = null; G.K.hostages = true;
       const H = G.hostages; L(R, 'warn', 'live', `Você acompanha a live: ${G.assail} armados no interior e reféns identificados (${H.inside - H.hurt - H.dead} ilesos, ${H.hurt} feridos). Em troca, mídia +25 e agitação +6.`); } },
@@ -732,7 +809,7 @@ const EVENT_FX = {
   deadline:  { elig: g => (g.round === 6 || g.round === 7) && !g.deadlineFired, choices: [{ label: 'Entendido', hint: 'O tempo agora tem hora marcada', run: R => {
     G.deadlineLeft = 2; G.deadlineFired = true; stake('prefeito', -5); addMedia(10);
     L(R, 'bad', 'clock', 'O noticiário das 20h vai ao ar em cerca de duas rodadas. O prefeito exige resolução (−5), a mídia sobe +10 e as perdas de prefeito passam a ser dobradas.'); } }] },
-  familia:   { elig: g => g.round >= 2, choices: [
+  familia:   { elig: g => g.round >= 2 && g.hl.some(h => h.id === 'yara' && h.in && h.st !== 'dead'), choices: [
     { label: 'Usar o canal para tranquilizar a refém', hint: 'Humano, mas fora do seu controle.', run: R => {
       stake('familias', 10); addAgit(4); G.K.hostages = true; const H = G.hostages;
       L(R, 'warn', 'family', `A mãe acalma a filha e você ouve o interior pela linha: ${H.hurt} feridos entre os reféns. As famílias aprovam (+10), o líder se irrita por perder o controle do canal (+4).`); } },
@@ -752,8 +829,9 @@ const EVENT_FX = {
       else { addAgit(12); if (G.nego.step > 1) G.nego.step--; L(R, 'bad', 'split', `O líder percebe a manobra. Agitação +12 e a negociação regride ao degrau ${G.nego.step}.`); } } },
     { label: 'Ignorar o sinal', hint: 'Sem risco, sem oportunidade.', run: R => { L(R, 'info', 'split', 'Você registra o sinal e não age. O momento passa.'); } }] }
 };
+const HEAVY = ['tiroteio', 'segundo', 'cumplice', 'live', 'infiltrado', 'passamal', 'proposta'];
 function drawEvent() {
-  const D = D_(); if (G.round < 2 || rnd() > D.evChance) return null;
+  const D = D_(); if (G.round < 2 || G.quietRound === G.round || rnd() > D.evChance) return null;
   const avgFat = deployed().length ? deployed().reduce((s, id) => s + (G.fat[id] || 0), 0) / deployed().length : 0;
   const pool = EVENT_DEFS.filter(e => !G.usedEvents.includes(e.id) && EVENT_FX[e.id].elig(G));
   if (!pool.length) return null;
@@ -765,12 +843,14 @@ function drawEvent() {
     if (x.id === 'prefeito' && G.round >= 4) w *= 2;
     return w;
   });
-  G.usedEvents.push(e.id); return e.id;
+  G.usedEvents.push(e.id);
+  if (HEAVY.includes(e.id)) G.quietRound = G.round + 1;   // respiro: a rodada seguinte não tem carta de evento
+  return e.id;
 }
 function chooseEvent(idx) {
   const R = G.R, fx = EVENT_FX[G.pendingEvent], ch = fx.choices[idx];
   if (ch.cost && G.credits < ch.cost) return false;
-  R.ev = { id: G.pendingEvent, choice: ch.label };
+  R.ev = { id: G.pendingEvent, choice: ch.label }; R.sec = 'ev';
   ch.run(R); G.pendingEvent = null; G.pressure = calcPressure(); G.stage = 'resolving';
   finishRound(); return true;
 }
@@ -778,6 +858,7 @@ function chooseEvent(idx) {
 /* ---------------- Fim de rodada / desfecho ---------------- */
 function finishRound() {
   const R = G.R, D = D_();
+  R.sec = 'fim';
   let out = null;
   if (R.interv) { out = doIntervention(false); }
   // ação desesperada
@@ -795,6 +876,7 @@ function finishRound() {
   if (!out && G.round >= 6 && G.stk.prefeito.lost && G.stk.prefeito.sat <= 15) { L(R, 'bad', 'mayor', 'ORDEM POLÍTICA: o prefeito determina a intervenção imediata, contra a sua recomendação técnica.'); out = doIntervention(true); }
   if (!out && G.round >= MAX_ROUNDS) out = doUltimatum();
   // manutenção de fim de rodada
+  syncHL(R);
   R.s1 = snap();
   const rec = { r: G.round, time: fmtTime(G.round), decs: R.decs, lines: R.lines.slice(), ev: R.ev, s0: R.s0, s1: R.s1, interv: !!R.interv };
   G.log.push(rec);

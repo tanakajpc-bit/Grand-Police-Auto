@@ -28,7 +28,8 @@ function sil(id, big) {
 /* ---------- Toasts de rádio ---------- */
 function toast(title, text, tone = '') {
   const box = document.getElementById('toasts'); if (!box) return;
-  const el = document.createElement('div'); el.className = 'toast ' + tone;
+  if ([...box.children].some(c => c.dataset.t === text)) return;
+  const el = document.createElement('div'); el.className = 'toast ' + tone; el.dataset.t = text;
   el.innerHTML = `<b>${title}</b>${text}`; box.appendChild(el);
   while (box.children.length > 4) box.removeChild(box.firstChild);
   setTimeout(() => { if (el.parentNode) el.parentNode.removeChild(el); }, 7000);
@@ -38,11 +39,13 @@ function radioToasts(list) {
 }
 
 /* ---------- Timer ---------- */
+/* Pacing: as duas primeiras rodadas são de orientação e dão mais tempo para ler o painel. */
+const roundTimer = () => Math.round(D_().timer * (G.round === 1 ? 1.6 : G.round === 2 ? 1.25 : 1));
 function stopTimer() { if (UI.timerId) { clearInterval(UI.timerId); UI.timerId = null; } }
 function startTimer() {
   stopTimer(); UI.timerRound = G.round;
   if (G.noLimit) { UI.deadline = 0; return; }
-  UI.deadline = Date.now() + D_().timer * 1000;
+  UI.deadline = Date.now() + roundTimer() * 1000;
   UI.timerId = setInterval(tick, 250); tick();
 }
 function tick() {
@@ -178,20 +181,31 @@ function tutorModal() {
 /* ===================================================================
    BRIEFING
    =================================================================== */
+function tickerHTML(items, label = 'AO VIVO') {
+  const t = items.map(x => `<span>${x}</span>`).join('<i>◆</i>');
+  return `<div class="ticker" role="marquee" aria-label="Manchetes ao vivo: ${items.join('. ')}"><b>${label}</b><div class="tk"><div class="tkin" aria-hidden="true">${t}<i>◆</i>${t}<i>◆</i></div></div></div>`;
+}
+function hostageStrip(cls = '') {
+  return `<div class="hstrip ${cls}" aria-label="Os 17 reféns: ${HOSTAGE_LIST.map(h => h.nome).join(', ')}">${HOSTAGE_LIST.map((h, i) => `<span class="hp" style="--i:${i}" title="${h.nome}, ${h.idade} anos, ${h.papel}${h.nota ? ' (' + h.nota + ')' : ''}">${sil1()}<small>${h.nome.split(' ')[0]}</small></span>`).join('')}</div>`;
+}
+const sil1 = () => '<svg viewBox="0 0 20 26" aria-hidden="true"><circle cx="10" cy="7" r="5"/><path d="M1 26c0-7 4-11 9-11s9 4 9 11z"/></svg>';
 function renderBriefing() {
   const w = [40, 20, 15, 10, 15], names = ['Vidas dos reféns', 'Prisão dos responsáveis', 'Valores recuperados', 'Custos operacionais', 'Confiança pública'];
-  return `<div class="screen brief">
+  return `<div class="screen brief" data-act="skipbrief">
+    ${tickerHTML(['URGENTE · Alarme dispara na Agência Central do Banco Meridiano, no centro de Porto Alto', 'Testemunhas falam em homens armados e clientes presos no interior', 'Polícia isola a Rua Marechal Deodoro; trânsito desviado', 'TV Porto Alto acompanha ao vivo'], 'URGENTE')}
     <div class="day">Sexta-feira</div><div class="time">14h07</div>
     <div class="narr">
       <p>O alarme silencioso da Agência Central do Banco Meridiano acaba de disparar. As primeiras viaturas confirmam: há pelo menos dois homens armados no interior da agência.</p>
-      <p>Dezessete pessoas, entre clientes e funcionários, estão impedidas de sair. Uma equipe da TV Porto Alto já estaciona o caminhão de transmissão na esquina da Rua Marechal Deodoro.</p>
-      <p>O delegado titular está em férias. Você é o próximo na cadeia de comando. A partir de agora, todas as decisões são suas.</p>
-      <p>Você tem mil créditos, doze profissionais disponíveis e um mapa com sete zonas. Não tem tempo, nem informação suficiente, e nenhuma decisão vai agradar a todos.</p>
+      <p>Dezessete pessoas, entre clientes e funcionários, estão impedidas de sair. Uma aposentada que veio pagar contas. Um caixa de 24 anos no segundo mês de emprego. Uma cliente grávida de sete meses.</p>
+      <p>Uma equipe da TV Porto Alto já estaciona o caminhão de transmissão na esquina da Rua Marechal Deodoro. O delegado titular está em férias. Você é o próximo na cadeia de comando. <b>A partir de agora, todas as decisões são suas.</b></p>
     </div>
     <div class="after">
+      <div class="eyebrow" style="margin-top:4px">Quem está lá dentro</div>
+      ${hostageStrip()}
+      <p class="faint" style="font-size:12.5px;margin-top:8px">Você tem mil créditos, doze profissionais de plantão e um mapa com sete zonas. Não tem tempo, nem informação suficiente, e nenhuma decisão vai agradar a todos.</p>
       <div class="eyebrow" style="margin-top:20px">Cinco objetivos em tensão</div>
       <div class="objgrid">${w.map((p, i) => `<div class="obj" style="--w:${p * 2.2}%"><b>${p}%</b><span>${names[i]}</span></div>`).join('')}</div>
-      <div class="row" style="margin-top:26px"><button class="btn primary lg" data-act="tobrief">Assumir o comando</button><span class="faint" style="font-size:12.5px">Próximo: Fase 0, recrutamento da equipe</span></div>
+      <div class="row" style="margin-top:26px"><button class="btn primary lg" data-act="tobrief">Assumir o comando</button><span class="faint" style="font-size:12.5px">Próximo: Fase 0, recrutamento da equipe · clique no texto para pular a animação</span></div>
     </div></div>`;
 }
 
@@ -210,6 +224,7 @@ function renderRecruit() {
       ${on ? '<span class="pill green hired">Recrutado</span>' : ''}
       <div class="top"><div class="sil">${sil(a.id)}</div><div><h4>${a.nome}</h4><span class="faint" style="font-size:11.5px">${a.trait}</span></div><span class="cost">${a.custo}</span></div>
       <div class="attrs">${Object.keys(ATTR).map(k => bar(ATTR[k], stat(a.id, k), k === 'tat' ? 'r' : k === 'neg' ? 'g' : k === 'int' ? 'v' : k === 'res' ? 'a' : 'b')).join('')}</div>
+      <p class="bio">${BIOS[a.id] || ''}</p>
       <div class="trait"><b>${a.trait}</b>${a.tdesc}</div></button>`;
   }).join('');
   const gear = EQUIPMENT_HTML();
@@ -224,7 +239,7 @@ function renderRecruit() {
     <div class="hud"><div class="hudrow"><span class="brand">PERÍMETRO</span><span class="pill">Fase 0 · Recrutamento</span><span class="spacer"></span><div class="stat"><small>Créditos</small><b style="color:var(--amber)">${fmt(G.credits)}</b></div></div></div>
     <div class="recr">
       <div class="grid" style="gap:18px">
-        <div><div class="eyebrow">Pool de profissionais</div><h2 style="font-size:22px;margin:4px 0 12px">Quem entra na sua força-tarefa?</h2><div class="agents">${agents}</div></div>
+        <div><div class="eyebrow">Pool de profissionais</div><h2 style="font-size:22px;margin:4px 0 6px">Quem entra na sua força-tarefa?</h2><p class="serif muted" style="font-size:15.5px;margin-bottom:12px;max-width:820px">14h12. A Secretaria liberou mil créditos e doze profissionais de plantão. Quem você chamar chega em quinze minutos. O que sobrar é tudo o que você terá para investigar, pedir apoio e pagar horas extras até o fim da noite.</p><div class="agents">${agents}</div></div>
         <div><div class="eyebrow">Catálogo de equipamentos</div><div class="gear" style="margin-top:8px;grid-template-columns:repeat(auto-fill,minmax(300px,1fr))">${gear}</div></div>
       </div>
       <aside class="side">
@@ -260,7 +275,7 @@ function renderPerimeter() {
   const intel = INTEL.filter(i => i.fase1).map(i => {
     const r = G.p1intel[i.id], done = r && typeof r === 'object', c = intelCost(i.id), can = G.credits >= c;
     return `<div class="icard ${done && r.ok ? 'done' : ''}"><b>${icon(i.ic, 'ico" style="width:18px;height:18px;vertical-align:-4px;margin-right:6px')}${i.nome}</b><p>${i.desc}</p>
-      ${done ? `<div class="insight ${r.ok ? 'good' : 'warn'}">${icon(r.ok ? 'check' : 'alert', '', 2)}<span>${r.text}</span></div>` : `<button class="btn sm" data-act="p1intel" data-id="${i.id}" ${can ? '' : 'disabled'}>Investigar · ${c} créditos</button>`}</div>`;
+      ${done ? dossierHTML(r) : `<button class="btn sm" data-act="p1intel" data-id="${i.id}" ${can ? '' : 'disabled'}>Investigar · ${c} créditos</button>`}</div>`;
   }).join('');
   const zrows = ZONES.map(z => {
     const cov = zoneCoverage(z.id), sel = UI.sel;
@@ -287,4 +302,19 @@ function renderPerimeter() {
         <p class="faint" style="font-size:11.5px">Cobertura calculada com a pressão inicial (${G.pressure}): eficiência × ${pressureFactor(G.pressure * .95).toFixed(2)}. Ela muda ao longo do cerco.</p>
       </aside>
     </div></div>`;
+}
+
+/* ---------- Dossiê de inteligência: resposta + o que muda (o "aha") ---------- */
+function dossierHTML(r) {
+  return `<div class="dossier ${r.ok ? 'ok' : 'no'}"><span class="stamp">${r.ok ? 'Confirmado' : 'Inconclusivo'}</span>
+    <b>${r.nome}</b><p>${r.text}</p>${r.impact ? `<div class="impact"><small>O que muda</small>${r.impact}</div>` : ''}</div>`;
+}
+
+/* ---------- Cortes de cena entre fases (não salvos: são só transição) ---------- */
+function cutHTML() {
+  const c = UI.cut; if (!c) return '';
+  return `<div class="cut" role="dialog" aria-modal="true" aria-label="${c.title}"><div class="cutin">
+    <div class="time">${c.time}</div><h2>${c.title}</h2>
+    ${c.lines.map((l, i) => `<p class="${l.radio ? 'radio-q' : ''}" style="animation-delay:${.5 + i * .9}s">${l.t}</p>`).join('')}
+    <div class="row" style="justify-content:center;margin-top:10px"><button class="btn primary lg" data-act="cutgo" style="animation-delay:${.6 + c.lines.length * .9}s">${c.btn}</button></div></div></div>`;
 }

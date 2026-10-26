@@ -5,7 +5,8 @@ const hoursN = () => Math.max(1, Math.round(G.round * ROUND_MIN / 60));
 const plural = (n, s, p) => n === 1 ? s : p;
 function harmSentence() {
   const H = G.hostages;
-  if (H.dead) return `A crise deixou ${H.dead} ${plural(H.dead, 'morto', 'mortos')} entre os reféns${H.hurt ? ` e ${H.hurt} ${plural(H.hurt, 'ferido', 'feridos')}` : ''}.`;
+  const names = G.hl.filter(h => h.st === 'dead').map(h => HOST[h.id].nome);
+  if (H.dead) return `A crise deixou ${H.dead} ${plural(H.dead, 'morto', 'mortos')} entre os reféns${H.hurt ? ` e ${H.hurt} ${plural(H.hurt, 'ferido', 'feridos')}` : ''}${names.length ? `. ${plural(names.length, 'Não voltou para casa', 'Não voltaram para casa')}: ${names.join(', ')}` : ''}.`;
   if (H.hurt) return `${H.hurt} ${plural(H.hurt, 'refém ficou ferido', 'reféns ficaram feridos')}; os demais saíram ilesos.`;
   return `Todos os ${HOSTAGES} reféns saíram ilesos.`;
 }
@@ -43,6 +44,28 @@ function outcomeStory() {
   p.push(harmSentence() + ' ' + vaultSentence());
   return { p, title, tag, cls: 'o-' + E.type };
 }
+/* ---------- A verdade por trás da névoa (revelação final) ---------- */
+function truthHTML() {
+  const K = G.K, at = K.at || {}, P = PR_(), H = G.hostages, st = G.stats, E = G.end;
+  const when = k => at[k] != null ? (at[k] === 0 ? 'antes do cerco' : `na rodada ${at[k]}`) : null;
+  const rows = [
+    ['Perfil do líder', P.nome, 'profile', K.profile ? '' : `Com esse perfil, ${P.mult.emp >= P.mult.rat ? 'escuta, empatia e rapport' : 'critério objetivo e proposta concreta'} rendiam mais.`],
+    ['Rota de fuga', ZONE[G.route].nome + (G.routeNow !== G.route ? `, depois ${ZONE[G.routeNow].nome}` : ''), 'route', `Cobertura no início do cerco: ${st.initCov[G.route] || 0}%.`],
+    ['Pessoas armadas', String(G.assail), 'count', ''],
+    ['Cúmplice externo', G.accomplice ? 'Sim' : 'Não', 'accomplice', ''],
+    ['Cofre', Math.round(G.vault) + '%', 'vault', ''],
+    ['Reféns feridos', `${H.hurt} ${plural(H.hurt, 'ferido', 'feridos')} · ${H.dead} ${plural(H.dead, 'morto', 'mortos')}`, 'hostages', '']
+  ];
+  const known = rows.filter(r => when(r[2])).length;
+  const cost = E.type === 'intervencao' || (E.type === 'prazo' && E.variant === 'forcado') ? `A intervenção aconteceu com ${known} de 6 variáveis conhecidas. A chance real de sucesso era de ${Math.round((E.P || 0) * 100)}%.`
+    : E.type === 'fuga' ? `A saída foi por ${ZONE[E.zone].nome}, com ${E.cov}% de cobertura efetiva${when('route') ? '' : ', numa rota que você nunca confirmou'}.`
+    : E.type === 'rendicao' ? `A rendição veio ${when('profile') ? 'com o perfil do líder já identificado' : 'sem que você soubesse com quem falava'}: ${known} de 6 variáveis conhecidas.`
+    : `O prazo esgotou com ${known} de 6 variáveis conhecidas.`;
+  const sig = st.sig || 0, noise = st.noise || 0;
+  return `<div class="card truth"><h3>A verdade por trás da névoa</h3>
+    <div class="trows">${rows.map(([k, v, key, note]) => { const w = when(key); return `<div class="tr ${w ? 'k' : 'u'}"><span>${k}</span><b>${v}</b><small>${w ? '✓ você sabia (' + w + ')' : '✕ você nunca confirmou'}${note ? ' · ' + note : ''}</small></div>`; }).join('')}</div>
+    <p style="margin-top:10px">${cost} ${sig + noise ? `Dos relatos de campo sobre rotas, ${sig} ${plural(sig, 'era sinal verdadeiro', 'eram sinais verdadeiros')} e ${noise} ${plural(noise, 'era ruído', 'eram ruído')}.` : ''}</p></div>`;
+}
 function renderOutcome() {
   const o = outcomeStory(), H = G.hostages;
   return `<div class="screen outcome ${o.cls}">
@@ -50,6 +73,7 @@ function renderOutcome() {
     <h1>${o.title}</h1>
     <div class="narr">${o.p.map(t => `<p>${t}</p>`).join('')}</div>
     <div class="kv"><div><small>Reféns ilesos</small><b>${HOSTAGES - H.hurt - H.dead}</b></div><div><small>Feridos</small><b>${H.hurt}</b></div><div><small>Mortos</small><b>${H.dead}</b></div><div><small>Cofre</small><b>${Math.round(G.vault)}%</b></div><div><small>Créditos</small><b>${fmt(G.credits)}</b></div><div><small>Duração</small><b>${hoursN()} h</b></div></div>
+    ${truthHTML()}
     <div class="row"><button class="btn primary lg" data-act="toscore">Ver a pontuação</button></div></div>`;
 }
 
@@ -101,7 +125,14 @@ function newsHTML() {
     sub = E.variant === 'escapou' ? 'Cofre foi aberto e rota de fuga não tinha cobertura suficiente, apontam testemunhas' : 'Cobertura da rota foi decisiva para encerrar o cerco ao Banco Meridiano';
   } else { hl = `ULTIMATO TERMINA EM RENDIÇÃO APÓS ${horas} DE CERCO`; sub = 'Prazo esgotado e comando sob pressão: assaltantes cedem na última hora'; }
   const safe = HOSTAGES - H.hurt - H.dead;
-  const quotes = [];
+  const quotes = [], deadIds = G.hl.filter(h => h.st === 'dead').map(h => h.id);
+  const wit = ['lucia', 'joana', 'benedito', 'rafael', 'cecilia', 'jorge'].map(id => G.hl.find(h => h.id === id)).find(h => h && h.st !== 'dead') || G.hl.find(h => h.st !== 'dead');
+  const wq = E.type === 'rendicao' ? 'Quando ele largou o telefone e disse “acabou”, ninguém acreditou. Ficamos sentados um tempo, sem coragem de levantar.'
+    : E.type === 'fuga' ? 'Eles saíram correndo e deixaram a gente lá dentro. Ficamos sem saber se podíamos levantar.'
+    : E.type === 'prazo' && E.variant === 'cedeu' ? 'As últimas horas foram as piores. Ele não parava de olhar o relógio.'
+    : v === 'limpa' ? 'Foi tudo muito rápido. Num minuto ouvi gritos, no outro alguém segurava a minha mão e dizia que tinha acabado.'
+    : 'Eu só pensava na minha família. Ainda não consigo falar sobre o resto.';
+  if (wit) quotes.push(`<blockquote>“${wq}”<cite>${HOST[wit.id].nome}, ${HOST[wit.id].idade}, ${HOST[wit.id].papel}</cite></blockquote>`);
   const pk = G.stk.prefeito.sat, fk = G.stk.familias.sat, bk = G.stk.banco.sat;
   quotes.push(`<blockquote>${pk >= 70 ? '“A cidade esteve bem protegida. Agradeço ao comando por não ter cedido à pressa.”' : pk >= 40 ? '“Poderia ter sido mais rápido, mas o resultado final é o que importa.”' : '“Vamos exigir uma apuração completa sobre a condução deste incidente.”'}<cite>Prefeito de Porto Alto</cite></blockquote>`);
   quotes.push(`<blockquote>${H.dead ? '“Nada devolve quem perdemos. Queremos respostas, e queremos que isso nunca mais se repita.”' : H.hurt ? '“Nossos parentes estão vivos, mas feridos. Esperamos que cada um receba o cuidado que merece.”' : fk >= 60 ? '“Só queríamos abraçá-los. Obrigada a quem ficou lá fora o tempo todo.”' : '“Ficamos horas sem informação. A gente só queria saber se eles estavam bem.”'}<cite>Representante das famílias</cite></blockquote>`);
@@ -114,7 +145,7 @@ function newsHTML() {
     <span class="extra">EDIÇÃO EXTRA</span>
     <h1 class="hl">${hl}</h1><p class="sub">${sub}</p>
     <div class="cols">
-      <p>PORTO ALTO — A crise que paralisou o centro da cidade na tarde desta sexta-feira terminou às ${t}, depois de ${hrs} ${plural(hrs, 'hora', 'horas')} de cerco à Agência Central do Banco Meridiano. Dos ${HOSTAGES} reféns, ${safe} ${plural(safe, 'saiu ileso', 'saíram ilesos')}${H.hurt ? `, ${H.hurt} ${plural(H.hurt, 'ficou ferido', 'ficaram feridos')}` : ''}${H.dead ? ` e ${H.dead} ${plural(H.dead, 'morreu', 'morreram')}` : ''}.</p>
+      <p>PORTO ALTO — A crise que paralisou o centro da cidade na tarde desta sexta-feira terminou às ${t}, depois de ${hrs} ${plural(hrs, 'hora', 'horas')} de cerco à Agência Central do Banco Meridiano. Dos ${HOSTAGES} reféns, ${safe} ${plural(safe, 'saiu ileso', 'saíram ilesos')}${H.hurt ? `, ${H.hurt} ${plural(H.hurt, 'ficou ferido', 'ficaram feridos')}` : ''}${H.dead ? ` e ${H.dead} ${plural(H.dead, 'morreu', 'morreram')}` : ''}.${deadIds.length ? ` A polícia confirmou ${plural(deadIds.length, 'a morte de', 'as mortes de')} ${deadIds.map(id => `${HOST[id].nome}, ${HOST[id].idade} anos`).join('; ')}.` : ''}</p>
       <p>${E.type === 'rendicao' ? `Segundo a polícia, a negociação foi decisiva. A conversa com o líder do grupo chegou ao degrau ${nsteps} de um processo de cinco etapas, da escuta ativa ao acordo sobre a saída, e a rendição foi acertada sem disparos.` : E.type === 'fuga' ? `Os assaltantes tentaram deixar o local por ${z}${E.adapted ? ' depois de mudarem o plano inicial' : ''}. ${E.variant === 'barrada' ? `A cobertura da zona, de ${E.cov}%, impediu a saída.` : E.variant === 'perseguicao' ? 'A perseguição foi encerrada na Avenida Principal.' : `A cobertura da zona era de ${E.cov}% e não impediu a fuga.`}` : E.type === 'prazo' ? `Ao fim do prazo estipulado pelos assaltantes, ${E.variant === 'cedeu' ? 'o líder do grupo aceitou se render, depois de uma negociação que chegou ao degrau ' + nsteps : 'o comando autorizou a entrada na agência'}.` : `A operação foi autorizada na rodada ${G.round}${E.forced ? ', sob determinação do gabinete do prefeito' : ''}. ${v === 'limpa' ? 'Segundo fontes, a informação reunida antes da entrada foi decisiva para o resultado.' : v === 'fracasso' ? 'Fontes do isolamento afirmam que faltou informação sobre o interior.' : 'Houve resistência no interior e a situação levou alguns minutos para ser contida.'}`}</p>
       <p>${vaultSentence()} A operação consumiu ${Math.round((1000 - G.credits) / 10)}% da verba disponível${G.credits < 100 ? ', deixando o comando praticamente sem margem' : ''}.</p>
       ${quotes.join('')}
@@ -227,6 +258,8 @@ ACT.continue = () => { const s = loadSave(); if (!s) { render(); return; } G = s
 ACT.howto = () => { UI.tutor = true; render(); };
 ACT.closehowto = () => { UI.tutor = false; render(); };
 ACT.tobrief = () => setPhase('recruit');
+ACT.skipbrief = () => { $app.classList.add('noanim'); };
+ACT.cutgo = () => { const c = UI.cut; UI.cut = null; render(); if (c && c.after) c.after(); };
 ACT.hire = d => {
   const a = agentById(d.id);
   if (G.team.includes(d.id)) { G.team = G.team.filter(x => x !== d.id); G.credits += a.custo; G.spent.rec -= a.custo; delete G.az[d.id]; }
@@ -246,7 +279,13 @@ ACT.torecruit = () => {
     if (!UI.emptyConfirm) { UI.emptyConfirm = true; render(); return; }
     G.team = ['g1', 'g2']; G.stats.noRecruit = true; G.team.forEach(id => G.az[id] = 'reserva');
   }
-  UI.emptyConfirm = false; UI.sel = null; G.pressure = calcPressure(); autoPlace(); setPhase('perimeter');
+  UI.emptyConfirm = false; UI.sel = null; G.pressure = calcPressure(); autoPlace();
+  const lead = G.team.slice().sort((a, b) => stat(b, 'tat') - stat(a, 'tat'))[0];
+  UI.cut = { time: '14h22', title: 'A equipe chega ao local', btn: 'Montar o perímetro', lines: [
+    { t: `${G.team.length} ${G.team.length === 1 ? 'profissional desce' : 'profissionais descem'} das viaturas na Rua Marechal Deodoro. O quarteirão já está isolado com fita, e a fita já tem uma plateia.` },
+    { t: `[RÁDIO] ${agentById(lead).nome} para o comando: “Equipe no local. Aguardo a distribuição pelas zonas. O banco tem mais saídas do que parece.” Câmbio.`, radio: true },
+    { t: 'Quatro das sete zonas ao redor da agência podem ser rotas de fuga. Você não sabe quais.' }] };
+  setPhase('perimeter');
 };
 CHG.camplus = (v, d, el) => { G.camAdj.plus = v; if (G.camAdj.minus === v) G.camAdj.minus = Object.keys(ATTR).find(k => k !== v); saveGame(); render(); };
 CHG.camminus = (v) => { G.camAdj.minus = v; if (G.camAdj.plus === v) G.camAdj.plus = Object.keys(ATTR).find(k => k !== v); saveGame(); render(); };
@@ -259,7 +298,16 @@ ACT.place = d => {
 };
 ACT.autoplace = () => { autoPlace(); UI.sel = null; saveGame(); render(); };
 ACT.p1intel = d => { const r = phase1Intel(d.id); if (!r) { warn('Créditos insuficientes.'); return; } saveGame(); render(); };
-ACT.tosiege = () => { confirmPerimeter(); G.phase = 'siege'; UI.pickZone = null; startRound(); render(); radioToasts(G.update.radio); (G.perimLog || []).forEach((t, i) => setTimeout(() => toast('RECONHECIMENTO', t, 'good'), 600 + i * 1200)); };
+ACT.tosiege = () => {
+  confirmPerimeter(); G.phase = 'siege'; UI.pickZone = null; startRound();
+  const adq = adequateCount();
+  UI.cut = { time: '14h37', title: 'Perímetro fechado', btn: 'Começar o cerco', lines: [
+    { t: `As equipes assumem as posições. ${adq} de 7 zonas têm cobertura adequada; nas outras, você está apostando.` },
+    { t: 'Dentro da agência, o telefone começa a tocar. É a linha que você mandou ligar.' },
+    { t: '[RÁDIO] Comando, todas as equipes em posição. A partir de agora o relógio é seu. Câmbio.', radio: true }],
+    after: () => { radioToasts(G.update.radio); (G.perimLog || []).forEach((t, i) => setTimeout(() => toast('RECONHECIMENTO', t, 'good'), 600 + i * 1200)); } };
+  render();
+};
 
 ACT.takepanel = () => { G.stage = 'panel'; UI.tab = 'tatica'; UI.ivConfirm = false; UI.pickZone = null; saveGame(); render(); };
 ACT.tab = d => { UI.tab = d.t; render(); };
@@ -288,7 +336,7 @@ ACT.execute = () => {
 };
 ACT.evchoice = d => { if (G.stage !== 'event') return; if (!chooseEvent(+d.i)) { warn('Créditos insuficientes para essa escolha.'); return; } render(); };
 ACT.cont = () => {
-  if (G.end) { G.phase = 'outcome'; saveGame(); render(); return; }
+  if (G.end) { const tb = document.getElementById('toasts'); if (tb) tb.innerHTML = ''; G.phase = 'outcome'; saveGame(); render(); return; }
   startRound(); render(); radioToasts(G.update.radio);
 };
 ACT.toscore = () => { G.phase = 'post'; UI.post = 'score'; saveGame(); render(); };
@@ -310,8 +358,9 @@ function render() {
   else if (G.phase === 'siege') html = G.stage === 'update' ? renderUpdate() : G.stage === 'panel' ? renderPanel() : G.stage === 'event' ? renderEventStage() : renderResult();
   else if (G.phase === 'outcome') html = renderOutcome();
   else html = renderPost();
-  $app.innerHTML = html;
+  $app.innerHTML = html + cutHTML();
   const key = G ? G.phase + ':' + (G.stage || '') + ':' + G.round + ':' + UI.post : 'menu';
+  if (key !== lastKey) $app.classList.remove('noanim');
   $app.classList.toggle('still', key === lastKey);
   if (key !== lastKey) { window.scrollTo(0, 0); lastKey = key; }
   const inSiege = G && G.phase === 'siege';
