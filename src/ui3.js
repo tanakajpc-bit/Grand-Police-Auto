@@ -188,7 +188,7 @@ function badgeEarned(id) {
     case 'olhos': return knownCount() >= 5;
     case 'cofre': return G.vault < 40;
     case 'economia': return G.credits >= 400;
-    case 'porta': return STK_KEYS.every(k => G.stk[k].sat >= DIFF[G.diff].porta);
+    case 'porta': return st.comms >= 3 && STK_KEYS.every(k => G.stk[k].sat >= DIFF[G.diff].porta);
     case 'degraus': return G.nego.maxStep >= 4 && G.nego.skips === 0;
     case 'rodizio': return st.minFF >= .7;
     case 'equilibrio': return [S.vidas, S.captura, S.valores, S.confianca].every(x => x > .6) && S.eficiencia > .3;

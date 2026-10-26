@@ -12,13 +12,13 @@ const EXPOSE = `globalThis.__api = {
   DIFF, PROFILES, AGENTS, GENERICS, EQUIP, INTEL, COMMS, POSTURES, STEPS, STK, STK_KEYS, ZONES, ZONE, EVENT_DEFS, EVENT_FX, EVDEF, BADGES, HOSTAGE_LIST, HOST, TOCS,
   ADEQ, HOSTAGES, MAX_ROUNDS, APOIO_PRECOS, agentById, clamp, fmtTime, syncHL
 };`;
-function load(seed, srcDir) {
+function load(seed, srcDir, extra) {
   const store = {};
   const sandbox = { console, localStorage: { getItem: k => (k in store ? store[k] : null), setItem: (k, v) => { store[k] = String(v); }, removeItem: k => { delete store[k]; }, _s: store }, performance: { now: () => 0 } };
   sandbox.globalThis = sandbox;
   const ctx = vm.createContext(sandbox);
   const dir = srcDir || SRC;
-  const code = FILES.map(f => fs.readFileSync(path.join(dir, f), 'utf8')).join('\n;\n') + '\n' + EXPOSE;
+  const code = FILES.map(f => fs.readFileSync(path.join(dir, f), 'utf8')).join('\n;\n') + '\n' + EXPOSE + (extra ? '\n' + extra : '');
   vm.runInContext(code, ctx, { filename: 'bundle.js' });
   const setRng = s => { sandbox.__rngfn = mulberry32(s >>> 0); vm.runInContext('Math.random = __rngfn;', ctx); };
   setRng(seed);

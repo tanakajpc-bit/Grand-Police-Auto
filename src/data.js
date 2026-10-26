@@ -272,7 +272,7 @@ const BADGES = [
   { id:'olhos',    nome:'Olhos abertos',          ic:'eye',   d:'Terminou com 5 das 6 variáveis ocultas reveladas.' },
   { id:'cofre',    nome:'Cofre intacto',          ic:'bank',  d:'Encerrou com o cofre abaixo de 40% de progresso.' },
   { id:'economia', nome:'Cofre da corporação',    ic:'coin',  d:'Terminou com 400 créditos ou mais de reserva.' },
-  { id:'porta',    nome:'Porta-voz',              ic:'mic',   d:'Todos os quatro stakeholders terminaram com 60 ou mais (50 ou mais no Caótico, que tem só duas decisões por rodada).' },
+  { id:'porta',    nome:'Porta-voz',              ic:'mic',   d:'Falou com os stakeholders pelo menos 3 vezes e terminou com os quatro em 60 ou mais (50 ou mais no Caótico, que tem só duas decisões por rodada).' },
   { id:'degraus',  nome:'Um degrau por vez',      ic:'stairs',d:'Chegou ao degrau 4 ou mais sem nunca pular etapa.' },
   { id:'rodizio',  nome:'Equipe descansada',      ic:'tired', d:'Nenhum agente chegou a fator de fadiga abaixo de 0,7.' },
   { id:'equilibrio',nome:'Equilíbrio perfeito',   ic:'radar', d:'Vidas, Prisões, Valores e Confiança acima de 60% e Eficiência acima de 30%: nenhuma dimensão ficou para trás.' },
