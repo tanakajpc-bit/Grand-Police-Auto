@@ -13,6 +13,7 @@ Carrega `data.js`, `story.js`, `engine.js` e `dash.js` num contexto `vm` isolado
 | `node tools/sim/edge.js [N] [NF]` | Casos extremos (sem equipe, gasta tudo, ignora negociação, só uma frente, passivo, intervém sempre…) mais um fuzz de `NF` partidas que confere invariantes a cada rodada (sem NaN, reféns que fecham 17, notas e tetos coerentes). |
 | `node tools/sim/itens.js [N] [equilibrada\|negociadora\|agressiva] [gratis]` | Valor de cada equipamento: a mesma equipe e política com um item só (ou nenhum). Pago inclui o custo de oportunidade; `gratis` mostra o efeito puro. |
 | `node tools/sim/notas.js [N]` | Fração das partidas que passa de cada limiar de nota (S e A) por jogador e dificuldade, incluindo equipes enxutas e cheias. |
+| `node tools/sim/equipe.js [N] [paz\|agr]` | Valor do tamanho da equipe: o especialista joga com 2 a 6 agentes e mostra se o agente a mais se paga (a nota já desconta a eficiência de custo). |
 | `node tools/sim/comparar.js [ref-git] [N]` | Teste diferencial: mesmas sementes com o motor de uma versão anterior (`git show`) e com o atual; conta as partidas que divergem. Zero divergência prova que uma mudança de interface ou de texto não mexeu no jogo. |
 
 `PERI_SRC=/outra/pasta/src` simula uma variante do código sem mexer no repositório. Os robôs ficam em `bots.js` (políticas e corredor de partidas; `policyComunicador` joga só negociação e comunicação com a equipe que se escolher), `experts.js` e `tiers.js`.
