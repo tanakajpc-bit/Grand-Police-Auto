@@ -22,9 +22,9 @@ function hudHTML() {
     <div class="stat"><small>Rodada</small><b>${G.round}/${MAX_ROUNDS}</b></div>
     <div class="stat"><small>Hora</small><b>${fmtTime(G.round)}</b></div>
     ${G.stage === 'panel' ? `<div class="timer" id="clock" role="timer" aria-label="Tempo restante da rodada">${G.noLimit ? '∞' : mmss(Math.max(0, Math.ceil((UI.deadline - Date.now()) / 1000)) || D_().timer)}</div>` : ''}
-    <div class="stat"><small>Créditos</small><b style="color:var(--amber)">${fmt(G.credits)}</b><em class="burn ${G.credits < plantaoCost() ? 'bad' : ''}" title="Custo de plantão cobrado ao fim de cada rodada">−${plantaoCost()}/rod.</em></div>
+    <div class="stat"><small>Créditos</small><b style="color:var(--amber)" data-k="cred" data-n="${Math.round(G.credits)}">${fmt(G.credits)}</b><em class="burn ${G.credits < plantaoCost() ? 'bad' : ''}" title="Custo de plantão cobrado ao fim de cada rodada">−${plantaoCost()}/rod.</em></div>
     <div class="stat tocchip ${TOCS[tocConstraint().k].cor}" title="Elo mais fraco do sistema agora (Teoria das Restrições)"><small>Gargalo</small><b>${TOCS[tocConstraint().k].nome}</b></div>
-    <div class="bsc" title="Projeção dos cinco objetivos (placar equilibrado)">${b.map(x => `<div>${x.k}<b>${x.unk ? '?' : Math.round(x.v)}</b>${meter(x.v, x.cls)}</div>`).join('')}</div>
+    <div class="bsc" title="Projeção dos cinco objetivos (placar equilibrado)">${b.map((x, i) => `<div><span>${x.k}</span><b ${x.unk ? 'title="Ainda desconhecido"' : `data-k="bscn${i}" data-n="${Math.round(x.v)}"`}>${x.unk ? '?' : Math.round(x.v)}</b>${meter(x.v, x.cls, `data-k="bsc${i}" data-val="${Math.round(x.v)}"`)}</div>`).join('')}</div>
   </div>${tickerHTML(headlines(), 'TV PORTO ALTO')}</div>`;
 }
 
@@ -78,14 +78,14 @@ function endsleyHTML() {
   L2.push(ins('info', 'phone', `Negociação no degrau ${G.nego.step} (${st.nome}). ${K.profile ? `Líder ${P.nome}: ${P.tip}` : G.nego.signalShown ? `Sinal do canal: “${P.sign}”` : 'O perfil do líder ainda é desconhecido, e a postura certa depende dele.'}`));
   const topEv = Object.entries(G.ev).sort((a, b) => b[1] - a[1])[0];
   const adq = adequateCount();
-  L2.push(ins(adq >= 4 ? 'good' : 'warn', 'map', `${adq} de 7 zonas com cobertura adequada. ${topEv && topEv[1] >= 1.5 ? `Os relatos convergem para <b>${ZONE[topEv[0]].nome}</b> (${topEv[1].toFixed(1)} indícios ponderados).${G.team.includes('carla') ? ' A Det. Mendes correlacionou os relatos.' : ''}` : 'Os relatos ainda não apontam uma rota com clareza.'}`));
+  L2.push(ins(adq >= 4 ? 'good' : 'warn', 'map', `${adq} de 7 zonas com cobertura adequada. ${topEv && topEv[1] >= 1.5 ? `Os relatos convergem para <b>${ZONE[topEv[0]].nome}</b> (${dec(topEv[1])} indícios ponderados).${G.team.includes('carla') ? ' A Det. Mendes correlacionou os relatos.' : ''}` : 'Os relatos ainda não apontam uma rota com clareza.'}`));
   const tired = deployed().filter(id => ff(id) < .8), away = G.team.filter(isAway);
   if (tired.length) L2.push(ins('warn', 'tired', `Fadiga: ${tired.map(id => shortName(agentById(id).nome)).join(', ')} abaixo de 80% de eficiência. Rodízio custa cobertura temporária.`));
   if (away.length) L2.push(ins('bad', 'alert', `${away.map(id => shortName(agentById(id).nome)).join(', ')} reconvocado${away.length > 1 ? 's' : ''} pela cidade por ${Math.max(...away.map(id => G.away[id]))} rodada(s).`));
   const bad = STK_KEYS.filter(k => G.stk[k].sem >= 2 || G.stk[k].sat < 40);
   if (bad.length) L2.push(ins('bad', 'family', `Risco com stakeholders: ${bad.map(k => `${STK[k].nome} (${Math.round(G.stk[k].sat)}${G.stk[k].sem >= 2 ? `, ${G.stk[k].sem} rodadas sem atenção` : ''})`).join('; ')}.`));
   if (G.round >= 6) L2.push(ins('bad', 'mayor', 'O prefeito está em modo de urgência: perdas de confiança dele são ampliadas até o fim.'));
-  G.hints.slice(-2).forEach(h => L2.push(ins('info', 'light', `Pista (rodada ${h.r}): ${h.t}`)));
+  G.hints.slice(-2).forEach(h => L2.push(ins('info', 'light', `Pista (rodada ${h.r}): ${br(h.t)}`)));
   // Nível 3
   const hist = G.hist, ag = hist.map(h => h.agit), md = hist.map(h => h.media), vl = hist.map(h => h.vault);
   const agNow = [...ag, Math.round(G.agit)], mdNow = [...md, Math.round(G.media)], vlNow = [...vl, Math.round(G.vault)];
@@ -109,12 +109,12 @@ function endsleyHTML() {
     ${ins('info', 'stairs', `Negociação: com a melhor postura, a chance de avançar é ${pLabel(pc)}; chegar ao degrau 5 leva cerca de ${roundsLeft || 'zero'} rodada${roundsLeft === 1 ? '' : 's'} se negociar todo turno. ${G.nego.step === 5 ? `Rendição ocorre se a agitação cair abaixo de ${D_().ret}.` : ''}`)}
     ${ins(ip > .55 ? 'good' : ip > .3 ? 'warn' : 'bad', 'shield', `Intervenção hoje: chance estimada ${pLabel(ip)} (${Math.round(clamp(ip - band, 0, 1) * 100)}–${Math.round(clamp(ip + band, 0, 1) * 100)}%). Quanto menos você sabe, mais larga é a faixa${blindParts().length ? ', e entrar sem conhecer o interior custa ' + Math.round(-blindParts().reduce((s, b) => s + b.v, 0) * 100) + ' pontos de chance' : ''}.`)}
     ${G.round < 6 ? ins('warn', 'mayor', `A urgência do prefeito aumenta na rodada 6 (faltam ${6 - G.round}).`) : ''}`;
-  return `<div class="card lvl"><h3>Painel do comandante · consciência situacional</h3>
-    <div class="lvl"><span class="tag"><b>1</b> Percepção · dados brutos</span>${l1}</div>
-    <hr style="border:0;border-top:1px solid var(--line);width:100%;margin:6px 0">
-    <div class="lvl l2"><span class="tag"><b>2</b> Compreensão · o que significa</span>${L2.join('')}</div>
-    <hr style="border:0;border-top:1px solid var(--line);width:100%;margin:6px 0">
-    <div class="lvl l3"><span class="tag"><b>3</b> Projeção · para onde vai</span>${L3}</div></div>`;
+  /* Os três níveis de Endsley viram abas: o mesmo conteúdo, um nível por vez (o painel tinha ~1.500 px). */
+  const l2s = L2.join(''), n2 = (l2s.match(/insight (warn|bad)/g) || []).length, n3 = (L3.match(/insight (warn|bad)/g) || []).length;
+  const lv = UI.lvl || 1, LV = [[1, 'Percepção', 'dados brutos', 0], [2, 'Compreensão', 'o que significa', n2], [3, 'Projeção', 'para onde vai', n3]];
+  return `<div class="card endsley"><h2 class="h3">Painel do comandante <span class="faint sub">consciência situacional</span></h2>
+    <div class="lvtabs" role="tablist" aria-label="Níveis de consciência situacional">${LV.map(([n, t, s, c]) => `<button class="lvtab l${n}" role="tab" id="lvt${n}" aria-controls="lvp" aria-selected="${lv === n}" tabindex="${lv === n ? 0 : -1}" data-act="lvl" data-t="${n}"><b>${n}</b><span>${t}<small>${s}</small></span>${c ? `<em title="${c} ${plural(c, 'leitura pede', 'leituras pedem')} atenção">${c}</em>` : ''}</button>`).join('')}</div>
+    <div class="lvl l${lv}${UI.tabAnim ? ' swap' : ''}" id="lvp" role="tabpanel" aria-labelledby="lvt${lv}">${lv === 1 ? l1 : lv === 2 ? l2s : L3}</div></div>`;
 }
 
 
@@ -129,16 +129,16 @@ function cashCard() {
   const status = G.credits < pl ? ['red', 'no vermelho no próximo plantão'] : G.credits >= need ? ['green', 'cobre o plantão até o fim'] : ['amber', `faltam ~${Math.round(need - G.credits)} até o fim`];
   const cats = spendBreakdown(), tot = cats.reduce((a, c) => a + c.v, 0) || 1;
   return `<div class="card cash"><h3>Caixa <span class="pill ${status[0]}">${status[1]}</span></h3>
-    <div class="cashtop"><div><small>Reserva</small><b class="mono">${fmt(G.credits)}</b></div><div><small>Plantão</small><b class="mono">−${pl}<i>/rod.</i></b></div><div><small>Cobre</small><b class="mono">${run >= 99 ? '∞' : run.toFixed(1).replace('.', ',')}<i> rod.</i></b></div></div>
+    <div class="cashtop"><div><small>Reserva</small><b class="mono" data-k="cashres" data-n="${Math.round(G.credits)}">${fmt(G.credits)}</b></div><div><small>Plantão</small><b class="mono">−${pl}<i>/rod.</i></b></div><div><small>Cobre</small><b class="mono">${run >= 99 ? '∞' : dec(run)}<i> rod.</i></b></div></div>
     <div class="stack" role="img" aria-label="Para onde foi o dinheiro: ${cats.filter(c => c.v > 0).map(c => c.k + ' ' + Math.round(c.v)).join(', ')}">${cats.filter(c => c.v > 0).map(c => `<i style="width:${c.v / tot * 100}%;background:${c.c}" title="${c.k}: ${Math.round(c.v)}"></i>`).join('')}</div>
     <div class="stackleg">${cats.filter(c => c.v > 0).map(c => `<span><i style="background:${c.c}"></i>${c.k} <b class="mono">${Math.round(c.v)}</b></span>`).join('')}</div>
-    <p class="faint" style="font-size:11.5px;margin-top:8px">Próximos preços: apoio externo ${G.supportUsed >= APOIO_PRECOS.length ? 'esgotado' : apoioCost(0)} · horas extras ${horasCost()} · investigação 40–70. Quem descansa na reserva ou foi reconvocado não custa plantão.</p></div>`;
+    <p class="faint" style="font-size:12px;margin-top:8px">Próximos preços: apoio externo ${G.supportUsed >= APOIO_PRECOS.length ? 'esgotado' : apoioCost(0)} · horas extras ${horasCost()} · investigação 40–70. Quem descansa na reserva ou foi reconvocado não custa plantão.</p></div>`;
 }
 function utilHTML() {
   const field = deployed().length, away = G.team.filter(isAway).length, rest = G.team.length - field - away;
   const tight = rest === 0 && field > 0;
   return `<div class="util" title="Utilização da equipe, como a capacidade de uma linha de produção"><span><b>${field}</b> em campo</span><span><b>${rest}</b> descansam</span><span><b>${away}</b> reconvocado${away === 1 ? '' : 's'}</span></div>
-    ${tight ? '<p class="faint" style="font-size:11.5px;margin:-4px 0 8px">Sem folga: ninguém descansa sem abrir uma zona. O cansaço acumulado só se resolve com rodízio ou horas extras.</p>' : ''}`;
+    ${tight ? '<p class="faint" style="font-size:12px;margin:-4px 0 8px">Sem folga: ninguém descansa sem abrir uma zona. O cansaço acumulado só se resolve com rodízio ou horas extras.</p>' : ''}`;
 }
 function gearNote(e) {
   const z = G.gz[e] || 'reserva', placed = z !== 'reserva', has = placed && agentsIn(z).length;
@@ -161,27 +161,27 @@ function gearCard() {
 const SEVN = { 3: 'crítico', 2: 'atenção', 1: 'aviso' };
 function alertsHTML() {
   const al = siegeAlerts();
-  if (!al.length) return `<div class="card alerts calm"><h3>Atenção agora</h3><p class="faint" style="font-size:13px">Nada exige ação imediata. Use a rodada para investir: informação, rodízio ou comunicação preventiva.</p></div>`;
+  if (!al.length) return `<div class="calmbar" role="status">${icon('check', 'ico', 2)}<span><b>Atenção agora:</b> nada exige ação imediata. Use a rodada para investir em informação, rodízio ou comunicação preventiva.</span></div>`;
   const top = al.slice(0, 3);
-  return `<div class="card alerts"><h3>Atenção agora <span class="pill ${al[0].sev === 3 ? 'red' : al[0].sev === 2 ? 'amber' : 'blue'}">${al.length} ${al.length === 1 ? 'alerta' : 'alertas'}</span></h3>
+  return `<div class="card alerts"><h2 class="h3">Atenção agora <span class="pill ${al[0].sev === 3 ? 'red' : al[0].sev === 2 ? 'amber' : 'blue'}">${al.length} ${al.length === 1 ? 'alerta' : 'alertas'}</span></h2>
     ${top.map(a => `<div class="alert s${a.sev}">${icon(a.ic, 'ico')}<div><b>${a.title}</b> <em>${SEVN[a.sev]}</em><span>${a.text}</span></div><button class="btn sm" data-act="tab" data-t="${a.tab}">${a.label}</button></div>`).join('')}
     ${al.length > 3 ? `<small class="faint">Em segundo plano: ${al.slice(3).map(a => a.title).join(' · ')}</small>` : ''}</div>`;
 }
 const TABN = { tatica: 'Tática', nego: 'Negociação', intel: 'Inteligência', com: 'Comunicação' };
 function tocWidget() {
   const t = tocConstraint(), keys = ['info', 'pessoal', 'tempo'], X = TOCS[t.k];
-  const bars = keys.map(k => `<div class="tocb ${k === t.k ? 'lead' : ''}"><span>${icon(TOCS[k].ic, 'ico')}${TOCS[k].nome}</span>${meter(t.pct[k], TOCCLS[TOCS[k].cor])}<b class="mono">${t.pct[k]}</b>${k === t.k ? '<em>gargalo</em>' : ''}</div>`).join('');
+  const bars = keys.map(k => `<div class="tocb ${k === t.k ? 'lead' : ''}"><span>${icon(TOCS[k].ic, 'ico')}${TOCS[k].nome}</span>${meter(t.pct[k], TOCCLS[TOCS[k].cor], `data-k="toc${k}" data-val="${t.pct[k]}"`)}<b class="mono">${t.pct[k]}</b>${k === t.k ? '<em>gargalo</em>' : ''}</div>`).join('');
   const dots = Array.from({ length: MAX_ROUNDS }, (_, i) => { const r = i + 1, k = G.tocLog[r]; return `<i class="td ${k ? TOCS[k].cor : ''} ${r === G.round ? 'now' : ''}" title="Rodada ${r}${k ? ': ' + TOCS[k].nome : ''}"></i>`; }).join('');
-  return `<div class="card toc"><h3>Gargalo do sistema <span class="faint" style="text-transform:none;letter-spacing:0;font-family:var(--sans);font-size:11.5px">Teoria das Restrições · o elo mais fraco decide o resultado</span></h3>
+  const hist = Array.from({ length: G.round }, (_, i) => G.tocLog[i + 1] ? `R${i + 1} ${TOCS[G.tocLog[i + 1]].nome}` : '').filter(Boolean).join(', ');
+  return `<div class="card toc"><h2 class="h3">Gargalo do sistema <span class="faint sub" title="O elo mais fraco decide o resultado do sistema">Teoria das Restrições</span></h2>
     <div class="tocbars">${bars}</div>
-    <div class="toctl"><small>Gargalo por rodada</small><span>${dots}</span></div>
+    <div class="toctl"><small>Gargalo por rodada</small><span aria-hidden="true">${dots}</span><span class="sr">${hist || 'sem histórico ainda'}</span></div>
     <p class="why"><b>${X.nome}.</b> ${X.por}</p>
-    <div class="elev"><small>Elevar</small>${X.elevar}</div>
-    <div class="elev stop"><small>Pare de</small>${X.parar}</div>
-    <div class="row" style="margin-top:8px"><button class="btn sm" data-act="tab" data-t="${X.tab}">Ir para ${TABN[X.tab]}</button><span class="faint" style="font-size:11.5px">${G.round <= 3 ? 'Esperado no início: informação.' : G.round <= 6 ? 'Esperado no meio: pessoal.' : 'Esperado no fim: tempo e fadiga.'} Quem não eleva o gargalo atual desperdiça o que gasta fora dele.</span></div></div>`;
+    <div class="elevs"><div class="elev"><small>Elevar</small>${X.elevar}</div><div class="elev stop"><small>Pare de</small>${X.parar}</div></div>
+    <div class="row" style="margin-top:8px"><button class="btn sm" data-act="tab" data-t="${X.tab}">Ir para ${TABN[X.tab]} →</button><span class="faint" style="font-size:12px">${G.round <= 3 ? 'Esperado no início: informação.' : G.round <= 6 ? 'Esperado no meio: pessoal.' : 'Esperado no fim: tempo e fadiga.'}</span></div></div>`;
 }
 function reposPreviewHTML() {
-  if (!UI.repoAgent || !UI.repoZone || G.az[UI.repoAgent] === UI.repoZone) return '<p class="faint" style="font-size:11.5px">Escolha agente e destino para ver o custo da mudança antes de assumi-la.</p>';
+  if (!UI.repoAgent || !UI.repoZone || G.az[UI.repoAgent] === UI.repoZone) return '<p class="faint" style="font-size:12px">Escolha agente e destino (ou clique numa zona do mapa) para ver o custo da mudança antes de assumi-la.</p>';
   const p = reposPreview(UI.repoAgent, UI.repoZone), nm = shortName(agentById(UI.repoAgent).nome);
   const cell = (z, a, b, c) => `<div class="rp"><b>${ZNAME(z)}</b><span class="mono">${a}% → <em class="${b < a ? 'neg' : 'pos'}">${b}%</em>${c != null ? ` → ${c}%` : ''}</span></div>`;
   return `<div class="rprev"><div class="eyebrow">Prévia · ${nm}</div>
@@ -191,7 +191,7 @@ function reposPreviewHTML() {
 }
 function planPreviewHTML() {
   const rows = planPreview(); if (!rows.length) return '';
-  return `<div class="card pprev"><h3>Prévia do plano <span class="faint" style="text-transform:none;letter-spacing:0;font-family:var(--sans);font-size:11.5px">estimativa com o que você já enxerga</span></h3>${rows.map(r => r.txt != null
+  return `<div class="card pprev"><h2 class="h3">Prévia do plano <span class="faint sub">estimativa com o que você já enxerga</span></h2>${rows.map(r => r.txt != null
     ? `<div class="pr"><span>${r.k}</span><b class="${r.tone}">${r.txt}</b><small>${r.note}</small></div>`
     : `<div class="pr"><span>${r.k}</span><b class="mono ${Math.abs(r.b - r.a) < .5 ? '' : (r.b > r.a) === r.goodUp ? 'pos' : 'neg'}">${r.f(r.a)} → ${r.f(r.b)}</b><small>${r.note}</small></div>`).join('')}</div>`;
 }
@@ -206,9 +206,9 @@ function colA() {
     const a = agentById(id), z = G.az[id] || 'reserva', f = ff(id);
     const tr = +G.transit[id] || 0, eff = agentEff(id) / stat(id, 'tat');
     return `<div class="trow ${isAway(id) ? 'away' : ''}"><div><b>${shortName(a.nome)}</b><small>${isAway(id) ? `reconvocado (${G.away[id]} rod.)` : ZNAME(z)}${tr ? ` · <span class="tr${tr}">em trânsito ${tr >= 2 ? '50' : '75'}%</span>` : ''} · ${a.trait}</small></div>
-      <div style="width:96px" title="Tática ${stat(id, 'tat')} × pressão ${Math.round(fp(id) * 100)}% × fadiga ${Math.round(f * 100)}%${tr ? ' × trânsito ' + (tr >= 2 ? '50' : '75') + '%' : ''}">${meter(f * 100, f > .75 ? 'g' : f > .55 ? 'a' : 'r')}<small class="mono faint" style="font-size:10.5px">rende ${Math.round(eff * 100)}%</small></div></div>`;
+      <div style="width:96px" title="Tática ${stat(id, 'tat')} × pressão ${Math.round(fp(id) * 100)}% × fadiga ${Math.round(f * 100)}%${tr ? ' × trânsito ' + (tr >= 2 ? '50' : '75') + '%' : ''}">${meter(f * 100, f > .75 ? 'g' : f > .55 ? 'a' : 'r', `data-k="ff${id}" data-val="${Math.round(f * 100)}"`)}<small class="mono faint" style="font-size:11px">rende ${Math.round(eff * 100)}%</small></div></div>`;
   }).join('');
-  return `<div class="colA">${cashCard()}${rosterCard()}<div class="card"><h3>Equipe e fadiga</h3>${utilHTML()}<div class="team">${team || '<p class="faint">Sem agentes.</p>'}</div></div>${gearCard()}${radioCard()}</div>`;
+  return `<div class="colA">${cashCard()}${rosterCard()}<div class="card"><h2 class="h3">Equipe e fadiga</h2>${utilHTML()}<div class="team">${team || '<p class="faint">Sem agentes.</p>'}</div></div>${gearCard()}${radioCard()}</div>`;
 }
 /* ---------- Quem está lá dentro: os 17 reféns com nome ---------- */
 function hstate(h) {
@@ -219,43 +219,69 @@ function hstate(h) {
 }
 function rosterCard() {
   const H = G.hostages, out = G.hl.filter(h => !h.in).length, inside = H.inside - H.dead;
-  return `<div class="card"><h3>Quem está lá dentro <span class="pill ${H.dead ? 'red' : inside < HOSTAGES ? 'green' : ''}">${inside} no interior</span></h3>
-    <div class="roster">${G.hl.map(h => { const d = HOST[h.id], st = hstate(h); return `<span class="rp ${st.c}" title="${d.nome}, ${d.idade} anos, ${d.papel}${d.nota ? ' (' + d.nota + ')' : ''}: ${st.t}"><b>${d.nome.split(' ')[0]}</b><small>${st.c.includes('unk') || st.c === 'in' ? d.idade + ' anos' : st.t}</small></span>`; }).join('')}</div>
-    <p class="faint" style="font-size:11.5px;margin-top:8px">${out ? `${out} fora do banco. ` : ''}${G.K.hostages ? 'Estado dos reféns confirmado.' : 'Borda tracejada: estado não confirmado. Você não sabe quem está ferido lá dentro; a sala de acolhimento ou uma investigação revelam.'}</p></div>`;
+  /* Compacto: só o nome; idade e papel ficam na dica. Estados fora do comum ganham texto, não só cor. */
+  return `<div class="card"><h2 class="h3">Quem está lá dentro <span class="pill ${H.dead ? 'red' : inside < HOSTAGES ? 'green' : ''}">${inside} no interior</span></h2>
+    <div class="roster">${G.hl.map(h => { const d = HOST[h.id], st = hstate(h), plain = st.c.includes('unk') || st.c === 'in'; return `<span class="rp ${st.c}" title="${d.nome}, ${d.idade} anos, ${d.papel}${d.nota ? ' (' + d.nota + ')' : ''}: ${st.t}"><b>${d.nome.split(' ')[0]}</b>${plain ? '' : `<small>${st.t}</small>`}</span>`; }).join('')}</div>
+    <p class="faint" style="font-size:12px;margin-top:8px">${out ? `${out} fora do banco. ` : ''}${G.K.hostages ? 'Estado dos reféns confirmado.' : 'Borda tracejada: estado não confirmado. A sala de acolhimento ou uma investigação revelam quem está ferido. Passe o mouse para ver idade e papel.'}</p></div>`;
 }
 
 /* ---------- Coluna C: decisões ---------- */
+const attr = s => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+/* Por que uma opção está indisponível. Devolve [motivo, mostrar na própria opção?].
+   Plano cheio e intervenção já aparecem num aviso único no topo da aba, então não se repetem em cada opção. */
+function whyNot(c = {}) {
+  const n = D_().slots;
+  if (G.queue.some(q => q.kind === 'interv')) return ['A intervenção ocupa a rodada inteira. Remova-a do plano para escolher outras ações.', false];
+  if (c.state) return [c.state, false];
+  if (c.inPlan) return ['Já está no plano. Para tirar, use o ✕ na barra do plano.', false];
+  if (!c.free && slotsLeft() <= 0) return [`Plano cheio: ${n} de ${n} decisões. Remova uma ação na barra do plano para trocar.`, false];
+  if (c.limit) return [c.limit, true];
+  if (c.cost && G.credits < c.cost) return [`Faltam ${fmt(c.cost - G.credits)} créditos (reserva ${fmt(G.credits)}).`, true];
+  return null;
+}
+/* Opção de decisão. Indisponível = aria-disabled: continua focável, mostra o motivo e explica no clique. */
 function opt(ic, title, desc, cost, act, data, o = {}) {
-  return `<button class="opt ${o.danger ? 'danger' : ''}" data-act="${act}" ${data || ''} ${o.disabled ? 'disabled' : ''} aria-pressed="${!!o.pressed}">${icon(ic, 'ico" style="width:24px;height:24px')}<span><b>${title}</b><span class="d">${desc}</span></span>${cost ? `<span class="c">${cost}</span>` : '<span></span>'}</button>`;
+  const w = o.why || null;
+  return `<button class="opt ${o.danger ? 'danger' : ''}" data-act="${act}" ${data || ''} ${w ? `aria-disabled="true" data-why="${attr(w[0])}"` : ''} aria-pressed="${!!o.pressed}">${icon(ic, 'ico" style="width:24px;height:24px')}<span><b>${title}${o.pressed ? ' <span class="pill amber inplan">no plano</span>' : ''}</b><span class="d">${desc}</span>${w && w[1] ? `<span class="unav">${w[0]}</span>` : ''}</span>${cost ? `<span class="c">${cost}</span>` : '<span></span>'}</button>`;
+}
+function planBanner() {
+  const n = D_().slots;
+  if (G.queue.some(q => q.kind === 'interv')) return `<div class="planfull bad" role="status">${icon('shield', 'ico', 1.8)}<span>A intervenção ocupa a rodada inteira. Para escolher outras ações, remova-a na barra do plano.</span></div>`;
+  if (slotsLeft() <= 0) return `<div class="planfull" role="status">${icon('check', 'ico', 2)}<span>Plano cheio: ${n} de ${n} decisões. Execute a rodada ou remova uma ação na barra do plano para trocar.</span></div>`;
+  return '';
 }
 function tabTatica() {
   const ags = G.team.filter(id => !isAway(id));
-  const noSlot = slotsLeft() <= 0, ivq = G.queue.some(q => q.kind === 'interv');
-  const zoneOpts = ZONES.map(z => `<option value="${z.id}">${z.nome} (${zoneCoverage(z.id)}%)</option>`).join('');
+  const ivq = G.queue.some(q => q.kind === 'interv');
+  const zoneOpts = ZONES.map(z => `<option value="${z.id}" ${UI.apoioZone === z.id ? 'selected' : ''}>${z.nome} (${zoneCoverage(z.id)}%)</option>`).join('');
   const ip = intervProb(), band = .16 * (1 - infoFrac()), blind = blindParts();
   const blindTxt = blind.length ? `<br><span style="color:var(--amber)">Às cegas: ${blind.map(b => `−${Math.round(-b.v * 100)}% porque você ${b.txt}`).join('; ')}.</span>` : '<br><span style="color:var(--green)">Você conhece o interior: sem penalidade por entrar às cegas.</span>';
+  const apoioLeft = Math.max(0, APOIO_PRECOS.length - G.supportUsed - G.queue.filter(q => q.kind === 'apoio').length);
+  const wRepos = whyNot(), wApoio = whyNot({ cost: apoioCost(), limit: apoioLeft ? null : 'Os 3 apoios externos da operação já foram usados.' });
+  const pausaQ = G.queue.some(q => q.kind === 'pausa'), horasQ = G.queue.some(q => q.kind === 'horas');
   return `<div class="card flat" style="display:grid;gap:8px"><h3>Reposicionar agente</h3>
-      <div class="row" style="gap:8px"><label class="field" style="flex:1;min-width:150px">Agente<select id="repoAgent" data-chg="repoagent"><option value="">escolher…</option>${ags.map(id => `<option value="${id}" ${UI.repoAgent === id ? 'selected' : ''}>${shortName(agentById(id).nome)} · ${ZNAME(G.az[id] || 'reserva')} · fad. ${(G.fat[id] || 0)}</option>`).join('')}</select></label>
-      <label class="field" style="flex:1;min-width:150px">Destino<select id="repoZone" data-chg="repozone"><option value="">escolher…</option>${ZONES.map(z => `<option value="${z.id}" ${UI.repoZone === z.id ? 'selected' : ''}>${z.nome}</option>`).join('')}<option value="reserva" ${UI.repoZone === 'reserva' ? 'selected' : ''}>Reserva (descansa)</option></select></label></div>
+      <div class="fields2"><label class="field">Agente<select id="repoAgent" data-chg="repoagent"><option value="">escolher…</option>${ags.map(id => `<option value="${id}" ${UI.repoAgent === id ? 'selected' : ''}>${shortName(agentById(id).nome)} · ${ZNAME(G.az[id] || 'reserva')} · fad. ${(G.fat[id] || 0)}</option>`).join('')}</select></label>
+      <label class="field">Destino<select id="repoZone" data-chg="repozone"><option value="">escolher…</option>${ZONES.map(z => `<option value="${z.id}" ${UI.repoZone === z.id ? 'selected' : ''}>${z.nome}</option>`).join('')}<option value="reserva" ${UI.repoZone === 'reserva' ? 'selected' : ''}>Reserva (descansa)</option></select></label></div>
       ${reposPreviewHTML()}
-      <button class="btn sm" data-act="addrepos" ${noSlot || ivq ? 'disabled' : ''}>Adicionar ao plano</button>
-      <p class="faint" style="font-size:11.5px">Deslocar custa: 50% de eficiência na rodada da ordem, 75% na seguinte, meia rodada de fadiga, e a zona de origem fica aberta na hora${hasGear('viatura') ? ' (sua Viatura elimina a perda de eficiência)' : ''}. A reserva descansa e zera a fadiga, mas não cobre nada.</p></div>
+      <div class="row"><button class="btn sm" data-act="addrepos" ${wRepos ? `aria-disabled="true" data-why="${attr(wRepos[0])}"` : ''}>Adicionar ao plano</button></div>
+      <p class="faint" style="font-size:12px">Deslocar custa: 50% de eficiência na rodada da ordem, 75% na seguinte, meia rodada de fadiga, e a zona de origem fica aberta na hora${hasGear('viatura') ? ' (sua Viatura elimina a perda de eficiência)' : ''}. A reserva descansa e zera a fadiga, mas não cobre nada.</p></div>
     <div class="optlist">
-      ${opt('support', 'Apoio externo', `Agências parceiras reforçam uma zona: +25 de cobertura por 2 rodadas. Cada uso encarece (${APOIO_PRECOS.join(' → ')}); ${Math.max(0, APOIO_PRECOS.length - G.supportUsed - G.queue.filter(q => q.kind === 'apoio').length)} restantes.`, apoioCost(), 'addapoio', '', { disabled: noSlot || ivq || G.credits < apoioCost() || G.supportUsed + G.queue.filter(q => q.kind === 'apoio').length >= APOIO_PRECOS.length })}
-      <div class="row" style="padding-left:40px;margin-top:-2px"><select id="apoioZone" data-chg="apoiozone" aria-label="Zona do apoio externo"><option value="">zona do apoio…</option>${zoneOpts}</select></div>
-      ${opt('pause', 'Pausa de Comando', `“Subir à sacada”: ${G.team.includes('diego') ? 'duas pistas' : 'uma pista'} sobre variáveis ocultas, visão sistêmica e −10 de pressão na equipe. Consome uma decisão; a crise continua andando.`, '', 'addpausa', '', { disabled: noSlot || ivq || G.queue.some(q => q.kind === 'pausa'), pressed: G.queue.some(q => q.kind === 'pausa') })}
-      ${opt('tired', 'Horas extras', `Recupera 2 rodadas de fadiga em campo e encerra a Fadiga crítica. O preço cresce com o efetivo em campo (${deployed().length} agentes).`, horasCost(), 'addhoras', '', { disabled: noSlot || ivq || G.credits < horasCost() || G.queue.some(q => q.kind === 'horas') })}
-      ${UI.ivConfirm ? `<div class="insight bad">${icon('alert', '', 1.8)}<span><b>Ordenar a intervenção agora?</b> Prontidão ${Math.round(intervPower())}%, chance estimada ${pLabel(ip)} (${Math.round(clamp(ip - band, 0, 1) * 100)}–${Math.round(clamp(ip + band, 0, 1) * 100)}%). Ocupa todas as decisões e encerra a crise nesta rodada.${blindTxt}</span></div><div class="row"><button class="btn danger" data-act="ivyes">Confirmar intervenção</button><button class="btn ghost" data-act="ivno">Cancelar</button></div>` :
+      ${opt('support', 'Apoio externo', `Agências parceiras reforçam uma zona: +25 de cobertura por 2 rodadas. Cada uso encarece (${APOIO_PRECOS.join(' → ')}); ${apoioLeft} ${plural(apoioLeft, 'restante', 'restantes')}.`, apoioCost(), 'addapoio', '', { why: wApoio })}
+      <label class="subfield"><span>Zona do apoio</span><select id="apoioZone" data-chg="apoiozone"><option value="">escolher…</option>${zoneOpts}</select></label>
+      ${opt('pause', 'Pausa de Comando', `“Subir à sacada”: ${G.team.includes('diego') ? 'duas pistas' : 'uma pista'} sobre variáveis ocultas, visão sistêmica e −10 de pressão na equipe. Consome uma decisão; a crise continua andando.`, '', 'addpausa', '', { why: whyNot({ inPlan: pausaQ }), pressed: pausaQ })}
+      ${opt('tired', 'Horas extras', `Recupera 2 rodadas de fadiga em campo e encerra a Fadiga crítica. O preço cresce com o efetivo em campo (${deployed().length} ${plural(deployed().length, 'agente', 'agentes')}).`, horasCost(), 'addhoras', '', { why: whyNot({ inPlan: horasQ, cost: horasCost() }), pressed: horasQ })}
+      ${UI.ivConfirm ? `<div class="insight bad">${icon('alert', '', 1.8)}<span><b>Ordenar a intervenção agora?</b> Prontidão ${Math.round(intervPower())}%, chance estimada ${pLabel(ip)} (${Math.round(clamp(ip - band, 0, 1) * 100)}–${Math.round(clamp(ip + band, 0, 1) * 100)}%). Ocupa todas as decisões e encerra a crise nesta rodada.${blindTxt}</span></div><div class="row"><button class="btn danger" data-act="ivyes">Confirmar intervenção</button><button class="btn ghost" data-act="ivno">Cancelar <span class="faint" style="font-weight:400">(Esc)</span></button></div>` :
         opt('shield', 'Intervenção', `Ação direta, o BATNA da força-tarefa. Prontidão ${Math.round(intervPower())}% · chance estimada <b>${pLabel(ip)}</b> (±${Math.round(band * 100)}%). Depende de inteligência, tática e agitação.${blindTxt}`, '', 'iv', '', { danger: true, pressed: ivq })}
     </div>`;
 }
 function tabNego() {
   const n = G.nego, cur = n.step, q = G.queue.find(x => x.kind === 'nego');
   const ags = avail(), negId = getNegotiator();
-  const ladder = STEPS.map(s => `<div class="step ${s.n < cur ? 'done' : s.n === cur ? 'cur' : ''}"><b>${s.n < cur ? '✓' : s.n}</b><span>${s.nome}<br><small>${s.sub}</small></span><small>${s.n === cur ? 'você está aqui' : ''}</small></div>`).join('');
+  const ladder = STEPS.map(s => `<div class="step ${s.n < cur ? 'done' : s.n === cur ? 'cur' : ''}"><b>${s.n < cur ? '✓' : s.n}</b><span>${s.nome}<br><small>${s.sub}</small></span><small>${s.n === cur ? 'você está aqui' : s.n < cur ? 'concluído' : ''}</small></div>`).join('');
+  const wN = whyNot({ free: !!q });   // trocar a postura não gasta decisão nova
   const posts = POSTURES.map(p => {
     const np = negoParts(p.t), tag = np.compat ? '<span class="pill green">compatível</span>' : np.skip ? '<span class="pill red">pula etapa</span>' : '<span class="pill">consolidar</span>';
-    return opt(p.kind === 'emp' ? 'ear' : 'stairs', `${p.t}. ${p.nome} ${tag}`, `${p.d}<br><span class="faint">Chance de avançar: <b style="color:var(--${pCls(np.p) === 'red' ? 'red' : pCls(np.p) === 'amber' ? 'amber' : pCls(np.p) === 'blue' ? 'blue' : 'green'})">${pLabel(np.p)}</b></span>`, '', 'addnego', `data-t="${p.t}"`, { pressed: !!q && q.p.tech === p.t, disabled: G.queue.some(x => x.kind === 'interv') });
+    return opt(p.kind === 'emp' ? 'ear' : 'stairs', `${p.t}. ${p.nome} ${tag}`, `${p.d}<br><span class="faint">Chance de avançar: <b style="color:var(--${pCls(np.p) === 'red' ? 'red' : pCls(np.p) === 'amber' ? 'amber' : pCls(np.p) === 'blue' ? 'blue' : 'green'})">${pLabel(np.p)}</b></span>`, '', 'addnego', `data-t="${p.t}"`, { pressed: !!q && q.p.tech === p.t, why: wN });
   }).join('');
   const hot = `<div class="hotline"><div class="eyebrow">${icon('phone', 'ico" style="width:15px;height:15px;vertical-align:-3px;margin-right:6px;color:var(--amber)')}Linha direta</div>
     <p class="scene">${n.contact ? STEP_SCENE[cur] : NO_CONTACT}</p>
@@ -264,52 +290,60 @@ function tabNego() {
   return `${hot}<div class="ladder">${ladder}</div>
     <label class="field">Negociador
       <select id="negotiator" data-chg="negotiator">${ags.map(id => `<option value="${id}" ${negId === id ? 'selected' : ''}>${shortName(agentById(id).nome)} · Negoc. ${stat(id, 'neg')}${G.az[id] && G.az[id] !== 'reserva' ? ' (em campo)' : ' (comando)'}</option>`).join('') || '<option>Comandante (você)</option>'}</select></label>
-    <p class="faint" style="font-size:11.5px">Postura compatível com o degrau atual: +20%. Pular etapa: −25% e metade da chance, com 20% de regredir. Pressionar sobe a agitação. Fadiga e pressão alta reduzem a habilidade do negociador (hoje ${negoSkill().toFixed(1)}). Com o canal aberto, as famílias contam como atendidas na rodada e cada avanço de degrau dá +3 a elas, um alívio quando as decisões são poucas.</p>
-    <div class="optlist">${posts}${opt('alert', 'Pressionar (ultimato)', `Sobe a agitação em +${PR_().press} (valor real). Pode regredir a negociação.`, '', 'addnego', 'data-t="press"', { danger: true, pressed: !!q && q.p.tech === 'press', disabled: G.queue.some(x => x.kind === 'interv') })}</div>`;
+    <p class="faint" style="font-size:12px">Postura compatível com o degrau atual: +20%. Pular etapa: −25% e metade da chance, com 20% de regredir. Pressionar sobe a agitação. Fadiga e pressão alta reduzem a habilidade do negociador (hoje ${dec(negoSkill())}). Com o canal aberto, as famílias contam como atendidas na rodada e cada avanço de degrau dá +3 a elas, um alívio quando as decisões são poucas.</p>
+    <div class="optlist">${posts}${opt('alert', 'Pressionar (ultimato)', `Sobe a agitação em +${PR_().press} (valor real). Pode regredir a negociação.`, '', 'addnego', 'data-t="press"', { danger: true, pressed: !!q && q.p.tech === 'press', why: wN })}</div>`;
 }
 function tabIntel() {
   const K = G.K, done = { perfil: K.profile, rota: !!K.route, efetivo: K.count, cofre: K.vault, refens: K.hostages, cumplice: K.accomplice };
   const pr = intelProb(false);
-  return `<p class="faint" style="font-size:12px">Confiabilidade estimada com a sua equipe: <b>${pLabel(pr)}</b>. O resultado chega no início da próxima rodada, e você paga mesmo se der inconclusivo.</p>
+  return `<p class="faint" style="font-size:12.5px">Confiabilidade estimada com a sua equipe: <b>${pLabel(pr)}</b>. O resultado chega no início da próxima rodada, e você paga mesmo se der inconclusivo.</p>
     <div class="optlist">${INTEL.map(i => {
-      const pend = G.pendingIntel.some(o => o.id === i.id) || G.queue.some(q => q.kind === 'intel' && q.p.id === i.id), c = intelCost(i.id);
-      const disabled = done[i.id] || pend || G.credits < c || slotsLeft() <= 0 || G.queue.some(q => q.kind === 'interv');
-      return opt(i.ic, `${i.nome}${done[i.id] ? ' <span class="pill green">revelado</span>' : pend ? ' <span class="pill amber">em andamento</span>' : ''}`, i.desc, c, 'addintel', `data-id="${i.id}"`, { disabled });
+      const queued = G.queue.some(q => q.kind === 'intel' && q.p.id === i.id), pend = G.pendingIntel.some(o => o.id === i.id), c = intelCost(i.id);
+      const w = whyNot({ state: done[i.id] ? 'Esta variável já foi revelada.' : pend ? 'Em andamento: o resultado chega no início da próxima rodada.' : null, inPlan: queued, cost: c });
+      return opt(i.ic, `${i.nome}${done[i.id] ? ' <span class="pill green">revelado</span>' : pend ? ' <span class="pill amber">em andamento</span>' : ''}`, i.desc, c, 'addintel', `data-id="${i.id}"`, { why: w, pressed: queued });
     }).join('')}</div>`;
 }
-function tabCom() {
-  const rows = STK_KEYS.map(k => {
+function stkRows(withSub) {
+  return STK_KEYS.map(k => {
     const s = G.stk[k], c = s.sat < 35 ? 'r' : s.sat < 60 ? 'a' : 'g';
-    return `<div class="stkrow"><div class="nm"><span>${STK[k].nome}</span><small>${STK[k].sub}</small></div>${meter(s.sat, c)}<span class="mono ${s.sem >= 2 ? 'alert' : ''}" title="${s.sem} rodada(s) sem atenção">${Math.round(s.sat)}</span></div>`;
+    return `<div class="stkrow"><div class="nm"><span>${STK[k].nome}</span>${withSub ? `<small>${STK[k].sub}</small>` : ''}</div>${meter(s.sat, c, `data-k="stk${k}" data-val="${Math.round(s.sat)}"`)}<span class="mono ${s.sem >= 2 ? 'alert' : ''}" title="${s.sem} ${plural(s.sem, 'rodada', 'rodadas')} sem atenção">${Math.round(s.sat)}${s.sem >= 2 ? ' !' : ''}</span></div>`;
   }).join('');
-  return `<div class="stk">${rows}</div>
-    <p class="faint" style="font-size:11.5px">Cada stakeholder ignorado perde 3 pontos × rodadas sem atenção (máx. 9 por rodada), além dos efeitos do que acontece na operação.</p>
-    <div class="optlist">${COMMS.map(c => opt(c.s === 'imprensa' ? 'mic' : c.s === 'prefeito' ? 'mayor' : c.s === 'banco' ? 'bank' : c.s === 'familias' ? 'family' : 'news', c.nome, c.d, c.custo || '', 'addcom', `data-id="${c.id}"`, { disabled: slotsLeft() <= 0 || G.credits < c.custo || G.queue.some(q => q.kind === 'com' && q.p.cid === c.id) || G.queue.some(q => q.kind === 'interv'), pressed: G.queue.some(q => q.kind === 'com' && q.p.cid === c.id) })).join('')}</div>`;
 }
+function tabCom() {
+  return `<div class="stk">${stkRows(true)}</div>
+    <p class="faint" style="font-size:12px">Cada stakeholder ignorado perde 3 pontos × rodadas sem atenção (máx. 9 por rodada), além dos efeitos do que acontece na operação. O sinal ! marca quem está há 2 rodadas ou mais sem atenção.</p>
+    <div class="optlist">${COMMS.map(c => { const q = G.queue.some(x => x.kind === 'com' && x.p.cid === c.id); return opt(c.s === 'imprensa' ? 'mic' : c.s === 'prefeito' ? 'mayor' : c.s === 'banco' ? 'bank' : c.s === 'familias' ? 'family' : 'news', c.nome, c.d, c.custo || '', 'addcom', `data-id="${c.id}"`, { why: whyNot({ inPlan: q, cost: c.custo }), pressed: q }); }).join('')}</div>`;
+}
+const TABS = [['tatica', 'Tática'], ['nego', 'Negociação'], ['intel', 'Inteligência'], ['com', 'Comunicação']];
 function colC() {
   const n = D_().slots, used = n - slotsLeft();
-  const tabs = [['tatica', 'Tática'], ['nego', 'Negociação'], ['intel', 'Inteligência'], ['com', 'Comunicação']];
   const body = UI.tab === 'tatica' ? tabTatica() : UI.tab === 'nego' ? tabNego() : UI.tab === 'intel' ? tabIntel() : tabCom();
-  const q = G.queue.map(d => `<div class="qitem"><span>${icon(FRONT_IC[d.front], 'ico" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px')}${d.label}${d.cost ? ` <span class="mono" style="color:var(--amber)">−${d.cost}</span>` : ''}</span><span class="faint" style="font-size:11px">${d.slots > 1 ? 'toda a rodada' : '1 decisão'}</span><button class="btn sm ghost" data-act="rmq" data-id="${d.id}" aria-label="Remover do plano">✕</button></div>`).join('');
-  const guide = G.round === 1 ? `<div class="card guide"><h3>Primeira rodada · como ler esta tela</h3><ol>
-      <li><b>Perceba</b> no centro: mapa, relatos de campo e o que ainda é desconhecido.</li>
-      <li><b>Compreenda e projete</b> logo abaixo: o painel traduz os dados e aponta tendências.</li>
-      <li><b>Decida</b> aqui: até ${n} ações nas quatro abas. Elas entram no plano e só acontecem quando você executa.</li></ol>
-      <p class="faint" style="font-size:11.5px">Nesta rodada e na próxima o relógio dá tempo extra para você se orientar.</p></div>` : '';
-  return `<div class="colC">${guide}<div class="card"><h3>Decisões da rodada <span class="slots" aria-label="${used} de ${n} decisões usadas">${Array.from({ length: n }, (_, i) => `<i class="slot ${i < used ? 'on' : ''}"></i>`).join('')}</span></h3>
-      <div class="tabs" role="tablist">${tabs.map(([k, l]) => `<button class="tab" role="tab" data-act="tab" data-t="${k}" aria-selected="${UI.tab === k}">${l}</button>`).join('')}</div>
-      <div class="grid" style="gap:10px;margin-top:12px">${body}</div></div>
-    <div class="card"><h3>Plano da rodada</h3><div class="queue">${q || '<p class="faint" style="font-size:12.5px">Nenhuma decisão ainda. Você pode executar sem decisões, mas o cofre e a mídia continuam andando.</p>'}</div>
-      <button class="btn primary lg" style="width:100%;margin-top:12px" data-act="execute">${G.queue.length ? 'Executar rodada' : 'Aguardar (sem decisões)'}</button></div>
+  const guide = G.round === 1 ? `<div class="card guide"><h2 class="h3">Primeira rodada · como ler esta tela</h2><ol>
+      <li><b>Perceba</b> no centro: alertas, mapa e a aba 1 do painel do comandante (relatos e o que ainda é desconhecido).</li>
+      <li><b>Compreenda e projete</b> nas abas 2 e 3 do painel: o que os dados significam e para onde vão.</li>
+      <li><b>Decida</b> aqui: até ${n} ações nas quatro frentes. Elas entram no plano (barra inferior) e só acontecem quando você executa.</li></ol>
+      <p class="muted" style="font-size:12px">Nesta rodada e na próxima o relógio dá tempo extra para você se orientar.</p></div>` : '';
+  return `<div class="colC">${guide}<div class="card decide"><h2 class="h3">Decisões da rodada <span class="slotc" aria-label="${used} de ${n} decisões no plano">${Array.from({ length: n }, (_, i) => `<i class="slot ${i < used ? 'on' : ''}"></i>`).join('')}<b class="mono">${used}/${n}</b></span></h2>
+      <div class="tabs" role="tablist" aria-label="Frentes de decisão">${TABS.map(([k, l]) => `<button class="tab" role="tab" id="tab-${k}" aria-controls="tabp" data-act="tab" data-t="${k}" aria-selected="${UI.tab === k}" tabindex="${UI.tab === k ? 0 : -1}">${icon(FRONT_IC[k], 'ico')}<span>${l}</span>${G.queue.some(d => d.front === k) ? '<i class="tdot" title="Há decisão desta frente no plano"></i>' : ''}</button>`).join('')}</div>
+      <div class="grid tabp${UI.tabAnim ? ' swap' : ''}" id="tabp" role="tabpanel" aria-labelledby="tab-${UI.tab}" style="gap:10px;margin-top:12px">${planBanner()}${body}</div></div>
     ${planPreviewHTML()}
-    <div class="card"><h3>Stakeholders</h3><div class="stk">${STK_KEYS.map(k => { const s = G.stk[k]; return `<div class="stkrow"><div class="nm"><span>${STK[k].nome}</span></div>${meter(s.sat, s.sat < 35 ? 'r' : s.sat < 60 ? 'a' : 'g')}<span class="mono ${s.sem >= 2 ? 'alert' : ''}">${Math.round(s.sat)}</span></div>`; }).join('')}</div></div></div>`;
+    ${UI.tab === 'com' ? '' : `<div class="card"><h2 class="h3">Stakeholders</h2><div class="stk">${stkRows(false)}</div></div>`}</div>`;
 }
 function radioCard() {
-  return `<div class="card"><h3>Rádio</h3><div class="radio">${G.radio.slice(0, 6).map(l => `<p class="${l.c || ''}">${l.t}</p>`).join('')}</div></div>`;
+  return `<div class="card"><h2 class="h3">Rádio</h2><div class="radio">${G.radio.slice(0, 6).map(l => `<p class="${l.c || ''}">${l.t}</p>`).join('')}</div></div>`;
+}
+/* Barra do plano: o que vai ser executado, quantas decisões restam e o botão de executar, sempre à vista. */
+function panelBar() {
+  const n = D_().slots, used = n - slotsLeft();
+  const chips = G.queue.map(d => `<span class="qchip" title="${attr(d.label)}${d.cost ? ' · −' + d.cost + ' créditos' : ''}">${icon(FRONT_IC[d.front], 'ico')}<span class="ql">${d.label}</span>${d.cost ? `<span class="mono qc">−${d.cost}</span>` : ''}<button class="qx" data-act="rmq" data-id="${d.id}" aria-label="Remover ${attr(d.label)} do plano">✕</button></span>`).join('');
+  return `<div class="absum"><span class="abk">Plano da rodada</span><span class="slotc">${Array.from({ length: n }, (_, i) => `<i class="slot ${i < used ? 'on' : ''}"></i>`).join('')}<b class="mono">${used}/${n}</b></span></div>
+    <div class="qchips" aria-live="polite">${chips || `<span class="faint">Nenhuma decisão ainda. Escolha até ${n} nas abas; sem decisões, o cofre e a mídia seguem andando.</span>`}</div>
+    <button class="btn primary lg" data-act="execute">${G.queue.length ? 'Executar rodada →' : 'Aguardar sem decisões'}</button>`;
 }
 function renderPanel() {
-  const mapCard = `<div class="card" style="padding:10px"><h3>Perímetro <span class="faint" style="text-transform:none;letter-spacing:0;font-family:var(--sans);font-size:11.5px">clique numa zona para usá-la como destino</span></h3><div class="mapwrap" style="padding:2px">${mapSVG({ interactive: G.stage === 'panel', act: 'zonepick', sel: UI.pickZone })}</div>${legendHTML()}</div>`;
-  return `${hudHTML()}<div class="siege screen">${colA()}<div class="colB">${alertsHTML()}${tocWidget()}${mapCard}${endsleyHTML()}</div>${colC()}</div>`;
+  const mapCard = `<div class="card mapcard"><h2 class="h3">Perímetro <span class="faint sub">clique numa zona para usá-la como destino</span></h2><div class="mapwrap" style="padding:2px">${mapSVG({ interactive: G.stage === 'panel', act: 'zonepick', sel: UI.pickZone })}</div>${legendHTML()}</div>`;
+  setBar(panelBar());
+  return `${hudHTML()}<div class="siege screen"><h1 class="sr">Rodada ${G.round} de ${MAX_ROUNDS}: painel de comando</h1>${colA()}<div class="colB">${alertsHTML()}${mapCard}${tocWidget()}${endsleyHTML()}</div>${colC()}</div>`;
 }
 
 /* ---------- Atualização da rodada ---------- */
@@ -323,20 +357,21 @@ const STANCE = { esperar: ['green', 'pede paciência'], intervir: ['red', 'quer 
 function councilHTML(list) {
   if (!list || !list.length) return '';
   const conflict = list.some(c => c.stance === 'intervir') && list.some(c => c.stance === 'esperar');
-  return `<div class="card"><h3>Mesa de comando <span class="faint" style="text-transform:none;letter-spacing:0;font-family:var(--sans);font-size:11.5px">cada um vê uma parte do problema</span></h3>
+  return `<div class="card"><h2 class="h3">Mesa de comando <span class="faint sub">cada um vê uma parte do problema</span></h2>
     <div class="council">${list.map(c => `<div class="adv"><div class="sil">${sil(c.id, 40)}</div><div><b>${shortName(c.nome)}</b> <span class="pill ${STANCE[c.stance][0]}">${STANCE[c.stance][1]}</span><p>“${c.t}”</p></div></div>`).join('')}</div>
     ${conflict ? ins('warn', 'split', 'Os conselhos se contradizem. Ninguém na mesa tem a informação inteira: integrar as partes é o seu trabalho.') : ''}</div>`;
 }
 function tocShiftHTML(u) {
   if (!u.toc) return '';
   const X = TOCS[u.toc], shifted = u.tocPrev && u.tocPrev !== u.toc;
-  if (!shifted && G.round === 1) return `<div class="card tocshift"><h3>O gargalo agora</h3><div class="tsrow">${icon(X.ic, 'ico')}<div><b>${X.nome}</b><p>${X.por} Em toda operação existe um elo mais fraco que decide o resultado. Ele muda ao longo do cerco: informação no início, pessoal no meio, tempo e fadiga no fim.</p></div></div></div>`;
+  if (!shifted && G.round === 1) return `<div class="card tocshift"><h2 class="h3">O gargalo agora</h2><div class="tsrow">${icon(X.ic, 'ico')}<div><b>${X.nome}</b><p>${X.por} Em toda operação existe um elo mais fraco que decide o resultado. Ele muda ao longo do cerco: informação no início, pessoal no meio, tempo e fadiga no fim.</p></div></div></div>`;
   if (!shifted) return `<div class="card tocshift calm"><div class="tsrow">${icon(X.ic, 'ico')}<div><b>O gargalo continua: ${X.nome}.</b> ${X.elevar}</div></div></div>`;
   const P = TOCS[u.tocPrev];
-  return `<div class="card tocshift"><h3>A restrição mudou</h3><div class="tsrow">${icon('split', 'ico')}<div><b>${P.nome} → ${X.nome}</b><p>${X.por}</p><p><b>Pare de:</b> ${X.parar}</p><p><b>Eleve agora:</b> ${X.elevar}</p></div></div></div>`;
+  return `<div class="card tocshift"><h2 class="h3">A restrição mudou</h2><div class="tsrow">${icon('split', 'ico')}<div><b>${P.nome} → ${X.nome}</b><p>${X.por}</p><p><b>Pare de:</b> ${X.parar}</p><p><b>Eleve agora:</b> ${X.elevar}</p></div></div></div>`;
 }
 function renderUpdate() {
   const u = G.update;
+  setBar(`<div class="absum"><span class="abk">Rodada ${G.round} de ${MAX_ROUNDS} · ${u.time}</span><span>${G.noLimit ? 'Sem limite de tempo.' : `Você terá <b class="mono">${roundTimer()}</b> segundos${G.round <= 2 ? ' (tempo extra de orientação)' : ''}`} e <b class="mono">${D_().slots}</b> decisões. O relógio só corre no painel.</span></div><span class="spacer"></span><button class="btn primary lg" data-act="takepanel">Assumir o painel →</button>`);
   const reps = u.reports.map(r => `<div class="report"><span class="src">${r.ag} · ${ZONE[r.z].curto}</span><span>${r.txt}. <span class="faint">Confiança ${r.conf}.</span></span></div>`).join('');
   return `${hudHTML()}<div class="resol screen">
     <div class="skyband r${G.round}">${skyline()}<i class="siren r"></i><i class="siren b"></i>
@@ -345,14 +380,14 @@ function renderUpdate() {
     ${siegeTrack()}
     <p class="serif intro">${u.intro || roundIntro()}</p>
     ${tocShiftHTML(u)}
+    ${G.round === 1 && (G.perimLog || []).length ? `<div class="card"><h2 class="h3">Reconhecimento do perímetro</h2><div class="grid" style="gap:6px">${G.perimLog.map(t => ins('good', 'eye', t)).join('')}</div></div>` : ''}
     ${u.quiet ? ins('good', 'wait', '<b>Calmaria.</b> Por alguns minutos, nada acontece. Pelo rádio, alguém pede café. Depois de uma rodada pesada, este é o momento de pensar, não de reagir: nenhuma carta de evento vai interromper esta rodada.') : ''}
-    <div class="card"><h3>Mensagens de rádio</h3><div class="radio" style="max-height:none">${u.radio.map(l => `<p class="${l.c || ''}">${l.t}</p>`).join('')}</div></div>
+    <div class="card"><h2 class="h3">Mensagens de rádio</h2><div class="radio live" style="max-height:none">${u.radio.map((l, i) => `<p class="${l.c || ''}" style="--i:${i}">${l.t}</p>`).join('')}</div></div>
     ${u.call ? `<div class="call">${icon('call', 'ico')}<div><small>Ligação recebida · ${u.call.who}</small><p>“${u.call.t}”</p></div></div>` : ''}
-    ${u.intel.length ? `<div class="card"><h3>Resultados da inteligência</h3><div class="dossiers">${u.intel.map(dossierHTML).join('')}</div></div>` : ''}
-    ${u.hint ? `<div class="card">${ins('info', 'light', u.hint)}</div>` : ''}
+    ${u.intel.length ? `<div class="card"><h2 class="h3">Resultados da inteligência</h2><div class="dossiers">${u.intel.map(dossierHTML).join('')}</div></div>` : ''}
+    ${u.hint ? `<div class="card">${ins('info', 'light', br(u.hint))}</div>` : ''}
     ${councilHTML(u.council)}
-    <div class="card"><h3>Relatos de campo</h3>${reps || '<p class="faint" style="font-size:13px">Nenhum relato novo. Zonas sem agentes não geram relatos.</p>'}</div>
-    <div class="row"><button class="btn primary lg" data-act="takepanel">Assumir o painel</button><span class="faint" style="font-size:12.5px">${G.noLimit ? 'Sem limite de tempo.' : `Você terá ${roundTimer()} segundos${G.round <= 2 ? ' (tempo extra de orientação)' : ''} e ${D_().slots} decisões.`}</span></div></div>`;
+    <div class="card"><h2 class="h3">Relatos de campo</h2>${reps || '<p class="faint" style="font-size:13px">Nenhum relato novo. Zonas sem agentes não geram relatos.</p>'}</div></div>`;
 }
 
 /* ---------- Resolução / feedback ---------- */
@@ -368,8 +403,8 @@ function waterfall(title, parts, exact, upBad = true) {
   const mag = v => Math.abs(v) < 2 ? 'leve' : Math.abs(v) < 6 ? 'moderado' : 'forte';
   return `<div class="wf"><div class="eyebrow">${title}</div>${ps.map(p => {
     const w = Math.abs(p.v) / mx * 50, bad = (p.v > 0) === upBad;
-    return `<div class="wfr"><span>${p.k}</span><div class="wfb"><i class="${bad ? 'bad' : 'good'}" style="${p.v > 0 ? 'left:50%' : `left:${50 - w}%`};width:${w}%"></i></div><b class="mono">${exact ? (p.v > 0 ? '+' : '−') + Math.abs(p.v).toFixed(1) : (p.v > 0 ? '↑ ' : '↓ ') + mag(p.v)}</b></div>`;
-  }).join('')}<div class="wfr tot"><span>Resultado</span><div></div><b class="mono">${exact ? (tot >= 0 ? '+' : '−') + Math.abs(tot).toFixed(1) : tot > .5 ? '↑ sobe' : tot < -.5 ? '↓ desce' : '→ estável'}</b></div></div>`;
+    return `<div class="wfr"><span>${p.k}</span><div class="wfb"><i class="${bad ? 'bad' : 'good'}" style="${p.v > 0 ? 'left:50%' : `left:${50 - w}%`};width:${w}%"></i></div><b class="mono">${exact ? (p.v > 0 ? '+' : '−') + dec(Math.abs(p.v)) : (p.v > 0 ? '↑ ' : '↓ ') + mag(p.v)}</b></div>`;
+  }).join('')}<div class="wfr tot"><span>Resultado</span><div></div><b class="mono">${exact ? (tot >= 0 ? '+' : '−') + dec(Math.abs(tot)) : tot > .5 ? '↑ sobe' : tot < -.5 ? '↓ desce' : '→ estável'}</b></div></div>`;
 }
 function stkWhyHTML(R, a, b) {
   return STK_KEYS.map(k => {
@@ -386,14 +421,14 @@ function hchgHTML(list) {
   if (fr.length) out.push(`<div class="hc out">${icon('check', 'ico')}<span><b>Saíram:</b> ${fr.map(id => `${HOST[id].nome} (${HOST[id].idade})`).join(', ')}.</span></div>`);
   if (hu.length) out.push(`<div class="hc hurt">${icon('heart', 'ico')}<span><b>${G.K.hostages ? 'Feridos:' : 'Ferimentos:'}</b> ${G.K.hostages ? hu.map(id => HOST[id].nome).join(', ') : `${hu.length} ${hu.length > 1 ? 'pessoas feridas' : 'pessoa ferida'} lá dentro, sem identificação confirmada`}.</span></div>`);
   if (de.length) out.push(`<div class="hc dead">${icon('heart', 'ico')}<span><b>Vidas perdidas:</b> ${de.map(id => `${HOST[id].nome}, ${HOST[id].idade} anos, ${HOST[id].papel}`).join('; ')}.</span></div>`);
-  return `<div class="card"><h3>Reféns nesta rodada</h3><div class="grid" style="gap:6px">${out.join('')}</div></div>`;
+  return `<div class="card"><h2 class="h3">Reféns nesta rodada</h2><div class="grid" style="gap:6px">${out.join('')}</div></div>`;
 }
 const SECS = [['dec', 'Suas decisões'], ['mundo', 'O mundo reagiu'], ['ev', 'Evento'], ['fim', 'Fim da rodada']];
 function linesBySec(lines, anim = true) {
   let k = 0;
   return SECS.map(([sec, t]) => {
     const ls = lines.filter(l => (l.sec || 'dec') === sec); if (!ls.length) return '';
-    return `<div class="sec"><div class="eyebrow">${t}</div>${ls.map(l => `<div class="res-line ${l.tone}" style="${anim ? `animation-delay:${(k++) * 90}ms` : 'animation:none'}">${icon(l.ic, '', 1.8)}<span>${l.text}</span></div>`).join('')}</div>`;
+    return `<div class="sec"><div class="eyebrow">${t}</div>${ls.map(l => `<div class="res-line ${l.tone}" style="${anim ? `animation-delay:${(k++) * 90}ms` : 'animation:none'}">${icon(l.ic, '', 1.8)}<span>${br(l.text)}</span></div>`).join('')}</div>`;
   }).join('');
 }
 function renderResult() {
@@ -408,30 +443,33 @@ function renderResult() {
     deltaCell('Pressão da equipe', a.p, b.p, v => Math.round(v), false, 'v')
   ].join('');
   const last = !!G.end, exactA = G.nego.contact && G.K.profile;
-  const cause = R.agitParts ? `<div class="card"><h3>Causa e efeito</h3><div class="grid" style="gap:14px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))">
+  const cause = R.agitParts ? `<div class="card"><h2 class="h3">Causa e efeito</h2><div class="grid" style="gap:14px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))">
       ${waterfall('Agitação do líder' + (exactA ? '' : ' (só a direção: sem perfil e canal, você não mede)'), R.agitParts, exactA)}
       ${waterfall('Pressão da mídia', R.mediaParts, true)}</div>
-      <p class="faint" style="font-size:11.5px;margin-top:8px">Eventos mudam a agitação e a mídia por fora destes fatores.</p></div>` : '';
+      <p class="faint" style="font-size:12px;margin-top:8px">Eventos mudam a agitação e a mídia por fora destes fatores.</p></div>` : '';
   const sw = stkWhyHTML(R, a, b);
+  setBar(`<div class="absum"><span class="abk">Resolução · rodada ${G.round} de ${MAX_ROUNDS}</span><span>${R.decs.length ? `${R.decs.length} ${plural(R.decs.length, 'decisão executada', 'decisões executadas')}` : 'Rodada sem decisões'}${last ? ' · a crise chegou ao fim' : ''}</span></div><span class="spacer"></span><button class="btn primary lg" data-act="cont">${last ? 'Ver o desfecho →' : G.round >= MAX_ROUNDS ? 'Encerrar →' : `Seguir para a rodada ${G.round + 1} →`}</button>`);
   return `${hudHTML()}<div class="resol screen">
-    <div><div class="eyebrow">Resolução · rodada ${G.round} de ${MAX_ROUNDS}</div><h1 style="font-family:var(--cond);font-size:clamp(28px,4vw,46px);letter-spacing:.03em;margin:6px 0 0">O que as suas decisões provocaram</h1></div>
+    <div><div class="eyebrow">Resolução · rodada ${G.round} de ${MAX_ROUNDS}</div><h1 class="rtitle">O que as suas decisões provocaram</h1></div>
     ${R.decs.length ? `<div class="row">${R.decs.map(d => `<span class="pill blue">${icon(FRONT_IC[d.front], 'ico" style="width:14px;height:14px')}${d.label}</span>`).join('')}</div>` : '<p class="muted">Você aguardou sem decisões nesta rodada. A crise não esperou.</p>'}
     <div class="grid" style="gap:14px">${linesBySec(R.lines)}</div>
     ${hchgHTML(R.hchg)}
-    <div class="card"><h3>Painel de feedback</h3><div class="delta">${cells}</div></div>
+    <div class="card"><h2 class="h3">Painel de feedback</h2><div class="delta">${cells}</div></div>
     ${cause}
-    ${sw ? `<div class="card"><h3>Stakeholders: por que mudaram</h3><div class="grid" style="gap:6px">${sw}</div></div>` : ''}
-    <div class="row"><button class="btn primary lg" data-act="cont">${last ? 'Ver o desfecho' : G.round >= MAX_ROUNDS ? 'Encerrar' : `Seguir para a rodada ${G.round + 1}`}</button></div></div>`;
+    ${sw ? `<div class="card"><h2 class="h3">Stakeholders: por que mudaram</h2><div class="grid" style="gap:6px">${sw}</div></div>` : ''}
+    </div>`;
 }
+/* Carta de evento: escolha obrigatória. Foco vai para a carta, Tab fica preso nela e as teclas 1–3 escolhem. */
 function eventModal() {
   const e = EVDEF[G.pendingEvent], fx = EVENT_FX[G.pendingEvent];
-  return `<div class="modalback"><div class="evcard" role="dialog" aria-modal="true" aria-label="${e.titulo}">
-    <div class="row" style="flex-wrap:nowrap"><div class="evico">${icon(e.ic)}</div><div><div class="eyebrow">Carta de evento</div><h2>${e.titulo}</h2></div></div>
-    <p class="radio-q">${e.radio}</p><p class="d">${e.desc}</p>
-    <div class="optlist">${fx.choices.map((c, i) => `<button class="opt" data-act="evchoice" data-i="${i}" ${c.cost && G.credits < c.cost ? 'disabled' : ''}><span></span><span><b>${c.label}</b><span class="d">${c.hint}</span></span>${c.cost ? `<span class="c">${c.cost}</span>` : '<span></span>'}</button>`).join('')}</div></div></div>`;
+  return `<div class="modalback"><div class="evcard" role="dialog" aria-modal="true" aria-labelledby="evt" aria-describedby="evd">
+    <div class="row" style="flex-wrap:nowrap"><div class="evico">${icon(e.ic)}</div><div><div class="eyebrow">Carta de evento</div><h2 id="evt">${e.titulo}</h2></div></div>
+    <p class="radio-q">${e.radio}</p><p class="d" id="evd">${e.desc}</p>
+    <div class="optlist">${fx.choices.map((c, i) => { const no = c.cost && G.credits < c.cost, why = no ? `Faltam ${fmt(c.cost - G.credits)} créditos (reserva ${fmt(G.credits)}).` : ''; return `<button class="opt evopt" data-act="evchoice" data-i="${i}" ${no ? `aria-disabled="true" data-why="${attr(why)}"` : ''}><span class="okey" aria-hidden="true">${i + 1}</span><span><b>${c.label}</b><span class="d">${c.hint}</span>${no ? `<span class="unav">${why}</span>` : ''}</span>${c.cost ? `<span class="c">${c.cost}</span>` : '<span></span>'}</button>`; }).join('')}</div>
+    <p class="faint" style="font-size:12px">Uma escolha é obrigatória. Atalho: teclas ${fx.choices.map((_, i) => i + 1).join(', ').replace(/, (\d)$/, ' ou $1')}.</p></div></div>`;
 }
 function renderEventStage() {
   const R = G.R;
-  const lines = R.lines.map(l => `<div class="res-line ${l.tone}">${icon(l.ic, '', 1.8)}<span>${l.text}</span></div>`).join('');
-  return `${hudHTML()}<div class="resol screen"><div><div class="eyebrow">Resolução · rodada ${G.round}</div><h1 style="font-family:var(--cond);font-size:clamp(28px,4vw,46px);margin:6px 0 0">Um evento interrompe a rodada</h1></div><div class="grid" style="gap:8px">${lines}</div></div>${eventModal()}`;
+  const lines = R.lines.map(l => `<div class="res-line ${l.tone}">${icon(l.ic, '', 1.8)}<span>${br(l.text)}</span></div>`).join('');
+  return `${hudHTML()}<div class="resol screen"><div><div class="eyebrow">Resolução · rodada ${G.round}</div><h1 class="rtitle">Um evento interrompe a rodada</h1></div><div class="grid" style="gap:8px">${lines}</div></div>${eventModal()}`;
 }

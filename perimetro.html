@@ -35,7 +35,7 @@ button,select,input{font:inherit;color:inherit}
 .mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
 .num{font-variant-numeric:tabular-nums}
 .muted{color:var(--ink2)} .faint{color:var(--ink3)}
-.eyebrow{font-family:var(--cond);text-transform:uppercase;letter-spacing:.16em;font-size:11.5px;color:var(--ink3);font-weight:600}
+.eyebrow{font-family:var(--cond);text-transform:uppercase;letter-spacing:.16em;font-size:12px;color:var(--ink3);font-weight:600}
 .serif{font-family:var(--serif)}
 
 /* botões */
@@ -43,6 +43,7 @@ button,select,input{font:inherit;color:inherit}
 .btn:hover{background:#22314a;border-color:#4a6288}
 .btn:active{transform:scale(.97)}
 .btn[disabled]{opacity:.45;cursor:not-allowed;transform:none}
+.btn[aria-disabled=true]{background:transparent;border-style:dashed;border-color:var(--line2);color:var(--ink2);cursor:not-allowed;transform:none;box-shadow:none}
 .btn.primary{background:var(--amber);border-color:var(--amber);color:#1b1305}
 .btn.primary:hover{background:#ffb93d;box-shadow:0 0 0 4px rgba(246,166,35,.18)}
 .btn.blue{background:var(--blue);border-color:var(--blue);color:#06162a}
@@ -52,14 +53,16 @@ button,select,input{font:inherit;color:inherit}
 .btn.ghost{background:transparent}
 .btn.sm{padding:6px 11px;font-size:12.5px;border-radius:6px}
 .btn.lg{padding:14px 26px;font-size:16px}
-.pill{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:99px;font-size:11.5px;font-weight:600;border:1px solid var(--line2);background:var(--panel2);color:var(--ink2);white-space:nowrap}
+.pill{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:600;border:1px solid var(--line2);background:var(--panel2);color:var(--ink2);white-space:nowrap}
 .pill.amber{color:var(--amber);border-color:rgba(246,166,35,.5);background:var(--amber-bg)}
 .pill.red{color:#ff9aa7;border-color:rgba(255,84,104,.5);background:var(--red-bg)}
 .pill.green{color:var(--green);border-color:rgba(65,208,143,.45);background:var(--green-bg)}
 .pill.blue{color:var(--blue);border-color:rgba(77,166,255,.45);background:var(--blue-bg)}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px}
 .card.flat{background:var(--bg2)}
-.card h3{font-size:13px;font-family:var(--cond);text-transform:uppercase;letter-spacing:.12em;color:var(--ink2);font-weight:600;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.card h3,.h3{font-size:13px;font-family:var(--cond);text-transform:uppercase;letter-spacing:.12em;color:var(--ink2);font-weight:600;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.card h3 .sub,.h3 .sub{text-transform:none;letter-spacing:0;font-family:var(--sans);font-size:12px;font-weight:400;text-align:right}
+.card h3 .pill,.h3 .pill{text-transform:none;letter-spacing:0;font-family:var(--sans)}
 .grid{display:grid;gap:14px}
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .spacer{flex:1}
@@ -90,17 +93,17 @@ button,select,input{font:inherit;color:inherit}
 .titleblock h1{font-family:var(--cond);font-weight:700;font-size:clamp(46px,9vw,120px);letter-spacing:.34em;margin-right:-.34em;line-height:1;text-shadow:0 0 40px rgba(77,166,255,.35)}
 .titleblock .sub{margin-top:14px;font-family:var(--serif);font-style:italic;font-size:clamp(15px,2vw,21px);color:var(--ink2)}
 .titleblock .clock{font-family:var(--mono);color:var(--amber);letter-spacing:.2em;font-size:13px;margin-bottom:14px}
-.menubody{display:grid;grid-template-columns:1.25fr 1fr;gap:22px;padding-top:22px;max-width:1180px;margin:0 auto;width:100%}
+.menubody{display:grid;grid-template-columns:1.25fr 1fr;gap:22px;padding-top:22px;max-width:1180px;margin:0 auto;width:100%;align-items:start}
 .diffs{display:grid;gap:10px}
 .diffcard{display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:center;text-align:left;width:100%;padding:14px 16px;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);cursor:pointer;transition:border-color .15s,background .15s,transform .12s}
 .diffcard:hover{border-color:var(--line2);background:var(--panel2)}
 .diffcard:active{transform:scale(.99)}
-.diffcard[aria-pressed=true]{border-color:var(--amber);background:var(--amber-bg)}
+.diffcard[aria-checked=true]{border-color:var(--amber);background:var(--amber-bg)}
 .diffcard .dot{width:12px;height:12px;border-radius:50%;border:2px solid var(--ink3)}
-.diffcard[aria-pressed=true] .dot{border-color:var(--amber);background:var(--amber)}
-.diffcard h3{font-size:16px}
-.diffcard p{font-size:12.5px;color:var(--ink2);margin-top:2px}
-.dparams{font-family:var(--mono);font-size:11px;color:var(--ink3);text-align:right;line-height:1.5}
+.diffcard[aria-checked=true] .dot{border-color:var(--amber);background:var(--amber);box-shadow:0 0 0 3px rgba(246,166,35,.2)}
+.diffcard .dname{font-size:16px;display:block}
+.diffcard .dblurb{font-size:13px;color:var(--ink2);margin-top:2px;display:block}
+.dparams{font-family:var(--mono);font-size:12px;color:var(--ink3);text-align:right;line-height:1.5}
 
 /* ===== BRIEFING ===== */
 .brief{max-width:860px;margin:0 auto;padding-top:30px}
@@ -124,15 +127,16 @@ button,select,input{font:inherit;color:inherit}
 .hudrow{display:flex;gap:18px;align-items:center;flex-wrap:wrap;max-width:1560px;margin:0 auto}
 .brand{font-family:var(--cond);letter-spacing:.3em;font-weight:700;font-size:15px}
 .stat{display:flex;flex-direction:column;line-height:1.15}
-.stat small{font-family:var(--cond);text-transform:uppercase;letter-spacing:.12em;font-size:10.5px;color:var(--ink3)}
+.stat small{font-family:var(--cond);text-transform:uppercase;letter-spacing:.12em;font-size:11px;color:var(--ink3)}
 .stat b{font-family:var(--mono);font-size:18px;font-variant-numeric:tabular-nums}
 .timer{font-family:var(--mono);font-size:22px;font-weight:600;padding:4px 12px;border-radius:8px;border:1px solid var(--line2);background:var(--panel)}
 .timer.low{color:var(--red);border-color:var(--red);animation:blink .9s steps(2) infinite}
 @keyframes blink{50%{opacity:.35}}
 .bsc{display:grid;grid-template-columns:repeat(5,minmax(70px,1fr));gap:10px;flex:1;min-width:320px}
-.bsc div{font-size:10.5px;font-family:var(--cond);text-transform:uppercase;letter-spacing:.1em;color:var(--ink3)}
-.bsc div .meter{margin-top:4px;height:6px}
-.bsc div b{float:right;font-family:var(--mono);color:var(--ink2);font-size:11px}
+.bsc>div{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:6px;font-size:11px;font-family:var(--cond);text-transform:uppercase;letter-spacing:.1em;color:var(--ink3)}
+.bsc>div>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bsc>div .meter{margin-top:4px;height:6px;grid-column:1/-1}
+.bsc>div b{font-family:var(--mono);color:var(--ink2);font-size:12px;letter-spacing:0;border-radius:3px}
 .edge{position:fixed;inset:0;pointer-events:none;z-index:50;box-shadow:inset 0 0 0 0 rgba(255,84,104,0);transition:box-shadow .6s}
 .edge.hot{animation:edge 1.6s ease-in-out infinite}
 @keyframes edge{0%,100%{box-shadow:inset 0 0 60px 6px rgba(255,84,104,.12)}50%{box-shadow:inset 0 0 120px 18px rgba(255,84,104,.34)}}
@@ -143,26 +147,28 @@ button,select,input{font:inherit;color:inherit}
 .acard{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:12px;padding:12px;display:grid;gap:9px;cursor:pointer;text-align:left;transition:transform .15s,border-color .15s,box-shadow .2s;position:relative;width:100%}
 .acard:hover{border-color:var(--line2);transform:translateY(-2px)}
 .acard[aria-pressed=true]{border-color:var(--green);box-shadow:0 0 0 1px var(--green),0 8px 26px rgba(65,208,143,.12)}
-.acard[aria-disabled=true]{opacity:.45;cursor:not-allowed}
+.acard[aria-disabled=true]{opacity:.72;border-style:dashed;cursor:not-allowed;background:var(--bg2)}
+.acard[aria-disabled=true]:hover{transform:none;border-color:var(--line2)}
 .acard .top{display:grid;grid-template-columns:54px 1fr auto;gap:10px;align-items:center}
 .sil{width:54px;height:62px;border-radius:8px;background:linear-gradient(160deg,#1f3150,#0e1626);border:1px solid var(--line);display:grid;place-items:end center;overflow:hidden}
-.acard h4{font-size:14px}
+.acard .an{font-size:14px;display:block;line-height:1.25}
 .acard .cost{font-family:var(--mono);color:var(--amber);font-weight:600}
 .attrs{display:grid;gap:4px}
-.attr{display:grid;grid-template-columns:78px 1fr 20px;gap:7px;align-items:center;font-size:11.5px;color:var(--ink2)}
+.attr{display:grid;grid-template-columns:84px 1fr 20px;gap:7px;align-items:center;font-size:12px;color:var(--ink2)}
 .attr .meter{height:6px}
 .attr b{font-family:var(--mono);text-align:right;color:var(--ink)}
-.trait{font-size:11.5px;line-height:1.35;color:var(--ink2);background:#0d1523;border:1px solid var(--line);border-radius:6px;padding:6px 8px}
-.trait b{color:var(--amber);font-family:var(--cond);letter-spacing:.06em;text-transform:uppercase;font-size:11px;display:block}
+.trait{font-size:12px;line-height:1.4;color:var(--ink2);background:#0d1523;border:1px solid var(--line);border-radius:6px;padding:6px 8px}
+.trait b{color:var(--amber);font-family:var(--cond);letter-spacing:.06em;text-transform:uppercase;font-size:11.5px;display:block}
 .hired{position:absolute;top:8px;right:8px}
-.side{position:sticky;top:78px;display:grid;gap:12px}
+.side{position:sticky;top:78px;display:grid;gap:12px;max-height:calc(100vh - 186px);overflow:auto;overscroll-behavior:contain;padding-right:2px;scrollbar-width:thin}
 .credits{font-family:var(--mono);font-size:38px;font-weight:600;color:var(--amber);line-height:1}
 .gear{display:grid;gap:8px}
 .gcard{display:grid;grid-template-columns:34px 1fr auto;gap:10px;align-items:center;padding:9px 10px;background:var(--panel);border:1px solid var(--line);border-radius:8px;cursor:pointer;text-align:left;width:100%;transition:border-color .15s,background .15s}
 .gcard:hover{border-color:var(--line2);background:var(--panel2)}
 .gcard[aria-pressed=true]{border-color:var(--green);background:var(--green-bg)}
-.gcard[aria-disabled=true]{opacity:.45;cursor:not-allowed}
-.gcard b{font-size:13px;display:block}.gcard span{font-size:11.5px;color:var(--ink2);line-height:1.3;display:block}
+.gcard[aria-disabled=true]{opacity:.72;border-style:dashed;cursor:not-allowed;background:var(--bg2)}
+.gcard b{font-size:13.5px;display:block}.gcard span{font-size:12px;color:var(--ink2);line-height:1.35;display:block}
+.gcard .cost{color:var(--amber);font-weight:600}
 .ico{width:30px;height:30px;color:var(--blue)}
 .mini{display:flex;justify-content:space-between;gap:8px;font-size:12.5px;padding:4px 0;border-bottom:1px dashed var(--line)}
 
@@ -173,33 +179,36 @@ svg.map{width:100%;height:auto;display:block}
 .zone rect.z{stroke-width:2;transition:fill .5s,stroke .3s}
 .zone{cursor:pointer;outline:none}
 .zone:hover rect.z{stroke:var(--ink)}
-.zone:focus-visible rect.z{stroke:var(--blue);stroke-width:3}
+.zone:focus-visible rect.z{stroke:#fff;stroke-width:3;stroke-dasharray:5 3}
 .zone.sel rect.z{stroke:var(--blue);stroke-width:3.5;stroke-dasharray:none}
+.zone.sel:focus-visible rect.z{stroke:#fff;stroke-dasharray:5 3}
 .zone text{pointer-events:none;font-family:var(--sans)}
-.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11.5px;color:var(--ink2);padding:8px 6px 2px}
+.legend{display:flex;gap:6px 14px;flex-wrap:wrap;font-size:12px;color:var(--ink2);padding:8px 6px 2px}
 .legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-2px}
-.chip{display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border-radius:99px;background:var(--panel2);border:1px solid var(--line2);font-size:12px;cursor:pointer;transition:border-color .15s,background .15s,transform .1s}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:99px;background:var(--panel2);border:1px solid var(--line2);font-size:12.5px;cursor:pointer;transition:border-color .15s,background .15s,transform .1s}
 .chip:hover{border-color:var(--blue)}
 .chip:active{transform:scale(.96)}
 .chip[aria-pressed=true]{background:var(--blue-bg);border-color:var(--blue);color:#cfe6ff}
-.chip .in{width:20px;height:20px;border-radius:50%;background:#26405f;display:grid;place-items:center;font-size:10px;font-weight:700}
+.chip .in{width:20px;height:20px;border-radius:50%;background:#26405f;display:grid;place-items:center;font-size:11px;font-weight:700}
 .zlist{display:grid;gap:8px}
 .zrow{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:8px 10px;background:var(--bg2);border:1px solid var(--line);border-radius:8px}
 .zrow.sel{border-color:var(--blue)}
 .zrow .nm{font-weight:600;font-size:13px}
 .zrow .cv{font-family:var(--mono);font-weight:600}
 .zrow .chips{grid-column:1/-1;display:flex;gap:6px;flex-wrap:wrap;min-height:4px}
-.intelgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px}
+.intelgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;align-items:start}
 .icard{padding:12px;background:var(--panel);border:1px solid var(--line);border-radius:10px;display:grid;gap:6px;text-align:left}
 .icard.done{border-color:var(--green);background:var(--green-bg)}
-.icard b{font-size:13.5px}.icard p{font-size:12px;color:var(--ink2)}
+.icard b{font-size:13.5px}.icard p{font-size:12.5px;color:var(--ink2)}
+.icard>.btn{justify-self:start}
 
 /* ===== CERCO ===== */
-.siege{display:grid;gap:14px;padding-top:14px;grid-template-columns:310px minmax(0,1fr) 410px;grid-template-areas:"A B C"}
+.siege{display:grid;gap:14px;padding-top:14px;grid-template-columns:300px minmax(0,1fr) 380px;grid-template-areas:"A B C"}
 .colA{grid-area:A;display:grid;gap:14px;align-content:start;min-width:0}
 .colB{grid-area:B;display:grid;gap:14px;align-content:start;min-width:0}
 .colC{grid-area:C;display:grid;gap:14px;align-content:start;min-width:0}
-@media (max-width:1180px){.siege{grid-template-columns:minmax(0,1fr) 380px;grid-template-areas:"B C" "A C"}}
+@media (max-width:1399px){.siege{grid-template-columns:minmax(0,1fr) 380px;grid-template-areas:"B C" "A A"}.siege .colA{display:block;columns:3 260px;column-gap:14px}.siege .colA>*{break-inside:avoid;margin-bottom:14px}}
+.siege svg.map{max-width:760px;margin-inline:auto}
 @media (max-width:820px){.siege{grid-template-columns:minmax(0,1fr);grid-template-areas:"C" "B" "A"}.recr,.perim,.menubody{grid-template-columns:1fr}.side{position:static}.objgrid{grid-template-columns:repeat(2,1fr)}.bsc{min-width:100%}}
 .lvl{display:grid;gap:10px}
 .lvl .tag{display:inline-flex;align-items:center;gap:8px;font-family:var(--cond);text-transform:uppercase;letter-spacing:.12em;font-size:11.5px;color:var(--ink2)}
@@ -207,7 +216,7 @@ svg.map{width:100%;height:auto;display:block}
 .l2 .tag b{background:var(--amber);color:#1b1305}.l3 .tag b{background:var(--violet);color:#150f2b}
 .kv{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}
 .kv div{background:var(--bg2);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
-.kv small{display:block;font-family:var(--cond);text-transform:uppercase;letter-spacing:.1em;font-size:10.5px;color:var(--ink3)}
+.kv small{display:block;font-family:var(--cond);text-transform:uppercase;letter-spacing:.1em;font-size:11px;color:var(--ink3)}
 .kv b{font-family:var(--mono);font-size:16px}
 .kv .unk{color:var(--ink3);font-style:italic;font-family:var(--sans);font-size:13px}
 .insight{display:grid;grid-template-columns:22px 1fr;gap:8px;font-size:13px;padding:8px 10px;border-radius:8px;background:var(--bg2);border:1px solid var(--line);line-height:1.4}
@@ -218,7 +227,7 @@ svg.map{width:100%;height:auto;display:block}
 .insight svg{width:18px;height:18px;margin-top:1px}
 .report{font-size:12.5px;display:grid;grid-template-columns:auto 1fr;gap:8px;padding:6px 0;border-bottom:1px dashed var(--line)}
 .report:last-child{border:0}
-.report .src{font-family:var(--mono);font-size:11px;color:var(--amber);white-space:nowrap}
+.report .src{font-family:var(--mono);font-size:11.5px;color:var(--amber);white-space:nowrap}
 .radio{font-family:var(--mono);font-size:12px;color:#cdd8e8;display:grid;gap:6px;max-height:190px;overflow:auto;padding-right:4px}
 .radio p{padding:6px 8px;border-left:3px solid var(--blue);background:#0d1523;border-radius:0 6px 6px 0}
 .radio p.hot{border-color:var(--red)}.radio p.warn{border-color:var(--amber)}
@@ -226,10 +235,12 @@ svg.map{width:100%;height:auto;display:block}
 .stk{display:grid;gap:9px}
 .stkrow{display:grid;grid-template-columns:92px 1fr 34px;gap:8px;align-items:center;font-size:12.5px}
 .stkrow .nm{display:flex;flex-direction:column;line-height:1.15}
-.stkrow .nm small{font-size:10.5px;color:var(--ink3)}
+.stkrow .nm small{font-size:11px;color:var(--ink3)}
 .stkrow .alert{color:var(--red)}
 .tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:4px}
-.tab{padding:8px 4px;border-radius:7px;border:0;background:transparent;font-family:var(--cond);text-transform:uppercase;letter-spacing:.07em;font-size:12px;font-weight:600;color:var(--ink2);cursor:pointer;transition:background .15s,color .15s}
+.tab{position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 4px 6px;border-radius:7px;border:0;background:transparent;font-family:var(--cond);text-transform:uppercase;letter-spacing:.06em;font-size:12px;font-weight:600;color:var(--ink2);cursor:pointer;transition:background .15s,color .15s,transform .1s}
+.tab .ico{width:16px;height:16px;color:currentColor}
+.tab:active{transform:scale(.97)}
 .tab:hover{background:var(--panel2);color:var(--ink)}
 .tab[aria-selected=true]{background:var(--blue);color:#06162a}
 .slots{display:flex;gap:6px;align-items:center}
@@ -239,13 +250,22 @@ svg.map{width:100%;height:auto;display:block}
 .opt:hover{border-color:var(--blue);background:var(--panel2)}
 .opt:active{transform:scale(.985)}
 .opt[disabled]{opacity:.42;cursor:not-allowed}
+.opt[aria-disabled=true]{background:transparent;border-style:dashed;cursor:not-allowed}
+.opt[aria-disabled=true]:hover{border-color:var(--line2);background:transparent}
+.opt[aria-disabled=true]:active{transform:none}
+.opt[aria-disabled=true] .ico{opacity:.6}.opt[aria-disabled=true] .c{color:var(--ink2)}
+.opt[aria-disabled=true] b{color:var(--ink2)}
+.opt[aria-disabled=true][aria-pressed=true]{border-style:solid;border-color:var(--amber);background:var(--amber-bg)}
+.opt[aria-disabled=true][aria-pressed=true] b{color:var(--ink)}
+.opt[aria-disabled=true][aria-pressed=true] .ico{opacity:1}
 .opt[aria-pressed=true]{border-color:var(--amber);background:var(--amber-bg)}
-.opt b{font-size:13px;display:block}.opt span.d{font-size:11.5px;color:var(--ink2);display:block;line-height:1.35}
-.opt .c{font-family:var(--mono);font-size:12px;color:var(--amber);white-space:nowrap}
+.opt b{font-size:13.5px;display:block}.opt span.d{font-size:12.5px;color:var(--ink2);display:block;line-height:1.4}
+.opt .c{font-family:var(--mono);font-size:13px;color:var(--amber);white-space:nowrap}
 .opt.danger{border-color:rgba(255,84,104,.45)}
 .optlist{display:grid;gap:7px}
-.field{display:grid;gap:4px;font-size:12px;color:var(--ink2)}
-select{background:#0d1523;border:1px solid var(--line2);border-radius:7px;padding:7px 9px;color:var(--ink)}
+.field{display:grid;gap:4px;font-size:12.5px;color:var(--ink2);min-width:0}
+select{background:#0d1523;border:1px solid var(--line2);border-radius:7px;padding:7px 9px;color:var(--ink);max-width:100%;min-width:0;cursor:pointer;transition:border-color .15s}
+.field select{width:100%}
 select:hover{border-color:var(--blue)}
 .queue{display:grid;gap:6px}
 .qitem{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;padding:7px 10px;background:var(--bg2);border:1px solid var(--line2);border-radius:8px;font-size:12.5px;animation:fadein .25s}
@@ -255,11 +275,11 @@ select:hover{border-color:var(--blue)}
 .step.done{border-color:rgba(65,208,143,.4)}.step.done b{background:var(--green);color:#052b1a;border-color:var(--green)}
 .step.cur{border-color:var(--amber);background:var(--amber-bg)}.step.cur b{background:var(--amber);color:#1b1305;border-color:var(--amber);animation:pulse 1.8s infinite}
 @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(246,166,35,.5)}50%{box-shadow:0 0 0 7px rgba(246,166,35,0)}}
-.step small{color:var(--ink3)}
+.step small{color:var(--ink3);font-size:12px}
 .team{display:grid;gap:6px}
 .trow{display:grid;grid-template-columns:1fr auto;gap:6px;align-items:center;padding:6px 8px;background:var(--bg2);border:1px solid var(--line);border-radius:8px;font-size:12.5px}
-.trow small{color:var(--ink3);display:block;font-size:11px}
-.trow.away{opacity:.5}
+.trow small{color:var(--ink3);display:block;font-size:11.5px}
+.trow.away{border-style:dashed;background:transparent}.trow.away b{color:var(--ink2)}
 
 /* ===== RESOLUÇÃO / EVENTO ===== */
 .resol{max-width:980px;margin:0 auto;padding-top:22px;display:grid;gap:16px}
@@ -282,12 +302,16 @@ select:hover{border-color:var(--blue)}
 .tutor h3{font-size:18px}
 
 /* toasts */
-#toasts{position:fixed;right:max(14px,env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:90;display:grid;gap:8px;width:min(360px,calc(100vw - 28px));pointer-events:none}
-.toast{background:#0c1424;border:1px solid var(--line2);border-left:4px solid var(--blue);border-radius:8px;padding:10px 12px;font-family:var(--mono);font-size:12px;color:#d6e0ef;box-shadow:0 10px 30px rgba(0,0,0,.5);animation:toastin .35s both,toastout .4s 6.5s forwards}
+#toasts{position:fixed;left:max(14px,env(safe-area-inset-left,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:90;display:grid;gap:8px;width:min(360px,calc(100vw - 28px));pointer-events:none;transition:bottom .2s}
+body.withbar #toasts{bottom:calc(96px + env(safe-area-inset-bottom,0px))}
+.toast{position:relative;pointer-events:auto;background:#0c1424;border:1px solid var(--line2);border-left:4px solid var(--blue);border-radius:8px;padding:10px 34px 10px 12px;font-family:var(--mono);font-size:12.5px;color:#d6e0ef;box-shadow:0 10px 30px rgba(0,0,0,.5);animation:toastin .35s both,toastout .4s 6.5s forwards}
+.toast:hover{animation-play-state:paused}
+.toast .tx{position:absolute;top:6px;right:6px;width:24px;height:24px;border-radius:6px;border:0;background:transparent;color:var(--ink3);cursor:pointer;font-size:12px;line-height:1}
+.toast .tx:hover{background:var(--panel2);color:var(--ink)}
 .toast.hot{border-left-color:var(--red)}.toast.warn{border-left-color:var(--amber)}.toast.good{border-left-color:var(--green)}
-.toast b{display:block;color:var(--amber);font-size:10.5px;letter-spacing:.14em;margin-bottom:2px}
-@keyframes toastin{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:none}}
-@keyframes toastout{to{opacity:0;transform:translateX(24px)}}
+.toast b{display:block;color:var(--amber);font-size:11px;letter-spacing:.14em;margin-bottom:2px}
+@keyframes toastin{from{opacity:0;transform:translateX(-24px)}to{opacity:1;transform:none}}
+@keyframes toastout{to{opacity:0;transform:translateX(-24px)}}
 
 /* ===== DESFECHO ===== */
 .outcome{max-width:900px;margin:0 auto;padding-top:34px;display:grid;gap:20px}
@@ -302,7 +326,9 @@ select:hover{border-color:var(--blue)}
 
 /* ===== PÓS-JOGO ===== */
 .postnav{display:flex;gap:6px;flex-wrap:wrap;padding:14px 0 6px;border-bottom:1px solid var(--line);position:sticky;top:env(safe-area-inset-top,0px);background:rgba(10,16,26,.94);z-index:30;margin-inline:calc(-1*max(16px,env(safe-area-inset-left,0px)));padding-inline:max(16px,env(safe-area-inset-left,0px))}
-.pn{padding:8px 14px;border-radius:99px;border:1px solid var(--line2);background:var(--panel);cursor:pointer;font-weight:600;font-size:13px;transition:background .15s,border-color .15s}
+.pn{padding:8px 14px;border-radius:99px;border:1px solid var(--line2);background:var(--panel);cursor:pointer;font-weight:600;font-size:13px;transition:background .15s,border-color .15s,transform .1s}
+.pn:active{transform:scale(.97)}
+.pntabs{display:flex;gap:6px;flex-wrap:wrap}
 .pn:hover{background:var(--panel2)}
 .pn[aria-selected=true]{background:var(--amber);color:#1b1305;border-color:var(--amber)}
 .post{padding-top:22px;max-width:1180px;margin:0 auto}
@@ -312,30 +338,31 @@ select:hover{border-color:var(--blue)}
 .bigscore{font-family:var(--mono);font-size:24px;color:var(--ink2)}
 @media (max-width:820px){.scorehead{grid-template-columns:1fr}}
 .dimrow{display:grid;grid-template-columns:150px 1fr 120px;gap:12px;align-items:center;padding:8px 0;border-bottom:1px dashed var(--line);font-size:13px}
-.dimrow small{color:var(--ink3);display:block}
+.dimrow small{color:var(--ink3);display:block;font-size:12px}
 .badges{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
 .badge{border:1px solid var(--line);border-radius:12px;padding:14px;background:var(--panel);display:grid;gap:6px;position:relative}
 .badge.on{border-color:var(--amber);background:linear-gradient(180deg,rgba(246,166,35,.13),var(--panel))}
-.badge.off{opacity:.55}
+.badge.off{border-style:dashed;background:transparent}.badge.off b{color:var(--ink2)}
 .badge .seal{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;background:#0b1320;border:2px solid var(--line2);color:var(--ink3)}
 .badge.on .seal{border-color:var(--amber);color:var(--amber);background:var(--amber-bg)}
 .badge b{font-size:14px}.badge p{font-size:12px;color:var(--ink2)}
 .timeline{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;margin-bottom:14px}
-.tnode{padding:10px 4px;border-radius:9px;border:1px solid var(--line2);background:var(--panel);text-align:center;cursor:pointer;font-size:12px;transition:background .15s,border-color .15s}
+.tnode{padding:10px 4px;border-radius:9px;border:1px solid var(--line2);background:var(--panel);text-align:center;cursor:pointer;font-size:12.5px;transition:background .15s,border-color .15s,transform .1s}
+.tnode:active{transform:scale(.97)}
 .tnode:hover{background:var(--panel2)}
 .tnode[aria-selected=true]{border-color:var(--amber);background:var(--amber-bg)}
 .tnode b{display:block;font-family:var(--mono);font-size:15px}
-.tnode.na{opacity:.35;cursor:default}
+.tnode.na{cursor:default;border-style:dashed;background:transparent;color:var(--ink3)}
 .concept{display:grid;gap:6px;padding:14px;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
 .concept h4{font-size:14px}
-.concept .ref{font-size:11.5px;color:var(--ink3);font-family:var(--mono)}
+.concept .ref{font-size:12px;color:var(--ink3);font-family:var(--mono)}
 .concept .you{font-size:13px;padding:8px 10px;border-radius:8px;background:var(--bg2);border-left:3px solid var(--amber)}
 .concept .les{font-size:13px;color:var(--ink2)}
 .kolb{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
 @media (max-width:820px){.kolb{grid-template-columns:1fr 1fr}}
 .table{width:100%;border-collapse:collapse;font-size:13px}
 .table td,.table th{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
-.table th{font-family:var(--cond);text-transform:uppercase;letter-spacing:.1em;font-size:11px;color:var(--ink3)}
+.table th{font-family:var(--cond);text-transform:uppercase;letter-spacing:.1em;font-size:11.5px;color:var(--ink3)}
 .scroll-x{overflow-x:auto}
 
 /* ===== JORNAL ===== */
@@ -367,7 +394,7 @@ select:hover{border-color:var(--blue)}
 /* ===== L1.2 — imersão, pacing e feedback ===== */
 /* ticker de manchetes */
 .ticker{display:flex;align-items:stretch;gap:0;margin-top:8px;border:1px solid rgba(255,84,104,.35);border-radius:6px;overflow:hidden;background:#0b111c;font-size:12px;max-width:1560px;margin-inline:auto}
-.ticker>b{flex:none;background:var(--red);color:#fff;font-family:var(--cond);letter-spacing:.14em;font-size:11px;padding:4px 10px;display:grid;place-items:center}
+.ticker>b{flex:none;background:#c62a40;color:#fff;font-family:var(--cond);letter-spacing:.14em;font-size:11.5px;padding:4px 10px;display:grid;place-items:center}
 .ticker .tk{overflow:hidden;flex:1;position:relative;mask-image:linear-gradient(90deg,transparent,#000 3%,#000 97%,transparent)}
 .ticker .tkin{display:inline-flex;gap:18px;white-space:nowrap;padding:4px 0;animation:tick 60s linear infinite;color:#dbe4f1}
 .ticker .tkin i{color:var(--red);font-style:normal;font-size:9px;align-self:center}
@@ -378,13 +405,13 @@ select:hover{border-color:var(--blue)}
 .hstrip{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
 .hstrip .hp{display:grid;justify-items:center;gap:2px;width:52px;opacity:0;animation:rise .5s ease forwards;animation-delay:calc(3.9s + var(--i) * 70ms)}
 .hstrip .hp svg{width:20px;height:26px;fill:#5d7aa6}
-.hstrip .hp small{font-size:10.5px;color:var(--ink2);white-space:nowrap}
+.hstrip .hp small{font-size:11px;color:var(--ink2);white-space:nowrap}
 .noanim .hstrip .hp{opacity:1;animation:none}
 .bio{font-family:var(--serif);font-style:italic;font-size:13px;color:var(--ink2);line-height:1.35}
 /* reféns no cerco */
-.roster{display:grid;grid-template-columns:repeat(auto-fill,minmax(82px,1fr));gap:5px}
-.rp{display:grid;padding:5px 7px;border-radius:7px;border:1px solid var(--line);background:var(--bg2);line-height:1.2}
-.rp b{font-size:12px}.rp small{font-size:10px;color:var(--ink3)}
+.roster{display:grid;grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:4px}
+.rp{display:grid;padding:3px 7px;border-radius:6px;border:1px solid var(--line);background:var(--bg2);line-height:1.25;min-width:0}
+.rp b{font-size:12px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.rp small{font-size:11px;color:var(--ink3)}
 .rp.in{border-color:rgba(77,166,255,.35)}
 .rp.unk{border-style:dashed}
 .rp.out{border-color:rgba(65,208,143,.5);background:var(--green-bg)}.rp.out small{color:var(--green)}
@@ -395,7 +422,7 @@ select:hover{border-color:var(--blue)}
 .hotline .scene{font-family:var(--serif);font-size:15px;line-height:1.5;color:#dfe6f1}
 .hotline blockquote{margin:0;padding:8px 12px;border-left:3px solid var(--amber);background:#0d1523;border-radius:0 8px 8px 0;font-family:var(--serif);font-size:16px;font-style:italic}
 .hotline blockquote.bad{border-color:var(--red)}.hotline blockquote.good{border-color:var(--green)}
-.hotline cite{display:block;font-style:normal;font-family:var(--sans);font-size:11px;color:var(--ink3);margin-top:4px}
+.hotline cite{display:block;font-style:normal;font-family:var(--sans);font-size:12px;color:var(--ink3);margin-top:4px}
 .hotline .ask{font-size:12.5px;color:var(--amber);font-weight:600}
 .res-line.voice{border-color:rgba(246,166,35,.4);background:#0d1523;font-family:var(--serif);font-style:italic;font-size:15.5px}
 /* atualização: céu por hora do dia */
@@ -420,12 +447,12 @@ select:hover{border-color:var(--blue)}
 .track .tk.past i{background:var(--line2)}
 .track .tk.now i{background:var(--amber);border-color:var(--amber);box-shadow:0 0 0 3px rgba(246,166,35,.18)}
 .track .tk.now small{color:var(--amber)}
-.track small{font-size:10.5px}
+.track small{font-size:11px}
 .track em{position:absolute;top:-16px;color:var(--amber)}
 .intro{font-size:clamp(17px,1.9vw,21px);line-height:1.6;color:#dfe6f1}
 .call{display:grid;grid-template-columns:34px 1fr;gap:12px;align-items:start;padding:12px 14px;border-radius:10px;border:1px solid rgba(255,84,104,.45);background:var(--red-bg)}
 .call .ico{color:#ff9aa7;width:28px;height:28px}
-.call small{font-family:var(--cond);text-transform:uppercase;letter-spacing:.12em;font-size:11px;color:#ff9aa7}
+.call small{font-family:var(--cond);text-transform:uppercase;letter-spacing:.12em;font-size:11.5px;color:#ff9aa7}
 .call p{font-family:var(--serif);font-size:16.5px;line-height:1.45;margin-top:2px}
 .council{display:grid;gap:10px}
 .adv{display:grid;grid-template-columns:44px 1fr;gap:10px;align-items:start}
@@ -442,10 +469,10 @@ select:hover{border-color:var(--blue)}
 .dossier.ok .stamp{color:var(--green)}.dossier.no .stamp{color:var(--amber)}
 .dossier b{font-size:13.5px;padding-right:110px}
 .dossier .impact{padding:7px 10px;border-radius:7px;background:var(--blue-bg);border:1px solid rgba(77,166,255,.35)}
-.dossier .impact small{display:block;font-family:var(--cond);text-transform:uppercase;letter-spacing:.12em;font-size:10.5px;color:var(--blue)}
+.dossier .impact small{display:block;font-family:var(--cond);text-transform:uppercase;letter-spacing:.12em;font-size:11px;color:var(--blue)}
 /* guia da primeira rodada */
 .guide{border-color:rgba(77,166,255,.5);background:linear-gradient(180deg,var(--blue-bg),var(--panel))}
-.guide ol{margin:0 0 6px;padding-left:18px;display:grid;gap:4px;font-size:12.5px}
+.guide ol{margin:0 0 6px;padding-left:18px;display:grid;gap:5px;font-size:13px}
 /* resolução: seções, causa e efeito */
 .sec{display:grid;gap:8px}
 .wf{display:grid;gap:6px}
@@ -458,7 +485,7 @@ select:hover{border-color:var(--blue)}
 .wfb i.bad{background:var(--red)}.wfb i.good{background:var(--green)}
 .wfr.tot{border-top:1px dashed var(--line);padding-top:6px}
 .sw{font-size:12.5px;padding:6px 0;border-bottom:1px dashed var(--line)}
-.sw small{display:block;color:var(--ink3);margin-top:2px}
+.sw small{display:block;color:var(--ink3);margin-top:2px;font-size:12px}
 .sw .pos{color:var(--green)}.sw .neg{color:#ff9aa7}
 .hc{display:grid;grid-template-columns:22px 1fr;gap:8px;font-size:13px;padding:8px 10px;border-radius:8px;border:1px solid var(--line)}
 .hc .ico{width:18px;height:18px}
@@ -468,7 +495,7 @@ select:hover{border-color:var(--blue)}
 /* revelação final */
 .truth .trows{display:grid;gap:6px}
 .truth .tr{display:grid;grid-template-columns:150px 1fr;gap:4px 12px;padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:var(--bg2);font-size:13px}
-.truth .tr small{grid-column:1/-1;color:var(--ink3)}
+.truth .tr small{grid-column:1/-1;color:var(--ink3);font-size:12px}
 .truth .tr.k small{color:var(--green)}.truth .tr.u small{color:#ff9aa7}
 .truth .tr b{font-family:var(--mono)}
 .truth p{font-family:var(--serif);font-size:16px;line-height:1.5}
@@ -481,43 +508,44 @@ select:hover{border-color:var(--blue)}
 .cutin p.radio-q{font-family:var(--mono);font-size:13.5px;color:#cdd8e8;border-left:3px solid var(--red);padding-left:12px;text-align:left}
 .cutin .btn{opacity:0;animation:rise .6s ease forwards}
 @media (prefers-reduced-motion:reduce){.cutin p,.cutin .btn,.hstrip .hp{opacity:1}}
-.icard .dossier>b{display:none}.icard .dossier{padding-top:30px}
+.icard .dossier>b{display:none}
+.icard .dossier .stamp{position:static;justify-self:start;transform:none;margin-bottom:2px}
 
 /* =====================================================================
    L1.3 — operações: caixa, gargalo, alertas, prévias
    ===================================================================== */
-.stat .burn{font-style:normal;font-family:var(--mono);font-size:10.5px;color:var(--ink3);margin-top:1px}
+.stat .burn{font-style:normal;font-family:var(--mono);font-size:11px;color:var(--ink3);margin-top:1px}
 .stat .burn.bad{color:#ff9aa7;font-weight:600}
 .stat.tocchip b{font-family:var(--cond);font-size:14px;letter-spacing:.04em}
 .stat.tocchip.violet b{color:var(--violet)}.stat.tocchip.blue b{color:var(--blue)}.stat.tocchip.amber b{color:var(--amber)}
 /* caixa */
 .cashtop{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
 .cashtop div{background:var(--bg2);border:1px solid var(--line);border-radius:8px;padding:7px 9px}
-.cashtop small{display:block;font-family:var(--cond);text-transform:uppercase;letter-spacing:.1em;font-size:10px;color:var(--ink3)}
-.cashtop b{font-size:18px;color:var(--ink)}.cashtop b i{font-style:normal;font-size:10.5px;color:var(--ink3);font-weight:400}
+.cashtop small{display:block;font-family:var(--cond);text-transform:uppercase;letter-spacing:.1em;font-size:11px;color:var(--ink3)}
+.cashtop b{font-size:18px;color:var(--ink);border-radius:3px}.cashtop b i{font-style:normal;font-size:11px;color:var(--ink3);font-weight:400}
 .cash .cashtop div:first-child b{color:var(--amber)}
 .stack{display:flex;height:12px;border-radius:99px;overflow:hidden;border:1px solid var(--line);background:#0b1320}
 .stack i{display:block;height:100%;min-width:2px}
 .stack i+i{border-left:1px solid var(--bg)}
-.stackleg{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:8px;font-size:11.5px;color:var(--ink2)}
+.stackleg{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:8px;font-size:12px;color:var(--ink2)}
 .stackleg i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px}
 .stackleg b{color:var(--ink);font-weight:600}
 /* utilização da equipe */
 .util{display:flex;gap:6px;margin-bottom:8px}
-.util span{flex:1;text-align:center;background:var(--bg2);border:1px solid var(--line);border-radius:8px;padding:5px 4px;font-size:11px;color:var(--ink3);line-height:1.2}
+.util span{flex:1;text-align:center;background:var(--bg2);border:1px solid var(--line);border-radius:8px;padding:5px 4px;font-size:11.5px;color:var(--ink3);line-height:1.2}
 .util b{display:block;font-family:var(--mono);font-size:17px;color:var(--ink)}
 .trow small .tr1,.trow small .tr2{color:var(--amber);font-weight:600}
 /* equipamentos */
 .gearlist{display:grid;gap:6px}
 .gl{display:grid;grid-template-columns:24px 1fr;gap:8px;align-items:center;font-size:12.5px;padding:6px 8px;background:var(--bg2);border:1px solid var(--line);border-radius:8px}
 .gl .ico{width:20px;height:20px}
-.gl small{display:block;color:var(--ink3);font-size:11px}
+.gl small{display:block;color:var(--ink3);font-size:11.5px}
 .gl.idle{border-style:dashed;opacity:.8}.gl.idle small{color:var(--amber)}
 /* alertas */
 .alerts .alert{display:grid;grid-template-columns:24px 1fr auto;gap:10px;align-items:center;padding:9px 10px;border-radius:8px;border:1px solid var(--line);background:var(--bg2);margin-bottom:8px}
 .alerts .alert .ico{width:22px;height:22px}
 .alerts .alert b{font-size:13.5px}
-.alerts .alert em{font-style:normal;font-family:var(--cond);text-transform:uppercase;letter-spacing:.1em;font-size:10px;margin-left:6px;padding:1px 6px;border-radius:99px;border:1px solid currentColor}
+.alerts .alert em{font-style:normal;font-family:var(--cond);text-transform:uppercase;letter-spacing:.1em;font-size:11px;margin-left:6px;padding:1px 6px;border-radius:99px;border:1px solid currentColor}
 .alerts .alert span{display:block;font-size:12.5px;color:var(--ink2);line-height:1.4;margin-top:2px}
 .alerts .alert.s3{border-color:rgba(255,84,104,.6);background:var(--red-bg)}.alerts .alert.s3 .ico,.alerts .alert.s3 em{color:#ff9aa7}
 .alerts .alert.s2{border-color:rgba(246,166,35,.55);background:var(--amber-bg)}.alerts .alert.s2 .ico,.alerts .alert.s2 em{color:var(--amber)}
@@ -529,18 +557,18 @@ select:hover{border-color:var(--blue)}
 .tocb span{display:flex;align-items:center;gap:6px}
 .tocb .ico{width:16px;height:16px}
 .tocb b{text-align:right;color:var(--ink)}
-.tocb em{font-style:normal;font-family:var(--cond);text-transform:uppercase;letter-spacing:.12em;font-size:10px;padding:1px 7px;border-radius:99px;background:var(--amber);color:#1b1305;font-weight:700}
+.tocb em{font-style:normal;font-family:var(--cond);text-transform:uppercase;letter-spacing:.12em;font-size:11px;padding:1px 7px;border-radius:99px;background:var(--amber);color:#1b1305;font-weight:700}
 .tocb:not(.lead) em{display:none}.tocb:not(.lead){opacity:.78}
 .tocb.lead .meter{height:11px}
-.toctl{display:flex;align-items:center;gap:10px;margin:10px 0 6px;font-size:11px;color:var(--ink3)}
-.toctl small{font-family:var(--cond);text-transform:uppercase;letter-spacing:.1em}
+.toctl{display:flex;align-items:center;gap:10px;margin:10px 0 6px;font-size:11.5px;color:var(--ink3)}
+.toctl small{font-family:var(--cond);text-transform:uppercase;letter-spacing:.1em;font-size:11px}
 .toctl span{display:flex;gap:5px}
 .td{display:inline-block;width:20px;height:9px;border-radius:3px;background:var(--panel2);border:1px solid var(--line)}
 .td.violet{background:var(--violet);border-color:var(--violet)}.td.blue{background:var(--blue);border-color:var(--blue)}.td.amber{background:var(--amber);border-color:var(--amber)}
 .td.now{outline:2px solid var(--ink);outline-offset:1px}
 .toc .why{font-size:13px;line-height:1.45}
 .toc .elev{font-size:12.5px;color:var(--ink2);margin-top:6px;padding:7px 10px;border-radius:8px;background:var(--green-bg);border:1px solid rgba(65,208,143,.35);line-height:1.4}
-.toc .elev small{font-family:var(--cond);text-transform:uppercase;letter-spacing:.12em;font-size:10px;color:var(--green);font-weight:700;margin-right:8px}
+.toc .elev small{font-family:var(--cond);text-transform:uppercase;letter-spacing:.12em;font-size:11px;color:var(--green);font-weight:700;margin-right:8px}
 .toc .elev.stop{background:var(--red-bg);border-color:rgba(255,84,104,.35)}.toc .elev.stop small{color:#ff9aa7}
 .tocshift .tsrow{display:grid;grid-template-columns:34px 1fr;gap:12px;align-items:start}
 .tocshift .tsrow .ico{width:28px;height:28px;color:var(--amber)}
@@ -554,7 +582,7 @@ select:hover{border-color:var(--blue)}
 .rprev em.pos,.pprev .pos{color:var(--green)}.rprev em.neg,.pprev .neg{color:#ff9aa7}
 .pprev .pr{display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:6px 0;border-bottom:1px dashed var(--line);font-size:13px}
 .pprev .pr:last-child{border-bottom:0}
-.pprev .pr small{grid-column:1/-1;color:var(--ink3);font-size:11.5px}
+.pprev .pr small{grid-column:1/-1;color:var(--ink3);font-size:12px}
 .pprev .pr b.red{color:#ff9aa7}.pprev .pr b.amber{color:var(--amber)}.pprev .pr b.blue{color:var(--blue)}.pprev .pr b.green{color:var(--green)}
 /* marcos */
 .miles{margin-top:6px}
@@ -565,7 +593,7 @@ select:hover{border-color:var(--blue)}
 /* previsão no recrutamento */
 .fc{display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:7px 0;border-bottom:1px dashed var(--line);font-size:13px}
 .fc:last-child{border-bottom:0}
-.fc small{grid-column:1/-1;color:var(--ink3);font-size:11.5px}
+.fc small{grid-column:1/-1;color:var(--ink3);font-size:12px}
 .fc.ok b{color:var(--green)}.fc.warn b{color:var(--amber)}.fc.bad b{color:#ff9aa7}
 /* debrief econômico */
 .econ .kv b{font-size:15px}
@@ -573,6 +601,118 @@ select:hover{border-color:var(--blue)}
 .econ .run{padding:4px 10px;border-radius:8px;font-size:12.5px;border:1px solid var(--line2)}
 .econ .run.violet{border-color:var(--violet);background:rgba(167,139,250,.12)}.econ .run.blue{border-color:var(--blue);background:var(--blue-bg)}.econ .run.amber{border-color:var(--amber);background:var(--amber-bg)}
 @media (max-width:1180px){.tocb{grid-template-columns:120px 1fr 30px auto}.alerts .alert{grid-template-columns:24px 1fr}.alerts .alert .btn{grid-column:2;justify-self:start}}
+
+/* =====================================================================
+   L1.4 — revisão de UX/UI: hierarquia, affordances, foco, microinterações
+   ===================================================================== */
+[tabindex="-1"]:focus{outline:none}
+kbd{font-family:var(--mono);font-size:11.5px;padding:1px 6px;border-radius:4px;border:1px solid var(--line2);border-bottom-width:2px;background:var(--bg2);color:var(--ink)}
+.tutor .h3{font-size:18px;text-transform:none;letter-spacing:0;color:var(--ink);font-family:var(--sans);font-weight:600;justify-content:flex-start}
+/* títulos de página: um h1 por tela */
+.ptitle{font-size:24px;font-weight:600;margin:4px 0 8px;letter-spacing:-.005em}
+.rtitle{font-family:var(--cond);font-size:clamp(28px,4vw,44px);letter-spacing:.02em;margin:6px 0 0}
+/* barra de ação fixa: o próximo passo sempre à vista */
+.actbar{position:fixed;left:0;right:0;bottom:0;z-index:45;background:rgba(10,16,26,.96);backdrop-filter:blur(8px);border-top:1px solid var(--line2);box-shadow:0 -12px 30px rgba(0,0,0,.35);padding:10px max(16px,env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.actin{max-width:1560px;margin:0 auto;display:flex;align-items:center;gap:14px;min-height:50px}
+.actin .btn.lg{flex:none}
+.absum{display:grid;gap:1px;font-size:13px;color:var(--ink2);min-width:0}
+.abk{font-family:var(--cond);text-transform:uppercase;letter-spacing:.14em;font-size:11.5px;color:var(--ink3);font-weight:600;white-space:nowrap}
+.abmsg{flex:1;display:flex;align-items:center;gap:8px;font-size:13px;color:#ffc2ca;min-width:0}
+.abmsg .ico{width:20px;height:20px;color:#ff9aa7;flex:none}
+body.withbar{padding-bottom:104px}
+.slotc{display:inline-flex;align-items:center;gap:5px}
+.slotc b{font-size:13px;color:var(--ink);margin-left:3px;letter-spacing:0}
+.qchips{flex:1;display:flex;gap:6px;align-items:center;min-width:0;overflow:hidden;font-size:13px}
+.qchip{display:inline-flex;align-items:center;gap:6px;min-width:0;max-width:300px;flex:0 1 auto;padding:4px 4px 4px 10px;border-radius:99px;border:1px solid rgba(246,166,35,.5);background:var(--amber-bg);font-size:12.5px;animation:pop .28s ease both}
+.qchip .ico{width:15px;height:15px;color:var(--amber);flex:none}
+.qchip .ql{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.qchip .qc{color:var(--amber);font-size:12px;flex:none}
+.qx{flex:none;width:24px;height:24px;border-radius:50%;border:1px solid transparent;background:transparent;color:var(--ink2);cursor:pointer;font-size:11px;line-height:1;transition:background .15s,color .15s}
+.qx:hover{background:var(--red-bg);border-color:rgba(255,84,104,.5);color:#ffb3bc}
+@keyframes pop{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:none}}
+#app.still .qchip{animation:none}
+@media (max-width:1180px){.qchip{max-width:220px}.actin{gap:10px}}
+/* indisponível: motivo visível, sem apagar o texto */
+.unav{display:block;margin-top:4px;font-size:12px;color:#ffc2ca;font-weight:500}
+small.unav{margin:0}
+.inplan{font-size:11px;padding:1px 7px;margin-left:4px;vertical-align:1px}
+.planfull{display:grid;grid-template-columns:22px 1fr;gap:8px;align-items:start;padding:8px 10px;border-radius:8px;border:1px solid rgba(246,166,35,.5);background:var(--amber-bg);font-size:13px}
+.planfull .ico{width:18px;height:18px;color:var(--amber)}
+.planfull.bad{border-color:rgba(255,84,104,.5);background:var(--red-bg)}.planfull.bad .ico{color:#ff9aa7}
+/* cartões do recrutamento: estado e efeito do clique por escrito */
+.cfoot{display:block;font-size:12px;color:var(--ink3);border-top:1px dashed var(--line);padding-top:7px;margin-top:1px}
+.cfoot.on{color:var(--green)}.cfoot.no{color:#ffc2ca}
+.gcard .cfoot{border:0;padding:3px 0 0}
+.acard:active{transform:scale(.99)}.gcard:active{transform:scale(.99)}
+.jump{font-size:12.5px;color:var(--blue);text-decoration:none;border-bottom:1px dashed rgba(77,166,255,.5)}
+.jump:hover{color:#8cc6ff;border-bottom-style:solid}
+.anchor{scroll-margin-top:90px}
+/* caixa de seleção maior */
+.check{display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--ink2);cursor:pointer;line-height:1.4}
+.check input{width:18px;height:18px;margin:1px 0 0;accent-color:var(--amber);flex:none;cursor:pointer}
+.check:hover{color:var(--ink)}
+@media (max-height:820px){.sky{height:min(36vh,400px)}}
+/* briefing */
+.skipb{animation:skipaway .3s ease 4.4s forwards}
+.noanim .skipb{display:none}
+@keyframes skipaway{to{opacity:0;visibility:hidden}}
+/* letreiro: pausa ao passar o mouse, ao focar e pelo botão */
+.ticker:hover .tkin,.ticker:focus-within .tkin,.ticker.paused .tkin{animation-play-state:paused}
+.tkp{flex:none;width:30px;border:0;border-left:1px solid rgba(255,84,104,.35);background:#0e1522;color:var(--ink2);cursor:pointer;font-size:10px;letter-spacing:-.1em;transition:background .15s,color .15s}
+.tkp:hover{background:var(--panel2);color:var(--ink)}
+.tkp[aria-pressed=true]{color:var(--amber)}
+/* mapa: modo de posicionamento */
+.target{display:grid;grid-template-columns:22px 1fr;gap:8px;align-items:center;margin-bottom:8px;padding:8px 12px;border-radius:8px;border:1px solid rgba(77,166,255,.5);background:var(--blue-bg);font-size:13px;animation:fadein .2s both}
+.target .ico{width:18px;height:18px}
+.map.targeting .zone{cursor:copy}
+.map.targeting .zone rect.z{stroke-dasharray:6 4;animation:march 1.2s linear infinite}
+.map.targeting .zone:hover rect.z,.map.targeting .zone:focus-visible rect.z{stroke:var(--blue);stroke-width:3.5;stroke-dasharray:none;animation:none}
+@keyframes march{to{stroke-dashoffset:-20}}
+.legend .sq{display:inline-block;width:12px;height:12px;border-radius:3px;border:1.5px solid var(--blue);background:#0d1523;margin-right:5px;vertical-align:-2px}
+.mapcard{padding:10px}
+/* atenção agora sem alertas: uma linha, não um cartão */
+.calmbar{display:grid;grid-template-columns:22px 1fr;gap:8px;align-items:center;padding:9px 12px;border-radius:10px;border:1px solid rgba(65,208,143,.35);background:var(--green-bg);font-size:13px;color:var(--ink2)}
+.calmbar .ico{width:18px;height:18px;color:var(--green)}
+.calmbar b{color:var(--ink)}
+/* gargalo mais enxuto */
+.elevs{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:8px;margin-top:8px}
+.elevs .elev{margin-top:0}
+/* abas: frentes de decisão e níveis de Endsley */
+.tdot{position:absolute;top:5px;right:7px;width:7px;height:7px;border-radius:50%;background:var(--amber);box-shadow:0 0 0 2px var(--bg2)}
+.tab[aria-selected=true] .tdot{box-shadow:0 0 0 2px var(--blue)}
+.lvtabs{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:4px;margin-bottom:12px}
+.lvtab{position:relative;display:grid;grid-template-columns:22px 1fr;gap:8px;align-items:center;text-align:left;padding:7px 8px;border-radius:7px;border:1px solid transparent;background:transparent;color:var(--ink2);cursor:pointer;font-size:13px;font-weight:600;transition:background .15s,color .15s,border-color .15s,transform .1s}
+.lvtab small{display:block;font-weight:400;font-size:11.5px;color:var(--ink3)}
+.lvtab>b{display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:var(--blue);color:#06162a;font-size:11.5px}
+.lvtab.l2>b{background:var(--amber);color:#1b1305}.lvtab.l3>b{background:var(--violet);color:#150f2b}
+.lvtab:hover{background:var(--panel2);color:var(--ink)}
+.lvtab:active{transform:scale(.98)}
+.lvtab[aria-selected=true]{background:var(--panel2);border-color:var(--line2);color:var(--ink)}
+.lvtab[aria-selected=true] small{color:var(--ink2)}
+.lvtab em{position:absolute;top:6px;right:8px;font-style:normal;font-family:var(--mono);font-size:11px;min-width:18px;height:18px;padding:0 5px;border-radius:99px;background:var(--amber);color:#1b1305;display:grid;place-items:center;font-weight:600}
+@media (max-width:1180px){.lvtab small{display:none}}
+.swap{animation:fadein .22s ease both}
+/* campos lado a lado sem sobreposição */
+.fields2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.subfield{display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px;align-items:center;padding-left:40px;margin-top:-2px;font-size:12.5px;color:var(--ink2)}
+/* rádio da atualização chega aos poucos (em vez de virar toast por cima da tela) */
+.radio.live p{animation:rise .45s ease both;animation-delay:calc(.25s + var(--i) * .55s)}
+#app.still .radio.live p,.noanim .radio.live p{animation:none}
+/* carta de evento: atalho numérico visível */
+.okey{display:grid;place-items:center;width:26px;height:26px;border-radius:7px;border:1px solid var(--line2);border-bottom-width:2px;background:var(--bg2);font-family:var(--mono);font-size:13px;color:var(--ink2)}
+.evopt:hover .okey{border-color:var(--blue);color:var(--ink)}
+/* valores que mudaram: brilho curto para o olho achar */
+.meter.chg{animation:mflash 1.1s ease}
+@keyframes mflash{0%,100%{box-shadow:0 0 0 0 rgba(246,166,35,0)}25%{box-shadow:0 0 0 3px rgba(246,166,35,.35)}}
+b.chg{animation:nflash 1.2s ease}
+@keyframes nflash{0%,30%{text-shadow:0 0 10px rgba(246,166,35,.85),0 0 2px rgba(255,255,255,.6)}100%{text-shadow:none}}
+/* HUD apertado em 1024–1180: rótulos encurtam em vez de colidir */
+@media (max-width:1180px){.bsc>div{letter-spacing:.04em}.hudrow{gap:12px}.stat b{font-size:17px}}
+.siege .colB,.siege .colC,.siege .colA{scroll-margin-top:120px}
+
+.badge .pill.amber{color:#ffc15a}
+.badge .pill{justify-self:start}
+.badge .seal .ico{color:var(--ink3)}.badge.on .seal .ico{color:var(--amber)}
 </style>
 <div id="edge" class="edge" aria-hidden="true"></div><div id="toasts" role="status" aria-live="polite"></div><div id="app"></div>
 <script>
@@ -2129,7 +2269,8 @@ function milestones() {
    ===================================================================== */
 const $app = document.getElementById('app');
 const UI = { tab: 'tatica', sel: null, repoAgent: '', repoZone: '', apoioZone: '', post: 'score', replayR: 1, diffSel: 'complexo', noLimit: false,
-  timerId: null, deadline: 0, timerRound: -1, tutor: false, ivConfirm: false, emptyConfirm: false, msg: '', pickZone: null };
+  timerId: null, deadline: 0, timerRound: -1, tutor: false, ivConfirm: false, emptyConfirm: false, msg: '', pickZone: null,
+  lvl: 1, tkPause: false, tabAnim: false };
 
 const fmt = n => Math.round(n).toLocaleString('pt-BR');
 const covCls = c => c >= ADEQ ? 'g' : c >= 30 ? 'a' : 'r';
@@ -2140,8 +2281,11 @@ const shortName = n => n.split(' ').slice(0, 2).join(' ');
 const mmss = s => String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
 const pLabel = p => p < .2 ? 'Baixa' : p < .45 ? 'Média' : p < .7 ? 'Boa' : 'Alta';
 const pCls = p => p < .2 ? 'red' : p < .45 ? 'amber' : p < .7 ? 'blue' : 'green';
+const dec = (n, d = 1) => Number(n).toFixed(d).replace('.', ',');   // decimal com vírgula (pt-BR)
+const br = t => String(t).replace(/(\d)\.(\d)(?!\d)/g, '$1,$2');   // textos do motor: 9.0 → 9,0 (milhar 1.000 fica intacto)
 
-function bar(label, v, cls = 'b', max = 10) { return `<div class="attr"><span>${label}</span><div class="meter ${cls}"><i style="width:${clamp(v / max * 100, 0, 100)}%"></i></div><b>${v}</b></div>`; }
+/* Barras de atributo são neutras: vermelho, âmbar e verde ficam reservados para estado (perigo, alerta, positivo). */
+function bar(label, v, cls = 'n', max = 10) { return `<div class="attr"><span>${label}</span><div class="meter ${cls}"><i style="width:${clamp(v / max * 100, 0, 100)}%"></i></div><b>${v}</b></div>`; }
 function meter(v, cls = 'b', extra = '') { return `<div class="meter ${cls}" ${extra}><i style="width:${clamp(v, 0, 100)}%"></i></div>`; }
 
 function sil(id, big) {
@@ -2151,17 +2295,19 @@ function sil(id, big) {
   return `<svg viewBox="0 0 54 62" width="${big || 54}" height="${big ? big * 62 / 54 : 62}" aria-hidden="true"><path d="M5 62c0-15 9-23 22-23s22 8 22 23z" fill="${c}"/><circle cx="27" cy="23" r="10" fill="${c}"/>${extra}</svg>`;
 }
 
-/* ---------- Toasts de rádio ---------- */
+/* ---------- Avisos (toasts) ----------
+   Ficam no canto inferior esquerdo, acima da barra de ação, longe da coluna de decisões.
+   Passar o mouse pausa a saída; o ✕ fecha na hora. O rádio da rodada não vira toast: ele já está na tela de atualização. */
 function toast(title, text, tone = '') {
   const box = document.getElementById('toasts'); if (!box) return;
   if ([...box.children].some(c => c.dataset.t === text)) return;
   const el = document.createElement('div'); el.className = 'toast ' + tone; el.dataset.t = text;
-  el.innerHTML = `<b>${title}</b>${text}`; box.appendChild(el);
-  while (box.children.length > 4) box.removeChild(box.firstChild);
-  setTimeout(() => { if (el.parentNode) el.parentNode.removeChild(el); }, 7000);
-}
-function radioToasts(list) {
-  list.forEach((l, i) => setTimeout(() => toast('RÁDIO', l.t.replace(/^\[RÁDIO\]\s*/, ''), l.c), 500 + i * 1100));
+  el.innerHTML = `<b>${title}</b>${text}<button class="tx" type="button" aria-label="Fechar aviso">✕</button>`; box.appendChild(el);
+  while (box.children.length > 3) box.removeChild(box.firstChild);
+  const kill = () => { if (el.parentNode) el.parentNode.removeChild(el); };
+  el.addEventListener('animationend', e => { if (e.animationName === 'toastout') kill(); });
+  el.querySelector('.tx').addEventListener('click', kill);
+  setTimeout(kill, 20000);
 }
 
 /* ---------- Timer ---------- */
@@ -2203,7 +2349,7 @@ const hostagesFramed = () => {
 /* ---------- Mapa ---------- */
 function mapSVG(o = {}) {
   const sel = o.sel || null; const K = G.K;
-  let s = `<svg class="map" viewBox="0 0 760 480" role="group" aria-label="Mapa esquemático do perímetro da Agência Central">
+  let s = `<svg class="map${o.targeting ? ' targeting' : ''}" viewBox="0 0 760 480" role="group" aria-label="Mapa esquemático do perímetro da Agência Central">
   <defs><pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="8" height="8" fill="transparent"/><path d="M0 0v8" stroke="rgba(255,255,255,.07)" stroke-width="3"/></pattern></defs>
   <rect width="760" height="480" fill="#0a111d"/>
   <g stroke="#14213a" stroke-width="1">${Array.from({ length: 19 }, (_, i) => `<path d="M${i * 40} 0V480"/>`).join('')}${Array.from({ length: 12 }, (_, i) => `<path d="M0 ${i * 40}H760"/>`).join('')}</g>`;
@@ -2213,40 +2359,49 @@ function mapSVG(o = {}) {
   for (let i = 0; i < H.inside; i++) dots.push(`<circle cx="${316 + (i % 6) * 25}" cy="${222 + Math.floor(i / 6) * 22}" r="5" fill="${'#8fb6e8'}" opacity=".85"/>`);
   const hot = G.phase === 'siege' && perceivedAgit().v > 65;
   s += `<g aria-label="Agência Central"><rect x="300" y="165" width="160" height="155" rx="6" fill="#16233b" stroke="${hot ? '#ff5468' : '#5a7bb0'}" stroke-width="2.5" ${hot ? 'class="agpulse"' : ''}/>
-   <text x="380" y="186" text-anchor="middle" fill="#9fb4d4" font-size="11" font-weight="700" letter-spacing="1.5">AGÊNCIA CENTRAL</text>${dots.join('')}
-   <text x="380" y="304" text-anchor="middle" fill="#7f93b2" font-size="10.5">${H.inside} reféns no interior</text></g>`;
+   <text x="380" y="186" text-anchor="middle" fill="#9fb4d4" font-size="12" font-weight="700" letter-spacing="1.5">AGÊNCIA CENTRAL</text>${dots.join('')}
+   <text x="380" y="304" text-anchor="middle" fill="#8b9fbd" font-size="11.5">${H.inside} reféns no interior</text></g>`;
   // stakeholders decor
   const warn = k => G.phase === 'siege' && G.stk[k].sem >= 2;
-  s += `<g><rect x="585" y="208" width="155" height="62" rx="6" fill="#111b2d" stroke="${warn('imprensa') ? '#ff5468' : '#2b3d5a'}" stroke-width="1.5" stroke-dasharray="4 3"/><text x="662" y="232" text-anchor="middle" fill="#9fb0c8" font-size="11" font-weight="600">Imprensa</text><text x="662" y="249" text-anchor="middle" fill="#6f82a0" font-size="10">Rua Marechal Deodoro</text>${G.phase === 'siege' ? `<text x="662" y="263" text-anchor="middle" fill="#9fb0c8" font-size="10" font-family="IBM Plex Mono,monospace">mídia ${Math.round(G.media)}</text>` : ''}</g>
-  <g><rect x="585" y="282" width="155" height="62" rx="6" fill="#111b2d" stroke="${warn('familias') ? '#ff5468' : '#2b3d5a'}" stroke-width="1.5" stroke-dasharray="4 3"/><text x="662" y="306" text-anchor="middle" fill="#9fb0c8" font-size="11" font-weight="600">Famílias</text><text x="662" y="323" text-anchor="middle" fill="#6f82a0" font-size="10">ponto de acolhimento</text></g>
-  <g><rect x="585" y="356" width="155" height="46" rx="6" fill="#111b2d" stroke="#2b3d5a" stroke-width="1.5"/><text x="662" y="376" text-anchor="middle" fill="#9fb0c8" font-size="11" font-weight="600">Posto de comando</text><text x="662" y="392" text-anchor="middle" fill="#6f82a0" font-size="10">você está aqui</text></g>`;
+  s += `<g><rect x="585" y="208" width="155" height="62" rx="6" fill="#111b2d" stroke="${warn('imprensa') ? '#ff5468' : '#2b3d5a'}" stroke-width="1.5" stroke-dasharray="4 3"/><text x="662" y="231" text-anchor="middle" fill="#a9bad2" font-size="12" font-weight="600">Imprensa</text><text x="662" y="248" text-anchor="middle" fill="#8396b3" font-size="11">Rua Marechal Deodoro</text>${G.phase === 'siege' ? `<text x="662" y="263" text-anchor="middle" fill="#a9bad2" font-size="11" font-family="IBM Plex Mono,monospace">mídia ${Math.round(G.media)}</text>` : ''}</g>
+  <g><rect x="585" y="282" width="155" height="62" rx="6" fill="#111b2d" stroke="${warn('familias') ? '#ff5468' : '#2b3d5a'}" stroke-width="1.5" stroke-dasharray="4 3"/><text x="662" y="307" text-anchor="middle" fill="#a9bad2" font-size="12" font-weight="600">Famílias</text><text x="662" y="324" text-anchor="middle" fill="#8396b3" font-size="11">ponto de acolhimento</text></g>
+  <g><rect x="585" y="356" width="155" height="46" rx="6" fill="#111b2d" stroke="#2b3d5a" stroke-width="1.5"/><text x="662" y="376" text-anchor="middle" fill="#a9bad2" font-size="12" font-weight="600">Posto de comando</text><text x="662" y="392" text-anchor="middle" fill="#8396b3" font-size="11">você está aqui</text></g>`;
   ZONES.forEach(z => {
     const cov = zoneCoverage(z.id), cl = covCls(cov);
     const fill = cl === 'g' ? '#12392b' : cl === 'a' ? '#3a3016' : '#3a1b25', stroke = cl === 'g' ? '#41d08f' : cl === 'a' ? '#f6a623' : '#ff5468';
     const ags = agentsIn(z.id), away = G.team.filter(id => G.az[id] === z.id && isAway(id));
     const isSel = sel === z.id;
+    // Zona estreita (o Beco): nome, porcentagem, estado e marca empilhados, para nada se sobrepor.
+    // Zona baixa e curta (a Entrada) usa o nome curto para caber ao lado de "100%".
+    const short = z.h < 80, narrow = z.w < 120, nm = narrow || (short && z.w < 300 && z.nome.length > 12) ? z.curto : z.nome;
     let mark = '';
-    if (K.route === z.id) mark = '★ rota provável'; else if (K.zrev[z.id] === true) mark = '◆ candidata'; else if (K.zrev[z.id] === false || K.cleared.includes(z.id)) mark = '○ improvável';
-    const act = o.interactive ? `data-act="${o.act || 'place'}" data-z="${z.id}" tabindex="0" role="button" aria-label="${z.nome}: cobertura ${cov}%, ${covTxt(cov)}"` : `role="img" aria-label="${z.nome}: cobertura ${cov}%, ${covTxt(cov)}"`;
-    const short = z.h < 80, nm = z.w < 120 ? z.curto : z.nome;
-    const agPos = i => short ? [z.x + z.w - 17 - (i % 6) * 23, z.y + 31 + Math.floor(i / 6) * 0] : [z.x + 17 + (i % 4) * 23, z.y + z.h - 15 - Math.floor(i / 4) * 21];
+    if (K.route === z.id) mark = narrow ? '★ rota' : '★ rota provável'; else if (K.zrev[z.id] === true) mark = '◆ candidata'; else if (K.zrev[z.id] === false || K.cleared.includes(z.id)) mark = '○ improvável';
+    const act = o.interactive ? `data-act="${o.act || 'place'}" data-z="${z.id}" tabindex="0" role="button" aria-label="${z.nome}: cobertura ${cov}%, ${covTxt(cov)}${mark ? ', ' + mark.slice(2) : ''}"` : `role="img" aria-label="${z.nome}: cobertura ${cov}%, ${covTxt(cov)}"`;
+    const pct = (x, y, anchor) => `<text x="${x}" y="${y}" text-anchor="${anchor}" fill="${stroke}" font-size="14" font-weight="700" font-family="IBM Plex Mono,monospace">${cov}%</text>`;
+    const wide = short && z.w > 300, yS = narrow ? 54 : short && !wide ? 35 : 36, xM = wide ? 130 : 9, yM = narrow ? 71 : wide ? yS : yS + 17;
+    // Quantos marcadores cabem sem cobrir o texto da zona; o excedente vira um "+N".
+    // Nas zonas baixas a fila de marcadores começa à esquerda dos equipamentos; no Beco, 3 por linha se houver equipamento.
+    const nG = gearIn(z.id).length, perRow = narrow && nG ? 3 : 4;
+    const cap = short ? (wide ? 20 : Math.max(1, 3 - nG)) : narrow ? 16 : z.h >= 120 ? 12 : 4;
+    const shown = ags.length > cap ? ags.slice(0, cap - 1) : ags, extra = ags.slice(shown.length);
+    const agPos = i => short ? [z.x + z.w - 17 - nG * 20 - i * 23, z.y + 31] : [z.x + 17 + (i % perRow) * 23, z.y + z.h - 15 - Math.floor(i / perRow) * 21];
     s += `<g class="zone${isSel ? ' sel' : ''}" ${act}>
       <title>${z.nome} — ${z.tip}</title>
       <rect class="z" x="${z.x}" y="${z.y}" width="${z.w}" height="${z.h}" rx="7" fill="${fill}" stroke="${stroke}" ${z.dash ? 'stroke-dasharray="7 4"' : ''}/>
       <rect x="${z.x}" y="${z.y}" width="${z.w}" height="${z.h}" rx="7" fill="url(#hatch)" opacity="${cl === 'r' ? 1 : cl === 'a' ? .45 : 0}" pointer-events="none"/>
-      <text x="${z.x + 9}" y="${z.y + 17}" fill="#e8edf5" font-size="12" font-weight="700">${nm}</text>
-      ${short ? `<text x="${z.x + z.w - 9}" y="${z.y + 18}" text-anchor="end" fill="${stroke}" font-size="13" font-weight="700" font-family="IBM Plex Mono,monospace">${cov}%</text>` : ''}
-      <text x="${z.x + 9}" y="${z.y + 33}" fill="${stroke}" font-size="10.5" font-weight="600">${covSym(cov)} ${covTxt(cov)}</text>
-      ${short ? '' : `<text x="${z.x + z.w - 9}" y="${z.y + 34}" text-anchor="end" fill="${stroke}" font-size="13" font-weight="700" font-family="IBM Plex Mono,monospace">${cov}%</text>`}
-      ${mark ? `<text x="${z.x + 9}" y="${z.y + 48}" fill="#cfe0ff" font-size="10.5" font-weight="600">${mark}</text>` : ''}
-      ${ags.map((id, i) => { const [cx, cy] = agPos(i); return `<g><circle cx="${cx}" cy="${cy}" r="9" fill="${+G.transit[id] ? '#3b4f6e' : '#27456d'}" stroke="${+G.transit[id] ? '#f6a623' : '#7fb4ee'}" stroke-width="1.5" ${+G.transit[id] ? 'stroke-dasharray="3 2"' : ''}/><text x="${cx}" y="${cy + 3.5}" text-anchor="middle" fill="#fff" font-size="9" font-weight="700">${initials(agentById(id).nome)}</text></g>`; }).join('')}
-      ${away.map((id, i) => `<text x="${z.x + z.w - 10}" y="${z.y + z.h - 8 - i * 12}" text-anchor="end" fill="#ff9aa7" font-size="9.5">✕ ${initials(agentById(id).nome)} ausente</text>`).join('')}
-      ${gearIn(z.id).map((e, i) => `<g><rect x="${z.x + z.w - 24 - i * 20}" y="${z.y + z.h - 24}" width="16" height="16" rx="3" fill="#0d1523" stroke="#4da6ff"/><text x="${z.x + z.w - 16 - i * 20}" y="${z.y + z.h - 12}" text-anchor="middle" fill="#4da6ff" font-size="10" font-weight="700">${EQ[e].nome[0]}</text></g>`).join('')}
+      <text x="${z.x + 9}" y="${z.y + 18}" fill="#e8edf5" font-size="13" font-weight="700">${nm}</text>
+      ${narrow ? pct(z.x + 9, z.y + 37, 'start') : short ? pct(z.x + z.w - 9, z.y + 19, 'end') : pct(z.x + z.w - 9, z.y + 37, 'end')}
+      <text x="${z.x + 9}" y="${z.y + yS}" fill="${stroke}" font-size="12.5" font-weight="600">${covSym(cov)} ${covTxt(cov)}</text>
+      ${mark ? `<text x="${z.x + xM}" y="${z.y + yM}" fill="#cfe0ff" font-size="12.5" font-weight="600">${mark}</text>` : ''}
+      ${shown.map((id, i) => { const [cx, cy] = agPos(i); return `<g><circle cx="${cx}" cy="${cy}" r="9.5" fill="${+G.transit[id] ? '#3b4f6e' : '#27456d'}" stroke="${+G.transit[id] ? '#f6a623' : '#7fb4ee'}" stroke-width="1.5" ${+G.transit[id] ? 'stroke-dasharray="3 2"' : ''}/><text x="${cx}" y="${cy + 3.5}" text-anchor="middle" fill="#fff" font-size="10" font-weight="700">${initials(agentById(id).nome)}</text></g>`; }).join('')}
+      ${extra.length ? (() => { const [cx, cy] = agPos(shown.length); return `<g><title>${extra.map(id => agentById(id).nome).join(', ')}</title><circle cx="${cx}" cy="${cy}" r="9.5" fill="#1b2a44" stroke="#7fb4ee" stroke-width="1.5"/><text x="${cx}" y="${cy + 3.5}" text-anchor="middle" fill="#cfe0ff" font-size="10" font-weight="700">+${extra.length}</text></g>`; })() : ''}
+      ${away.map((id, i) => `<text x="${z.x + z.w - 10}" y="${z.y + z.h - 8 - (nG && !short ? 20 : 0) - i * 13}" text-anchor="end" fill="#ff9aa7" font-size="11.5">✕ ${initials(agentById(id).nome)} ausente</text>`).join('')}
+      ${gearIn(z.id).map((e, i) => `<g><title>${EQ[e].nome}</title><rect x="${z.x + z.w - 24 - i * 20}" y="${z.y + z.h - 24}" width="16" height="16" rx="3" fill="#0d1523" stroke="#4da6ff"/><text x="${z.x + z.w - 16 - i * 20}" y="${z.y + z.h - 12}" text-anchor="middle" fill="#4da6ff" font-size="10.5" font-weight="700">${EQ[e].nome[0]}</text></g>`).join('')}
     </g>`;
   });
   return s + '</svg>';
 }
-const legendHTML = () => `<div class="legend"><span><i style="background:#41d08f"></i>✓ cobertura adequada (≥${ADEQ}%)</span><span><i style="background:#f6a623"></i>! parcial (30–59%)</span><span><i style="background:#ff5468"></i>✕ descoberta (&lt;30%)</span><span><i style="background:#4da6ff"></i>equipamento</span></div>`;
+const legendHTML = () => `<div class="legend"><span><i style="background:#41d08f"></i>✓ adequada (≥${ADEQ}%)</span><span><i style="background:#f6a623"></i>! parcial (30–59%)</span><span><i style="background:#ff5468"></i>✕ descoberta (&lt;30%)</span><span><i class="sq"></i>equipamento (inicial do nome)</span><span>★ rota provável · ◆ candidata · ○ improvável</span></div>`;
 
 /* ===================================================================
    MENU
@@ -2266,9 +2421,9 @@ function skyline() {
 function renderMenu() {
   const save = loadSave();
   const dcards = Object.entries(DIFF).map(([k, d]) => `
-    <button class="diffcard" data-act="diff" data-v="${k}" aria-pressed="${UI.diffSel === k}">
-      <span class="dot"></span>
-      <span><h3>${d.nome}</h3><p>${d.blurb}</p></span>
+    <button class="diffcard" role="radio" data-act="diff" data-v="${k}" aria-checked="${UI.diffSel === k}" tabindex="${UI.diffSel === k ? 0 : -1}">
+      <span class="dot" aria-hidden="true"></span>
+      <span><b class="dname">${d.nome}</b><span class="dblurb">${d.blurb}</span></span>
       <span class="dparams">${d.slots} decisões<br>${d.timer}s/rodada<br>eventos ${Math.round(d.evChance * 100)}%</span>
     </button>`).join('');
   return `<div class="screen menu">
@@ -2277,39 +2432,40 @@ function renderMenu() {
     </div>
     <div class="menubody">
       <div class="grid">
-        <div><div class="eyebrow">Dificuldade</div><div class="diffs" style="margin-top:8px">${dcards}</div></div>
+        <div><div class="eyebrow" id="difflbl">Dificuldade</div><div class="diffs" role="radiogroup" aria-labelledby="difflbl" style="margin-top:8px">${dcards}</div></div>
         <div class="row"><button class="btn primary lg" data-act="start">Iniciar simulação</button>
           ${save ? `<button class="btn lg" data-act="continue">Continuar partida <span class="faint" style="font-weight:400">(${DIFF[save.diff].nome}, ${save.phase === 'siege' ? 'rodada ' + save.round : save.phase === 'post' || save.phase === 'outcome' ? 'finalizada' : save.phase === 'recruit' ? 'recrutamento' : save.phase === 'perimeter' ? 'perímetro' : 'briefing'})</span></button>` : ''}
         </div>
-        <label class="row" style="gap:8px;font-size:13px;color:var(--ink2);cursor:pointer"><input type="checkbox" id="nolimit" data-chg="nolimit" ${UI.noLimit ? 'checked' : ''}> Cronômetro sem limite (acessibilidade): o relógio aparece, mas não encerra a rodada</label>
+        <label class="check"><input type="checkbox" id="nolimit" data-chg="nolimit" ${UI.noLimit ? 'checked' : ''}><span>Cronômetro sem limite (acessibilidade): o relógio aparece, mas não encerra a rodada</span></label>
       </div>
       <div class="card">
-        <h3>Sua missão</h3>
+        <h2 class="h3">Sua missão</h2>
         <p class="serif" style="font-size:16.5px;line-height:1.6;color:#dfe6f1">Você é o comandante do incidente. Em 8 rodadas, equilibre cinco objetivos que competem entre si: <b>vidas</b>, <b>prisões</b>, <b>valores</b>, <b>custo</b> e <b>confiança pública</b>. Não existe estratégia dominante.</p>
-        <div class="row" style="margin-top:12px"><button class="btn sm" data-act="howto">Como funciona</button><span class="faint" style="font-size:12px">25 a 40 min · salva automaticamente no navegador</span></div>
-        <p class="faint" style="font-size:11.5px;margin-top:14px">Todos os nomes, lugares e instituições são fictícios. A perspectiva é sempre a de quem protege; as ações táticas são abstratas e não há imagens explícitas.</p>
+        <div class="row" style="margin-top:12px"><button class="btn sm" data-act="howto">Como funciona</button><span class="faint" style="font-size:12.5px">25 a 40 min · salva automaticamente no navegador</span></div>
+        <p class="faint" style="font-size:12px;margin-top:14px">Todos os nomes, lugares e instituições são fictícios. A perspectiva é sempre a de quem protege; as ações táticas são abstratas e não há imagens explícitas.</p>
       </div>
     </div>
     ${UI.tutor ? tutorModal() : ''}
   </div>`;
 }
 function tutorModal() {
-  return `<div class="modalback" role="dialog" aria-modal="true" aria-label="Como funciona"><div class="tutor">
-    <h3>Como funciona o PERÍMETRO</h3>
+  return `<div class="modalback"><div class="tutor" role="dialog" aria-modal="true" aria-labelledby="tutt">
+    <h2 class="h3" id="tutt">Como funciona o PERÍMETRO</h2>
     <p class="muted"><b>1. Recrute</b> uma equipe com 1.000 créditos. O que sobrar é sua reserva para investigações, apoio externo e horas extras, e também paga o <b>plantão</b>: toda rodada, cada agente em campo custa verba. Sem reserva, a operação entra no vermelho.</p>
     <p class="muted"><b>2. Posicione</b> agentes e equipamentos em 7 zonas. Quatro delas são rotas de fuga possíveis, mas você não sabe quais. Os recursos só cobrem bem cerca de 60% das zonas: é preciso apostar, ou investir em inteligência. Mudar alguém de zona tem custo: ele rende menos por duas rodadas.</p>
     <p class="muted"><b>3. Comande o cerco</b> por 8 rodadas. Em cada uma você recebe informações parciais (Percepção), lê indicadores (Compreensão) e vê tendências (Projeção). Então toma 2 ou 3 decisões em quatro frentes: <b>Tática, Negociação, Inteligência e Comunicação</b>.</p>
     <p class="muted"><b>4. A crise termina</b> por rendição negociada, intervenção, fuga ou prazo esgotado. A nota combina vidas (40%), prisões (20%), valores (15%), eficiência de custo (10%) e confiança pública (15%).</p>
     <p class="muted">Dica: a negociação sobe uma escada de 5 degraus, um por vez. Pular etapas reduz pela metade a chance de avançar. O painel mostra o <b>gargalo</b> da operação: ele muda de informação para pessoal e depois para tempo, e gastar fora dele rende pouco.</p>
-    <div class="row"><button class="btn primary" data-act="closehowto">Entendi</button></div></div></div>`;
+    <div class="row"><button class="btn primary" data-act="closehowto">Entendi</button><span class="faint" style="font-size:12px">Esc também fecha</span></div></div></div>`;
 }
 
 /* ===================================================================
    BRIEFING
    =================================================================== */
+/* Manchetes em movimento contínuo: pausam com o mouse ou o foco, e o botão ❚❚ congela de vez (WCAG 2.2.2). */
 function tickerHTML(items, label = 'AO VIVO') {
   const t = items.map(x => `<span>${x}</span>`).join('<i>◆</i>');
-  return `<div class="ticker" role="marquee" aria-label="Manchetes ao vivo: ${items.join('. ')}"><b>${label}</b><div class="tk"><div class="tkin" aria-hidden="true">${t}<i>◆</i>${t}<i>◆</i></div></div></div>`;
+  return `<div class="ticker${UI.tkPause ? ' paused' : ''}" role="marquee" aria-label="Manchetes ao vivo: ${items.join('. ')}"><b>${label}</b><div class="tk"><div class="tkin" aria-hidden="true">${t}<i>◆</i>${t}<i>◆</i></div></div><button class="tkp" type="button" data-act="tkpause" aria-pressed="${UI.tkPause}" aria-label="${UI.tkPause ? 'Retomar' : 'Pausar'} as manchetes" title="${UI.tkPause ? 'Retomar' : 'Pausar'} as manchetes">${UI.tkPause ? '▶' : '❚❚'}</button></div>`;
 }
 function hostageStrip(cls = '') {
   return `<div class="hstrip ${cls}" aria-label="Os 17 reféns: ${HOSTAGE_LIST.map(h => h.nome).join(', ')}">${HOSTAGE_LIST.map((h, i) => `<span class="hp" style="--i:${i}" title="${h.nome}, ${h.idade} anos, ${h.papel}${h.nota ? ' (' + h.nota + ')' : ''}">${sil1()}<small>${h.nome.split(' ')[0]}</small></span>`).join('')}</div>`;
@@ -2319,7 +2475,8 @@ function renderBriefing() {
   const w = [40, 20, 15, 10, 15], names = ['Vidas dos reféns', 'Prisão dos responsáveis', 'Valores recuperados', 'Custos operacionais', 'Confiança pública'];
   return `<div class="screen brief" data-act="skipbrief">
     ${tickerHTML(['URGENTE · Alarme dispara na Agência Central do Banco Meridiano, no centro de Porto Alto', 'Testemunhas falam em homens armados e clientes presos no interior', 'Polícia isola a Rua Marechal Deodoro; trânsito desviado', 'TV Porto Alto acompanha ao vivo'], 'URGENTE')}
-    <div class="day">Sexta-feira</div><div class="time">14h07</div>
+    <h1 class="sr">Briefing: assalto com reféns na Agência Central</h1>
+    <div class="row" style="justify-content:space-between;align-items:flex-end"><div><div class="day">Sexta-feira</div><div class="time">14h07</div></div><button class="btn sm ghost skipb" type="button" data-act="skipbrief">Pular animação</button></div>
     <div class="narr">
       <p>O alarme silencioso da Agência Central do Banco Meridiano acaba de disparar. As primeiras viaturas confirmam: há pelo menos dois homens armados no interior da agência.</p>
       <p>Dezessete pessoas, entre clientes e funcionários, estão impedidas de sair. Uma aposentada que veio pagar contas. Um caixa de 24 anos no segundo mês de emprego. Uma cliente grávida de sete meses.</p>
@@ -2328,10 +2485,10 @@ function renderBriefing() {
     <div class="after">
       <div class="eyebrow" style="margin-top:4px">Quem está lá dentro</div>
       ${hostageStrip()}
-      <p class="faint" style="font-size:12.5px;margin-top:8px">Você tem mil créditos, doze profissionais de plantão e um mapa com sete zonas. Não tem tempo, nem informação suficiente, e nenhuma decisão vai agradar a todos.</p>
+      <p class="faint" style="font-size:13px;margin-top:8px">Você tem mil créditos, doze profissionais de plantão e um mapa com sete zonas. Não tem tempo, nem informação suficiente, e nenhuma decisão vai agradar a todos.</p>
       <div class="eyebrow" style="margin-top:20px">Cinco objetivos em tensão</div>
       <div class="objgrid">${w.map((p, i) => `<div class="obj" style="--w:${p * 2.2}%"><b>${p}%</b><span>${names[i]}</span></div>`).join('')}</div>
-      <div class="row" style="margin-top:26px"><button class="btn primary lg" data-act="tobrief">Assumir o comando</button><span class="faint" style="font-size:12.5px">Próximo: Fase 0, recrutamento da equipe · clique no texto para pular a animação</span></div>
+      <div class="row" style="margin-top:26px"><button class="btn primary lg" data-act="tobrief">Assumir o comando</button><span class="faint" style="font-size:13px">Próximo: Fase 0, recrutamento da equipe</span></div>
     </div></div>`;
 }
 
@@ -2341,17 +2498,19 @@ function renderBriefing() {
 function teamSummary() {
   const t = G.team; if (!t.length) return '<p class="faint" style="font-size:12.5px">Nenhum agente recrutado.</p>';
   const sum = k => t.reduce((s, id) => s + stat(id, k), 0), best = k => Math.max(...t.map(id => stat(id, k)));
-  return `<div class="attrs">${bar('Tática (soma)', sum('tat'), 'b', 50)}${bar('Melhor negoc.', best('neg'), 'g')}${bar('Melhor intel.', best('int'), 'v')}${bar('Melhor comun.', best('com'), 'a')}</div>`;
+  return `<div class="attrs">${bar('Tática (soma)', sum('tat'), 'n', 50)}${bar('Melhor negoc.', best('neg'))}${bar('Melhor intel.', best('int'))}${bar('Melhor comun.', best('com'))}</div>`;
 }
+/* Rodapé do cartão: diz o estado e o que o clique faz (recrutar, dispensar, ou por que não dá). */
+const cardFoot = (on, can, falta, verbOn, verbOff) => on ? `<span class="cfoot on">✓ ${verbOn} · clique para desfazer</span>` : can ? `<span class="cfoot">Clique para ${verbOff}</span>` : `<span class="cfoot no">Faltam ${fmt(falta)} créditos</span>`;
 function renderRecruit() {
   const agents = AGENTS.map(a => {
     const on = G.team.includes(a.id), can = on || G.credits >= a.custo;
-    return `<button class="acard" data-act="hire" data-id="${a.id}" aria-pressed="${on}" aria-disabled="${!can}">
-      ${on ? '<span class="pill green hired">Recrutado</span>' : ''}
-      <div class="top"><div class="sil">${sil(a.id)}</div><div><h4>${a.nome}</h4><span class="faint" style="font-size:11.5px">${a.trait}</span></div><span class="cost">${a.custo}</span></div>
-      <div class="attrs">${Object.keys(ATTR).map(k => bar(ATTR[k], stat(a.id, k), k === 'tat' ? 'r' : k === 'neg' ? 'g' : k === 'int' ? 'v' : k === 'res' ? 'a' : 'b')).join('')}</div>
+    return `<button class="acard" data-act="hire" data-id="${a.id}" aria-pressed="${on}" ${can ? '' : `aria-disabled="true" data-why="Faltam ${fmt(a.custo - G.credits)} créditos para chamar ${a.nome}. Dispense alguém ou um equipamento para liberar verba."`}>
+      <div class="top"><div class="sil">${sil(a.id)}</div><div><b class="an">${a.nome}</b><span class="faint" style="font-size:12px">${a.trait}</span></div><span class="cost">${a.custo}</span></div>
+      <div class="attrs">${Object.keys(ATTR).map(k => bar(ATTR[k], stat(a.id, k))).join('')}</div>
       <p class="bio">${BIOS[a.id] || ''}</p>
-      <div class="trait"><b>${a.trait}</b>${a.tdesc}</div></button>`;
+      <div class="trait"><b>${a.trait}</b>${a.tdesc}</div>
+      ${cardFoot(on, can, a.custo - G.credits, 'Na equipe', 'recrutar')}</button>`;
   }).join('');
   const gear = EQUIPMENT_HTML();
   const reserve = G.credits;
@@ -2363,36 +2522,42 @@ function renderRecruit() {
   const cam = G.team.includes('camila') ? `<div class="card flat"><h3>Camila Araújo · Versátil</h3><div class="row" style="gap:8px">
     <label class="field">+1 em<select data-chg="camplus" id="camplus">${Object.keys(ATTR).map(k => `<option value="${k}" ${G.camAdj.plus === k ? 'selected' : ''}>${ATTR[k]}</option>`).join('')}</select></label>
     <label class="field">−1 em<select data-chg="camminus" id="camminus">${Object.keys(ATTR).map(k => `<option value="${k}" ${G.camAdj.minus === k ? 'selected' : ''}>${ATTR[k]}</option>`).join('')}</select></label></div></div>` : '';
+  setBar(recruitBar());
   return `<div class="screen">
-    <div class="hud"><div class="hudrow"><span class="brand">PERÍMETRO</span><span class="pill">Fase 0 · Recrutamento</span><span class="spacer"></span><div class="stat"><small>Créditos</small><b style="color:var(--amber)">${fmt(G.credits)}</b></div></div></div>
+    <div class="hud"><div class="hudrow"><span class="brand">PERÍMETRO</span><span class="pill">Fase 0 · Recrutamento</span><span class="spacer"></span><div class="stat"><small>Créditos</small><b style="color:var(--amber)" data-k="cred" data-n="${Math.round(G.credits)}">${fmt(G.credits)}</b></div></div></div>
     <div class="recr">
       <div class="grid" style="gap:18px">
-        <div><div class="eyebrow">Pool de profissionais</div><h2 style="font-size:22px;margin:4px 0 6px">Quem entra na sua força-tarefa?</h2><p class="serif muted" style="font-size:15.5px;margin-bottom:12px;max-width:820px">14h12. A Secretaria liberou mil créditos e doze profissionais de plantão. Quem você chamar chega em quinze minutos. O que sobrar é tudo o que você terá para investigar, pedir apoio e pagar horas extras até o fim da noite.</p><div class="agents">${agents}</div></div>
-        <div><div class="eyebrow">Catálogo de equipamentos</div><div class="gear" style="margin-top:8px;grid-template-columns:repeat(auto-fill,minmax(300px,1fr))">${gear}</div></div>
+        <div><div class="row" style="justify-content:space-between"><div class="eyebrow">Pool de profissionais</div><a class="jump" href="#equip">Catálogo de equipamentos ↓</a></div><h1 class="ptitle">Quem entra na sua força-tarefa?</h1><p class="serif muted" style="font-size:15.5px;margin-bottom:12px;max-width:820px">14h12. A Secretaria liberou mil créditos e doze profissionais de plantão. Quem você chamar chega em quinze minutos. O que sobrar é tudo o que você terá para investigar, pedir apoio e pagar horas extras até o fim da noite.</p><div class="agents">${agents}</div></div>
+        <div id="equip" class="anchor"><div class="eyebrow">Catálogo de equipamentos</div><h2 class="sr">Equipamentos</h2><div class="gear" style="margin-top:8px;grid-template-columns:repeat(auto-fill,minmax(300px,1fr))">${gear}</div></div>
       </div>
       <aside class="side">
-        <div class="card"><h3>Orçamento</h3><div class="credits num">${fmt(G.credits)}</div><p class="muted" style="font-size:12.5px;margin-top:6px">Reserva operacional. Cada crédito gasto agora é um crédito a menos para investigar, pedir apoio externo ou pagar o plantão de cada rodada.</p>
+        <div class="card"><h3>Orçamento</h3><div class="credits num" data-k="cred2" data-n="${Math.round(G.credits)}">${fmt(G.credits)}</div><p class="muted" style="font-size:12.5px;margin-top:6px">Reserva operacional. Cada crédito gasto agora é um crédito a menos para investigar, pedir apoio externo ou pagar o plantão de cada rodada.</p>
           <div class="stack" style="margin-top:10px" role="img" aria-label="Equipe ${G.spent.rec}, equipamento ${G.spent.equip}, reserva ${G.credits}"><i style="width:${G.spent.rec / 10}%;background:var(--blue)"></i><i style="width:${G.spent.equip / 10}%;background:var(--violet)"></i><i style="width:${G.credits / 10}%;background:${G.credits < 150 ? 'var(--red)' : G.credits < 350 ? 'var(--amber)' : 'var(--green)'}"></i></div>
           <div class="stackleg"><span><i style="background:var(--blue)"></i>Equipe <b class="mono">${G.spent.rec}</b></span><span><i style="background:var(--violet)"></i>Equipamento <b class="mono">${G.spent.equip}</b></span><span><i style="background:${G.credits < 150 ? 'var(--red)' : G.credits < 350 ? 'var(--amber)' : 'var(--green)'}"></i>Reserva <b class="mono">${fmt(G.credits)}</b></span></div></div>
         ${G.team.length ? `<div class="card"><h3>O que a reserva precisa pagar</h3>
           <div class="fc"><span>Plantão previsto</span><b class="mono">~${F.per}/rodada</b><small>${F.nField} ${F.nField === 1 ? 'agente' : 'agentes'} em campo. Reserva e reconvocados não custam.</small></div>
-          <div class="fc"><span>Nas 8 rodadas</span><b class="mono">~${F.total}</b><small>vezes ${D_().ops.toString().replace('.', ',')} da dificuldade ${D_().nome}.</small></div>
-          <div class="fc ${F.free < 0 ? 'bad' : F.free < 60 ? 'warn' : 'ok'}"><span>Sobra para decidir</span><b class="mono">${F.free < 0 ? '−' + Math.round(-F.free) : Math.round(F.free)}</b><small>${F.free <= 0 ? 'nada para investigar, apoiar ou pagar horas extras' : `≈ ${F.intels} investigações ou ${F.apoios} apoio${F.apoios === 1 ? '' : 's'} externo${F.apoios === 1 ? '' : 's'}`}</small></div>
+          <div class="fc"><span>Nas 8 rodadas</span><b class="mono">~${F.total}</b><small>com o multiplicador de plantão da dificuldade ${D_().nome} (×${dec(D_().ops, D_().ops % 1 ? 1 : 0)}).</small></div>
+          <div class="fc ${F.free < 0 ? 'bad' : F.free < 60 ? 'warn' : 'ok'}"><span>Sobra para decidir</span><b class="mono">${F.free < 0 ? '−' + Math.round(-F.free) : Math.round(F.free)}</b><small>${F.free <= 0 ? 'nada para investigar, apoiar ou pagar horas extras' : `≈ ${F.intels} ${plural(F.intels, 'investigação', 'investigações')} ou ${F.apoios} apoio${F.apoios === 1 ? '' : 's'} externo${F.apoios === 1 ? '' : 's'}`}</small></div>
           <div class="fc ${cap.adq >= 3 ? 'ok' : cap.adq === 2 ? 'warn' : 'bad'}"><span>Capacidade de cobertura</span><b class="mono">${cap.adq} / 7 zonas</b><small>adequadas (≥60%) se os agentes forem espalhados. Concentrar agentes cobre melhor menos zonas.</small></div></div>` : ''}
         <div class="card"><h3>Equipe (${G.team.length})</h3>${teamSummary()}
           <div style="margin-top:10px">${G.team.map(id => `<div class="mini"><span>${shortName(agentById(id).nome)}</span><span class="mono">${agentById(id).custo}</span></div>`).join('')}${G.gear.map(id => `<div class="mini"><span>${EQ[id].nome}</span><span class="mono">${EQ[id].custo}</span></div>`).join('')}</div>
           ${warns.map(w => `<div class="insight warn" style="margin-top:8px">${icon('alert', '', 1.8)}<span>${w}</span></div>`).join('')}</div>
         ${cam}
-        ${UI.emptyConfirm && !G.team.length ? `<div class="insight bad">${icon('alert', '', 1.8)}<span>Sem agentes, a guarnição local improvisa dois patrulheiros (Tática 3). A cobertura será mínima e a negociação, amadora. Confirma?</span></div>` : ''}
-        <button class="btn primary lg" data-act="torecruit">${UI.emptyConfirm && !G.team.length ? 'Sim, seguir sem equipe' : 'Posicionar o perímetro'}</button>
       </aside>
     </div></div>`;
 }
 function EQUIPMENT_HTML() {
   return EQUIP.map(e => {
     const on = G.gear.includes(e.id), can = on || G.credits >= e.custo;
-    return `<button class="gcard" data-act="buygear" data-id="${e.id}" aria-pressed="${on}" aria-disabled="${!can}">${icon(e.ic)}<span><b>${e.nome}</b><span>${e.desc}</span></span><span class="cost mono" style="color:var(--amber);font-weight:600">${e.custo}</span></button>`;
+    return `<button class="gcard" data-act="buygear" data-id="${e.id}" aria-pressed="${on}" ${can ? '' : `aria-disabled="true" data-why="Faltam ${fmt(e.custo - G.credits)} créditos para ${e.nome}."`}>${icon(e.ic)}<span><b>${e.nome}</b><span>${e.desc}</span>${on ? '<span class="cfoot on">✓ Comprado · clique para devolver</span>' : can ? '' : `<span class="cfoot no">Faltam ${fmt(e.custo - G.credits)} créditos</span>`}</span><span class="cost mono">${e.custo}</span></button>`;
   }).join('');
+}
+/* Barra de ação do recrutamento: o resumo e o próximo passo sempre à vista. */
+function recruitBar() {
+  const empty = !G.team.length;
+  return `<div class="absum"><span class="abk">Sua força-tarefa</span><span><b class="mono">${G.team.length}</b> ${plural(G.team.length, 'agente', 'agentes')} · <b class="mono">${G.gear.length}</b> ${plural(G.gear.length, 'equipamento', 'equipamentos')} · reserva <b class="mono" style="color:var(--amber)">${fmt(G.credits)}</b></span></div>
+    ${UI.emptyConfirm && empty ? `<p class="abmsg bad">${icon('alert', 'ico', 1.8)}Sem agentes, a guarnição local improvisa dois patrulheiros (Tática 3): cobertura mínima e negociação amadora. Confirma?</p>` : '<span class="spacer"></span>'}
+    <button class="btn primary lg" data-act="torecruit">${UI.emptyConfirm && empty ? 'Sim, seguir sem equipe' : 'Posicionar o perímetro →'}</button>`;
 }
 
 /* ===================================================================
@@ -2409,32 +2574,35 @@ function renderPerimeter() {
   const intel = INTEL.filter(i => i.fase1).map(i => {
     const r = G.p1intel[i.id], done = r && typeof r === 'object', c = intelCost(i.id), can = G.credits >= c;
     return `<div class="icard ${done && r.ok ? 'done' : ''}"><b>${icon(i.ic, 'ico" style="width:18px;height:18px;vertical-align:-4px;margin-right:6px')}${i.nome}</b><p>${i.desc}</p>
-      ${done ? dossierHTML(r) : `<button class="btn sm" data-act="p1intel" data-id="${i.id}" ${can ? '' : 'disabled'}>Investigar · ${c} créditos</button>`}</div>`;
+      ${done ? dossierHTML(r) : `<button class="btn sm" data-act="p1intel" data-id="${i.id}" ${can ? '' : `aria-disabled="true" data-why="Faltam ${fmt(c - G.credits)} créditos para esta investigação."`}>Investigar · ${c} créditos</button>${can ? '' : `<small class="unav">Faltam ${fmt(c - G.credits)} créditos</small>`}`}</div>`;
   }).join('');
   const zrows = ZONES.map(z => {
     const cov = zoneCoverage(z.id), sel = UI.sel;
     return `<div class="zrow ${UI.pickZone === z.id ? 'sel' : ''}"><div><span class="nm">${z.nome}</span> <span class="pill ${covCls(cov) === 'g' ? 'green' : covCls(cov) === 'a' ? 'amber' : 'red'}">${covSym(cov)} ${covTxt(cov)}</span></div><span class="cv" style="color:var(--${covCls(cov) === 'g' ? 'green' : covCls(cov) === 'a' ? 'amber' : 'red'})">${cov}%</span>
       <div class="chips">${agentsIn(z.id).map(id => chipHTML('a', id)).join('')}${gearIn(z.id).map(id => chipHTML('g', id)).join('')}${sel ? `<button class="btn sm" data-act="place" data-z="${z.id}">Posicionar aqui</button>` : ''}</div></div>`;
   }).join('');
+  const selName = UI.sel ? (UI.sel.t === 'a' ? agentById(UI.sel.id).nome : EQ[UI.sel.id].nome) : '';
+  setBar(`<div class="absum"><span class="abk">Perímetro</span><span><b class="mono" style="color:var(--${adq >= 4 ? 'green' : adq >= 3 ? 'amber' : 'red'})">${adq} de 7</b> zonas adequadas · ${reserveA.length} ${plural(reserveA.length, 'agente', 'agentes')} na reserva · plantão <b class="mono">−${plantaoCost()}</b>/rod.</span></div>
+    <span class="spacer"></span><button class="btn" data-act="autoplace">Distribuição automática</button><button class="btn primary lg" data-act="tosiege">Confirmar e iniciar o cerco →</button>`);
   return `<div class="screen">
     <div class="hud"><div class="hudrow"><span class="brand">PERÍMETRO</span><span class="pill">Fase 1 · Posicionamento</span><span class="spacer"></span>
       <div class="stat"><small>Zonas adequadas</small><b style="color:var(--${adq >= 4 ? 'green' : adq >= 3 ? 'amber' : 'red'})">${adq} / 7</b></div>
       <div class="stat"><small>Plantão previsto</small><b>−${plantaoCost()}/rod.</b></div>
-      <div class="stat"><small>Créditos</small><b style="color:var(--amber)">${fmt(G.credits)}</b></div></div></div>
+      <div class="stat"><small>Créditos</small><b style="color:var(--amber)" data-k="cred" data-n="${Math.round(G.credits)}">${fmt(G.credits)}</b></div></div></div>
     <div class="perim">
       <div class="grid">
-        <div><div class="eyebrow">Mapa esquemático</div><h2 style="font-size:22px;margin:4px 0 10px">Onde você vai apostar?</h2>
+        <div><div class="eyebrow">Mapa esquemático</div><h1 class="ptitle">Onde você vai apostar?</h1>
           <p class="muted" style="margin-bottom:10px;max-width:760px">Quatro das sete zonas são rotas de fuga possíveis, mas você não sabe quais. Selecione um agente ou equipamento e clique na zona de destino. A cobertura combina a eficiência tática dos agentes com o fator dos equipamentos (×1,0 sem · ×1,3 com um · ×1,6 com dois).</p>
-          <div class="mapwrap">${mapSVG({ interactive: true, sel: UI.pickZone })}${legendHTML()}</div></div>
+          ${UI.sel ? `<div class="target" role="status">${icon('map', 'ico', 1.8)}<span>Posicionando <b>${selName}</b>: clique na zona de destino no mapa ou em “Posicionar aqui” na lista. <kbd>Esc</kbd> cancela.</span></div>` : ''}
+          <div class="mapwrap">${mapSVG({ interactive: true, sel: UI.pickZone, targeting: !!UI.sel })}${legendHTML()}</div></div>
         <div><div class="eyebrow">Inteligência prévia (resultado imediato, 15% menos confiável)</div><div class="intelgrid" style="margin-top:8px">${intel}</div></div>
       </div>
       <aside class="side">
-        <div class="card"><h3>Reserva <span class="pill">${reserveA.length} agentes</span></h3>
+        <div class="card"><h2 class="h3">Reserva <span class="pill">${reserveA.length} ${plural(reserveA.length, 'agente', 'agentes')}</span></h2>
           <div class="row" style="gap:6px">${reserveA.map(id => chipHTML('a', id)).join('') || '<span class="faint" style="font-size:12.5px">Todos posicionados.</span>'}${reserveG.map(id => chipHTML('g', id)).join('')}</div>
-          ${UI.sel ? `<div class="row" style="margin-top:10px"><button class="btn sm" data-act="place" data-z="reserva">Devolver à reserva</button><span class="faint" style="font-size:12px">${UI.sel.t === 'a' ? agentById(UI.sel.id).nome : EQ[UI.sel.id].nome} selecionado</span></div>` : '<p class="faint" style="font-size:12px;margin-top:8px">Clique em um item e depois em uma zona. Agentes na reserva descansam, mas não cobrem zona nenhuma.</p>'}</div>
-        <div class="card"><h3>Zonas</h3><div class="zlist">${zrows}</div></div>
-        <button class="btn" data-act="autoplace">Distribuição automática</button><button class="btn primary lg" data-act="tosiege">Confirmar e iniciar o cerco</button>
-        <p class="faint" style="font-size:11.5px">Cobertura calculada com a pressão inicial (${G.pressure}): eficiência × ${pressureFactor(G.pressure * .95).toFixed(2)}. Ela muda ao longo do cerco.</p>
+          ${UI.sel ? `<div class="row" style="margin-top:10px"><button class="btn sm" data-act="place" data-z="reserva">Devolver à reserva</button><span class="faint" style="font-size:12.5px">${selName} selecionado</span></div>` : '<p class="faint" style="font-size:12.5px;margin-top:8px">Clique em um item e depois em uma zona. Agentes na reserva descansam, mas não cobrem zona nenhuma.</p>'}</div>
+        <div class="card"><h2 class="h3">Zonas</h2><div class="zlist">${zrows}</div></div>
+        <p class="faint" style="font-size:12px">Cobertura calculada com a pressão inicial (${G.pressure}): eficiência × ${dec(pressureFactor(G.pressure * .95), 2)}. Ela muda ao longo do cerco.</p>
       </aside>
     </div></div>`;
 }
@@ -2448,8 +2616,8 @@ function dossierHTML(r) {
 /* ---------- Cortes de cena entre fases (não salvos: são só transição) ---------- */
 function cutHTML() {
   const c = UI.cut; if (!c) return '';
-  return `<div class="cut" role="dialog" aria-modal="true" aria-label="${c.title}"><div class="cutin">
-    <div class="time">${c.time}</div><h2>${c.title}</h2>
+  return `<div class="cut" role="dialog" aria-modal="true" aria-labelledby="cutt"><div class="cutin">
+    <div class="time">${c.time}</div><h2 id="cutt">${c.title}</h2>
     ${c.lines.map((l, i) => `<p class="${l.radio ? 'radio-q' : ''}" style="animation-delay:${.5 + i * .9}s">${l.t}</p>`).join('')}
     <div class="row" style="justify-content:center;margin-top:10px"><button class="btn primary lg" data-act="cutgo" style="animation-delay:${.6 + c.lines.length * .9}s">${c.btn}</button></div></div></div>`;
 }
@@ -2477,9 +2645,9 @@ function hudHTML() {
     <div class="stat"><small>Rodada</small><b>${G.round}/${MAX_ROUNDS}</b></div>
     <div class="stat"><small>Hora</small><b>${fmtTime(G.round)}</b></div>
     ${G.stage === 'panel' ? `<div class="timer" id="clock" role="timer" aria-label="Tempo restante da rodada">${G.noLimit ? '∞' : mmss(Math.max(0, Math.ceil((UI.deadline - Date.now()) / 1000)) || D_().timer)}</div>` : ''}
-    <div class="stat"><small>Créditos</small><b style="color:var(--amber)">${fmt(G.credits)}</b><em class="burn ${G.credits < plantaoCost() ? 'bad' : ''}" title="Custo de plantão cobrado ao fim de cada rodada">−${plantaoCost()}/rod.</em></div>
+    <div class="stat"><small>Créditos</small><b style="color:var(--amber)" data-k="cred" data-n="${Math.round(G.credits)}">${fmt(G.credits)}</b><em class="burn ${G.credits < plantaoCost() ? 'bad' : ''}" title="Custo de plantão cobrado ao fim de cada rodada">−${plantaoCost()}/rod.</em></div>
     <div class="stat tocchip ${TOCS[tocConstraint().k].cor}" title="Elo mais fraco do sistema agora (Teoria das Restrições)"><small>Gargalo</small><b>${TOCS[tocConstraint().k].nome}</b></div>
-    <div class="bsc" title="Projeção dos cinco objetivos (placar equilibrado)">${b.map(x => `<div>${x.k}<b>${x.unk ? '?' : Math.round(x.v)}</b>${meter(x.v, x.cls)}</div>`).join('')}</div>
+    <div class="bsc" title="Projeção dos cinco objetivos (placar equilibrado)">${b.map((x, i) => `<div><span>${x.k}</span><b ${x.unk ? 'title="Ainda desconhecido"' : `data-k="bscn${i}" data-n="${Math.round(x.v)}"`}>${x.unk ? '?' : Math.round(x.v)}</b>${meter(x.v, x.cls, `data-k="bsc${i}" data-val="${Math.round(x.v)}"`)}</div>`).join('')}</div>
   </div>${tickerHTML(headlines(), 'TV PORTO ALTO')}</div>`;
 }
 
@@ -2533,14 +2701,14 @@ function endsleyHTML() {
   L2.push(ins('info', 'phone', `Negociação no degrau ${G.nego.step} (${st.nome}). ${K.profile ? `Líder ${P.nome}: ${P.tip}` : G.nego.signalShown ? `Sinal do canal: “${P.sign}”` : 'O perfil do líder ainda é desconhecido, e a postura certa depende dele.'}`));
   const topEv = Object.entries(G.ev).sort((a, b) => b[1] - a[1])[0];
   const adq = adequateCount();
-  L2.push(ins(adq >= 4 ? 'good' : 'warn', 'map', `${adq} de 7 zonas com cobertura adequada. ${topEv && topEv[1] >= 1.5 ? `Os relatos convergem para <b>${ZONE[topEv[0]].nome}</b> (${topEv[1].toFixed(1)} indícios ponderados).${G.team.includes('carla') ? ' A Det. Mendes correlacionou os relatos.' : ''}` : 'Os relatos ainda não apontam uma rota com clareza.'}`));
+  L2.push(ins(adq >= 4 ? 'good' : 'warn', 'map', `${adq} de 7 zonas com cobertura adequada. ${topEv && topEv[1] >= 1.5 ? `Os relatos convergem para <b>${ZONE[topEv[0]].nome}</b> (${dec(topEv[1])} indícios ponderados).${G.team.includes('carla') ? ' A Det. Mendes correlacionou os relatos.' : ''}` : 'Os relatos ainda não apontam uma rota com clareza.'}`));
   const tired = deployed().filter(id => ff(id) < .8), away = G.team.filter(isAway);
   if (tired.length) L2.push(ins('warn', 'tired', `Fadiga: ${tired.map(id => shortName(agentById(id).nome)).join(', ')} abaixo de 80% de eficiência. Rodízio custa cobertura temporária.`));
   if (away.length) L2.push(ins('bad', 'alert', `${away.map(id => shortName(agentById(id).nome)).join(', ')} reconvocado${away.length > 1 ? 's' : ''} pela cidade por ${Math.max(...away.map(id => G.away[id]))} rodada(s).`));
   const bad = STK_KEYS.filter(k => G.stk[k].sem >= 2 || G.stk[k].sat < 40);
   if (bad.length) L2.push(ins('bad', 'family', `Risco com stakeholders: ${bad.map(k => `${STK[k].nome} (${Math.round(G.stk[k].sat)}${G.stk[k].sem >= 2 ? `, ${G.stk[k].sem} rodadas sem atenção` : ''})`).join('; ')}.`));
   if (G.round >= 6) L2.push(ins('bad', 'mayor', 'O prefeito está em modo de urgência: perdas de confiança dele são ampliadas até o fim.'));
-  G.hints.slice(-2).forEach(h => L2.push(ins('info', 'light', `Pista (rodada ${h.r}): ${h.t}`)));
+  G.hints.slice(-2).forEach(h => L2.push(ins('info', 'light', `Pista (rodada ${h.r}): ${br(h.t)}`)));
   // Nível 3
   const hist = G.hist, ag = hist.map(h => h.agit), md = hist.map(h => h.media), vl = hist.map(h => h.vault);
   const agNow = [...ag, Math.round(G.agit)], mdNow = [...md, Math.round(G.media)], vlNow = [...vl, Math.round(G.vault)];
@@ -2564,12 +2732,12 @@ function endsleyHTML() {
     ${ins('info', 'stairs', `Negociação: com a melhor postura, a chance de avançar é ${pLabel(pc)}; chegar ao degrau 5 leva cerca de ${roundsLeft || 'zero'} rodada${roundsLeft === 1 ? '' : 's'} se negociar todo turno. ${G.nego.step === 5 ? `Rendição ocorre se a agitação cair abaixo de ${D_().ret}.` : ''}`)}
     ${ins(ip > .55 ? 'good' : ip > .3 ? 'warn' : 'bad', 'shield', `Intervenção hoje: chance estimada ${pLabel(ip)} (${Math.round(clamp(ip - band, 0, 1) * 100)}–${Math.round(clamp(ip + band, 0, 1) * 100)}%). Quanto menos você sabe, mais larga é a faixa${blindParts().length ? ', e entrar sem conhecer o interior custa ' + Math.round(-blindParts().reduce((s, b) => s + b.v, 0) * 100) + ' pontos de chance' : ''}.`)}
     ${G.round < 6 ? ins('warn', 'mayor', `A urgência do prefeito aumenta na rodada 6 (faltam ${6 - G.round}).`) : ''}`;
-  return `<div class="card lvl"><h3>Painel do comandante · consciência situacional</h3>
-    <div class="lvl"><span class="tag"><b>1</b> Percepção · dados brutos</span>${l1}</div>
-    <hr style="border:0;border-top:1px solid var(--line);width:100%;margin:6px 0">
-    <div class="lvl l2"><span class="tag"><b>2</b> Compreensão · o que significa</span>${L2.join('')}</div>
-    <hr style="border:0;border-top:1px solid var(--line);width:100%;margin:6px 0">
-    <div class="lvl l3"><span class="tag"><b>3</b> Projeção · para onde vai</span>${L3}</div></div>`;
+  /* Os três níveis de Endsley viram abas: o mesmo conteúdo, um nível por vez (o painel tinha ~1.500 px). */
+  const l2s = L2.join(''), n2 = (l2s.match(/insight (warn|bad)/g) || []).length, n3 = (L3.match(/insight (warn|bad)/g) || []).length;
+  const lv = UI.lvl || 1, LV = [[1, 'Percepção', 'dados brutos', 0], [2, 'Compreensão', 'o que significa', n2], [3, 'Projeção', 'para onde vai', n3]];
+  return `<div class="card endsley"><h2 class="h3">Painel do comandante <span class="faint sub">consciência situacional</span></h2>
+    <div class="lvtabs" role="tablist" aria-label="Níveis de consciência situacional">${LV.map(([n, t, s, c]) => `<button class="lvtab l${n}" role="tab" id="lvt${n}" aria-controls="lvp" aria-selected="${lv === n}" tabindex="${lv === n ? 0 : -1}" data-act="lvl" data-t="${n}"><b>${n}</b><span>${t}<small>${s}</small></span>${c ? `<em title="${c} ${plural(c, 'leitura pede', 'leituras pedem')} atenção">${c}</em>` : ''}</button>`).join('')}</div>
+    <div class="lvl l${lv}${UI.tabAnim ? ' swap' : ''}" id="lvp" role="tabpanel" aria-labelledby="lvt${lv}">${lv === 1 ? l1 : lv === 2 ? l2s : L3}</div></div>`;
 }
 
 
@@ -2584,16 +2752,16 @@ function cashCard() {
   const status = G.credits < pl ? ['red', 'no vermelho no próximo plantão'] : G.credits >= need ? ['green', 'cobre o plantão até o fim'] : ['amber', `faltam ~${Math.round(need - G.credits)} até o fim`];
   const cats = spendBreakdown(), tot = cats.reduce((a, c) => a + c.v, 0) || 1;
   return `<div class="card cash"><h3>Caixa <span class="pill ${status[0]}">${status[1]}</span></h3>
-    <div class="cashtop"><div><small>Reserva</small><b class="mono">${fmt(G.credits)}</b></div><div><small>Plantão</small><b class="mono">−${pl}<i>/rod.</i></b></div><div><small>Cobre</small><b class="mono">${run >= 99 ? '∞' : run.toFixed(1).replace('.', ',')}<i> rod.</i></b></div></div>
+    <div class="cashtop"><div><small>Reserva</small><b class="mono" data-k="cashres" data-n="${Math.round(G.credits)}">${fmt(G.credits)}</b></div><div><small>Plantão</small><b class="mono">−${pl}<i>/rod.</i></b></div><div><small>Cobre</small><b class="mono">${run >= 99 ? '∞' : dec(run)}<i> rod.</i></b></div></div>
     <div class="stack" role="img" aria-label="Para onde foi o dinheiro: ${cats.filter(c => c.v > 0).map(c => c.k + ' ' + Math.round(c.v)).join(', ')}">${cats.filter(c => c.v > 0).map(c => `<i style="width:${c.v / tot * 100}%;background:${c.c}" title="${c.k}: ${Math.round(c.v)}"></i>`).join('')}</div>
     <div class="stackleg">${cats.filter(c => c.v > 0).map(c => `<span><i style="background:${c.c}"></i>${c.k} <b class="mono">${Math.round(c.v)}</b></span>`).join('')}</div>
-    <p class="faint" style="font-size:11.5px;margin-top:8px">Próximos preços: apoio externo ${G.supportUsed >= APOIO_PRECOS.length ? 'esgotado' : apoioCost(0)} · horas extras ${horasCost()} · investigação 40–70. Quem descansa na reserva ou foi reconvocado não custa plantão.</p></div>`;
+    <p class="faint" style="font-size:12px;margin-top:8px">Próximos preços: apoio externo ${G.supportUsed >= APOIO_PRECOS.length ? 'esgotado' : apoioCost(0)} · horas extras ${horasCost()} · investigação 40–70. Quem descansa na reserva ou foi reconvocado não custa plantão.</p></div>`;
 }
 function utilHTML() {
   const field = deployed().length, away = G.team.filter(isAway).length, rest = G.team.length - field - away;
   const tight = rest === 0 && field > 0;
   return `<div class="util" title="Utilização da equipe, como a capacidade de uma linha de produção"><span><b>${field}</b> em campo</span><span><b>${rest}</b> descansam</span><span><b>${away}</b> reconvocado${away === 1 ? '' : 's'}</span></div>
-    ${tight ? '<p class="faint" style="font-size:11.5px;margin:-4px 0 8px">Sem folga: ninguém descansa sem abrir uma zona. O cansaço acumulado só se resolve com rodízio ou horas extras.</p>' : ''}`;
+    ${tight ? '<p class="faint" style="font-size:12px;margin:-4px 0 8px">Sem folga: ninguém descansa sem abrir uma zona. O cansaço acumulado só se resolve com rodízio ou horas extras.</p>' : ''}`;
 }
 function gearNote(e) {
   const z = G.gz[e] || 'reserva', placed = z !== 'reserva', has = placed && agentsIn(z).length;
@@ -2616,27 +2784,27 @@ function gearCard() {
 const SEVN = { 3: 'crítico', 2: 'atenção', 1: 'aviso' };
 function alertsHTML() {
   const al = siegeAlerts();
-  if (!al.length) return `<div class="card alerts calm"><h3>Atenção agora</h3><p class="faint" style="font-size:13px">Nada exige ação imediata. Use a rodada para investir: informação, rodízio ou comunicação preventiva.</p></div>`;
+  if (!al.length) return `<div class="calmbar" role="status">${icon('check', 'ico', 2)}<span><b>Atenção agora:</b> nada exige ação imediata. Use a rodada para investir em informação, rodízio ou comunicação preventiva.</span></div>`;
   const top = al.slice(0, 3);
-  return `<div class="card alerts"><h3>Atenção agora <span class="pill ${al[0].sev === 3 ? 'red' : al[0].sev === 2 ? 'amber' : 'blue'}">${al.length} ${al.length === 1 ? 'alerta' : 'alertas'}</span></h3>
+  return `<div class="card alerts"><h2 class="h3">Atenção agora <span class="pill ${al[0].sev === 3 ? 'red' : al[0].sev === 2 ? 'amber' : 'blue'}">${al.length} ${al.length === 1 ? 'alerta' : 'alertas'}</span></h2>
     ${top.map(a => `<div class="alert s${a.sev}">${icon(a.ic, 'ico')}<div><b>${a.title}</b> <em>${SEVN[a.sev]}</em><span>${a.text}</span></div><button class="btn sm" data-act="tab" data-t="${a.tab}">${a.label}</button></div>`).join('')}
     ${al.length > 3 ? `<small class="faint">Em segundo plano: ${al.slice(3).map(a => a.title).join(' · ')}</small>` : ''}</div>`;
 }
 const TABN = { tatica: 'Tática', nego: 'Negociação', intel: 'Inteligência', com: 'Comunicação' };
 function tocWidget() {
   const t = tocConstraint(), keys = ['info', 'pessoal', 'tempo'], X = TOCS[t.k];
-  const bars = keys.map(k => `<div class="tocb ${k === t.k ? 'lead' : ''}"><span>${icon(TOCS[k].ic, 'ico')}${TOCS[k].nome}</span>${meter(t.pct[k], TOCCLS[TOCS[k].cor])}<b class="mono">${t.pct[k]}</b>${k === t.k ? '<em>gargalo</em>' : ''}</div>`).join('');
+  const bars = keys.map(k => `<div class="tocb ${k === t.k ? 'lead' : ''}"><span>${icon(TOCS[k].ic, 'ico')}${TOCS[k].nome}</span>${meter(t.pct[k], TOCCLS[TOCS[k].cor], `data-k="toc${k}" data-val="${t.pct[k]}"`)}<b class="mono">${t.pct[k]}</b>${k === t.k ? '<em>gargalo</em>' : ''}</div>`).join('');
   const dots = Array.from({ length: MAX_ROUNDS }, (_, i) => { const r = i + 1, k = G.tocLog[r]; return `<i class="td ${k ? TOCS[k].cor : ''} ${r === G.round ? 'now' : ''}" title="Rodada ${r}${k ? ': ' + TOCS[k].nome : ''}"></i>`; }).join('');
-  return `<div class="card toc"><h3>Gargalo do sistema <span class="faint" style="text-transform:none;letter-spacing:0;font-family:var(--sans);font-size:11.5px">Teoria das Restrições · o elo mais fraco decide o resultado</span></h3>
+  const hist = Array.from({ length: G.round }, (_, i) => G.tocLog[i + 1] ? `R${i + 1} ${TOCS[G.tocLog[i + 1]].nome}` : '').filter(Boolean).join(', ');
+  return `<div class="card toc"><h2 class="h3">Gargalo do sistema <span class="faint sub" title="O elo mais fraco decide o resultado do sistema">Teoria das Restrições</span></h2>
     <div class="tocbars">${bars}</div>
-    <div class="toctl"><small>Gargalo por rodada</small><span>${dots}</span></div>
+    <div class="toctl"><small>Gargalo por rodada</small><span aria-hidden="true">${dots}</span><span class="sr">${hist || 'sem histórico ainda'}</span></div>
     <p class="why"><b>${X.nome}.</b> ${X.por}</p>
-    <div class="elev"><small>Elevar</small>${X.elevar}</div>
-    <div class="elev stop"><small>Pare de</small>${X.parar}</div>
-    <div class="row" style="margin-top:8px"><button class="btn sm" data-act="tab" data-t="${X.tab}">Ir para ${TABN[X.tab]}</button><span class="faint" style="font-size:11.5px">${G.round <= 3 ? 'Esperado no início: informação.' : G.round <= 6 ? 'Esperado no meio: pessoal.' : 'Esperado no fim: tempo e fadiga.'} Quem não eleva o gargalo atual desperdiça o que gasta fora dele.</span></div></div>`;
+    <div class="elevs"><div class="elev"><small>Elevar</small>${X.elevar}</div><div class="elev stop"><small>Pare de</small>${X.parar}</div></div>
+    <div class="row" style="margin-top:8px"><button class="btn sm" data-act="tab" data-t="${X.tab}">Ir para ${TABN[X.tab]} →</button><span class="faint" style="font-size:12px">${G.round <= 3 ? 'Esperado no início: informação.' : G.round <= 6 ? 'Esperado no meio: pessoal.' : 'Esperado no fim: tempo e fadiga.'}</span></div></div>`;
 }
 function reposPreviewHTML() {
-  if (!UI.repoAgent || !UI.repoZone || G.az[UI.repoAgent] === UI.repoZone) return '<p class="faint" style="font-size:11.5px">Escolha agente e destino para ver o custo da mudança antes de assumi-la.</p>';
+  if (!UI.repoAgent || !UI.repoZone || G.az[UI.repoAgent] === UI.repoZone) return '<p class="faint" style="font-size:12px">Escolha agente e destino (ou clique numa zona do mapa) para ver o custo da mudança antes de assumi-la.</p>';
   const p = reposPreview(UI.repoAgent, UI.repoZone), nm = shortName(agentById(UI.repoAgent).nome);
   const cell = (z, a, b, c) => `<div class="rp"><b>${ZNAME(z)}</b><span class="mono">${a}% → <em class="${b < a ? 'neg' : 'pos'}">${b}%</em>${c != null ? ` → ${c}%` : ''}</span></div>`;
   return `<div class="rprev"><div class="eyebrow">Prévia · ${nm}</div>
@@ -2646,7 +2814,7 @@ function reposPreviewHTML() {
 }
 function planPreviewHTML() {
   const rows = planPreview(); if (!rows.length) return '';
-  return `<div class="card pprev"><h3>Prévia do plano <span class="faint" style="text-transform:none;letter-spacing:0;font-family:var(--sans);font-size:11.5px">estimativa com o que você já enxerga</span></h3>${rows.map(r => r.txt != null
+  return `<div class="card pprev"><h2 class="h3">Prévia do plano <span class="faint sub">estimativa com o que você já enxerga</span></h2>${rows.map(r => r.txt != null
     ? `<div class="pr"><span>${r.k}</span><b class="${r.tone}">${r.txt}</b><small>${r.note}</small></div>`
     : `<div class="pr"><span>${r.k}</span><b class="mono ${Math.abs(r.b - r.a) < .5 ? '' : (r.b > r.a) === r.goodUp ? 'pos' : 'neg'}">${r.f(r.a)} → ${r.f(r.b)}</b><small>${r.note}</small></div>`).join('')}</div>`;
 }
@@ -2661,9 +2829,9 @@ function colA() {
     const a = agentById(id), z = G.az[id] || 'reserva', f = ff(id);
     const tr = +G.transit[id] || 0, eff = agentEff(id) / stat(id, 'tat');
     return `<div class="trow ${isAway(id) ? 'away' : ''}"><div><b>${shortName(a.nome)}</b><small>${isAway(id) ? `reconvocado (${G.away[id]} rod.)` : ZNAME(z)}${tr ? ` · <span class="tr${tr}">em trânsito ${tr >= 2 ? '50' : '75'}%</span>` : ''} · ${a.trait}</small></div>
-      <div style="width:96px" title="Tática ${stat(id, 'tat')} × pressão ${Math.round(fp(id) * 100)}% × fadiga ${Math.round(f * 100)}%${tr ? ' × trânsito ' + (tr >= 2 ? '50' : '75') + '%' : ''}">${meter(f * 100, f > .75 ? 'g' : f > .55 ? 'a' : 'r')}<small class="mono faint" style="font-size:10.5px">rende ${Math.round(eff * 100)}%</small></div></div>`;
+      <div style="width:96px" title="Tática ${stat(id, 'tat')} × pressão ${Math.round(fp(id) * 100)}% × fadiga ${Math.round(f * 100)}%${tr ? ' × trânsito ' + (tr >= 2 ? '50' : '75') + '%' : ''}">${meter(f * 100, f > .75 ? 'g' : f > .55 ? 'a' : 'r', `data-k="ff${id}" data-val="${Math.round(f * 100)}"`)}<small class="mono faint" style="font-size:11px">rende ${Math.round(eff * 100)}%</small></div></div>`;
   }).join('');
-  return `<div class="colA">${cashCard()}${rosterCard()}<div class="card"><h3>Equipe e fadiga</h3>${utilHTML()}<div class="team">${team || '<p class="faint">Sem agentes.</p>'}</div></div>${gearCard()}${radioCard()}</div>`;
+  return `<div class="colA">${cashCard()}${rosterCard()}<div class="card"><h2 class="h3">Equipe e fadiga</h2>${utilHTML()}<div class="team">${team || '<p class="faint">Sem agentes.</p>'}</div></div>${gearCard()}${radioCard()}</div>`;
 }
 /* ---------- Quem está lá dentro: os 17 reféns com nome ---------- */
 function hstate(h) {
@@ -2674,43 +2842,69 @@ function hstate(h) {
 }
 function rosterCard() {
   const H = G.hostages, out = G.hl.filter(h => !h.in).length, inside = H.inside - H.dead;
-  return `<div class="card"><h3>Quem está lá dentro <span class="pill ${H.dead ? 'red' : inside < HOSTAGES ? 'green' : ''}">${inside} no interior</span></h3>
-    <div class="roster">${G.hl.map(h => { const d = HOST[h.id], st = hstate(h); return `<span class="rp ${st.c}" title="${d.nome}, ${d.idade} anos, ${d.papel}${d.nota ? ' (' + d.nota + ')' : ''}: ${st.t}"><b>${d.nome.split(' ')[0]}</b><small>${st.c.includes('unk') || st.c === 'in' ? d.idade + ' anos' : st.t}</small></span>`; }).join('')}</div>
-    <p class="faint" style="font-size:11.5px;margin-top:8px">${out ? `${out} fora do banco. ` : ''}${G.K.hostages ? 'Estado dos reféns confirmado.' : 'Borda tracejada: estado não confirmado. Você não sabe quem está ferido lá dentro; a sala de acolhimento ou uma investigação revelam.'}</p></div>`;
+  /* Compacto: só o nome; idade e papel ficam na dica. Estados fora do comum ganham texto, não só cor. */
+  return `<div class="card"><h2 class="h3">Quem está lá dentro <span class="pill ${H.dead ? 'red' : inside < HOSTAGES ? 'green' : ''}">${inside} no interior</span></h2>
+    <div class="roster">${G.hl.map(h => { const d = HOST[h.id], st = hstate(h), plain = st.c.includes('unk') || st.c === 'in'; return `<span class="rp ${st.c}" title="${d.nome}, ${d.idade} anos, ${d.papel}${d.nota ? ' (' + d.nota + ')' : ''}: ${st.t}"><b>${d.nome.split(' ')[0]}</b>${plain ? '' : `<small>${st.t}</small>`}</span>`; }).join('')}</div>
+    <p class="faint" style="font-size:12px;margin-top:8px">${out ? `${out} fora do banco. ` : ''}${G.K.hostages ? 'Estado dos reféns confirmado.' : 'Borda tracejada: estado não confirmado. A sala de acolhimento ou uma investigação revelam quem está ferido. Passe o mouse para ver idade e papel.'}</p></div>`;
 }
 
 /* ---------- Coluna C: decisões ---------- */
+const attr = s => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+/* Por que uma opção está indisponível. Devolve [motivo, mostrar na própria opção?].
+   Plano cheio e intervenção já aparecem num aviso único no topo da aba, então não se repetem em cada opção. */
+function whyNot(c = {}) {
+  const n = D_().slots;
+  if (G.queue.some(q => q.kind === 'interv')) return ['A intervenção ocupa a rodada inteira. Remova-a do plano para escolher outras ações.', false];
+  if (c.state) return [c.state, false];
+  if (c.inPlan) return ['Já está no plano. Para tirar, use o ✕ na barra do plano.', false];
+  if (!c.free && slotsLeft() <= 0) return [`Plano cheio: ${n} de ${n} decisões. Remova uma ação na barra do plano para trocar.`, false];
+  if (c.limit) return [c.limit, true];
+  if (c.cost && G.credits < c.cost) return [`Faltam ${fmt(c.cost - G.credits)} créditos (reserva ${fmt(G.credits)}).`, true];
+  return null;
+}
+/* Opção de decisão. Indisponível = aria-disabled: continua focável, mostra o motivo e explica no clique. */
 function opt(ic, title, desc, cost, act, data, o = {}) {
-  return `<button class="opt ${o.danger ? 'danger' : ''}" data-act="${act}" ${data || ''} ${o.disabled ? 'disabled' : ''} aria-pressed="${!!o.pressed}">${icon(ic, 'ico" style="width:24px;height:24px')}<span><b>${title}</b><span class="d">${desc}</span></span>${cost ? `<span class="c">${cost}</span>` : '<span></span>'}</button>`;
+  const w = o.why || null;
+  return `<button class="opt ${o.danger ? 'danger' : ''}" data-act="${act}" ${data || ''} ${w ? `aria-disabled="true" data-why="${attr(w[0])}"` : ''} aria-pressed="${!!o.pressed}">${icon(ic, 'ico" style="width:24px;height:24px')}<span><b>${title}${o.pressed ? ' <span class="pill amber inplan">no plano</span>' : ''}</b><span class="d">${desc}</span>${w && w[1] ? `<span class="unav">${w[0]}</span>` : ''}</span>${cost ? `<span class="c">${cost}</span>` : '<span></span>'}</button>`;
+}
+function planBanner() {
+  const n = D_().slots;
+  if (G.queue.some(q => q.kind === 'interv')) return `<div class="planfull bad" role="status">${icon('shield', 'ico', 1.8)}<span>A intervenção ocupa a rodada inteira. Para escolher outras ações, remova-a na barra do plano.</span></div>`;
+  if (slotsLeft() <= 0) return `<div class="planfull" role="status">${icon('check', 'ico', 2)}<span>Plano cheio: ${n} de ${n} decisões. Execute a rodada ou remova uma ação na barra do plano para trocar.</span></div>`;
+  return '';
 }
 function tabTatica() {
   const ags = G.team.filter(id => !isAway(id));
-  const noSlot = slotsLeft() <= 0, ivq = G.queue.some(q => q.kind === 'interv');
-  const zoneOpts = ZONES.map(z => `<option value="${z.id}">${z.nome} (${zoneCoverage(z.id)}%)</option>`).join('');
+  const ivq = G.queue.some(q => q.kind === 'interv');
+  const zoneOpts = ZONES.map(z => `<option value="${z.id}" ${UI.apoioZone === z.id ? 'selected' : ''}>${z.nome} (${zoneCoverage(z.id)}%)</option>`).join('');
   const ip = intervProb(), band = .16 * (1 - infoFrac()), blind = blindParts();
   const blindTxt = blind.length ? `<br><span style="color:var(--amber)">Às cegas: ${blind.map(b => `−${Math.round(-b.v * 100)}% porque você ${b.txt}`).join('; ')}.</span>` : '<br><span style="color:var(--green)">Você conhece o interior: sem penalidade por entrar às cegas.</span>';
+  const apoioLeft = Math.max(0, APOIO_PRECOS.length - G.supportUsed - G.queue.filter(q => q.kind === 'apoio').length);
+  const wRepos = whyNot(), wApoio = whyNot({ cost: apoioCost(), limit: apoioLeft ? null : 'Os 3 apoios externos da operação já foram usados.' });
+  const pausaQ = G.queue.some(q => q.kind === 'pausa'), horasQ = G.queue.some(q => q.kind === 'horas');
   return `<div class="card flat" style="display:grid;gap:8px"><h3>Reposicionar agente</h3>
-      <div class="row" style="gap:8px"><label class="field" style="flex:1;min-width:150px">Agente<select id="repoAgent" data-chg="repoagent"><option value="">escolher…</option>${ags.map(id => `<option value="${id}" ${UI.repoAgent === id ? 'selected' : ''}>${shortName(agentById(id).nome)} · ${ZNAME(G.az[id] || 'reserva')} · fad. ${(G.fat[id] || 0)}</option>`).join('')}</select></label>
-      <label class="field" style="flex:1;min-width:150px">Destino<select id="repoZone" data-chg="repozone"><option value="">escolher…</option>${ZONES.map(z => `<option value="${z.id}" ${UI.repoZone === z.id ? 'selected' : ''}>${z.nome}</option>`).join('')}<option value="reserva" ${UI.repoZone === 'reserva' ? 'selected' : ''}>Reserva (descansa)</option></select></label></div>
+      <div class="fields2"><label class="field">Agente<select id="repoAgent" data-chg="repoagent"><option value="">escolher…</option>${ags.map(id => `<option value="${id}" ${UI.repoAgent === id ? 'selected' : ''}>${shortName(agentById(id).nome)} · ${ZNAME(G.az[id] || 'reserva')} · fad. ${(G.fat[id] || 0)}</option>`).join('')}</select></label>
+      <label class="field">Destino<select id="repoZone" data-chg="repozone"><option value="">escolher…</option>${ZONES.map(z => `<option value="${z.id}" ${UI.repoZone === z.id ? 'selected' : ''}>${z.nome}</option>`).join('')}<option value="reserva" ${UI.repoZone === 'reserva' ? 'selected' : ''}>Reserva (descansa)</option></select></label></div>
       ${reposPreviewHTML()}
-      <button class="btn sm" data-act="addrepos" ${noSlot || ivq ? 'disabled' : ''}>Adicionar ao plano</button>
-      <p class="faint" style="font-size:11.5px">Deslocar custa: 50% de eficiência na rodada da ordem, 75% na seguinte, meia rodada de fadiga, e a zona de origem fica aberta na hora${hasGear('viatura') ? ' (sua Viatura elimina a perda de eficiência)' : ''}. A reserva descansa e zera a fadiga, mas não cobre nada.</p></div>
+      <div class="row"><button class="btn sm" data-act="addrepos" ${wRepos ? `aria-disabled="true" data-why="${attr(wRepos[0])}"` : ''}>Adicionar ao plano</button></div>
+      <p class="faint" style="font-size:12px">Deslocar custa: 50% de eficiência na rodada da ordem, 75% na seguinte, meia rodada de fadiga, e a zona de origem fica aberta na hora${hasGear('viatura') ? ' (sua Viatura elimina a perda de eficiência)' : ''}. A reserva descansa e zera a fadiga, mas não cobre nada.</p></div>
     <div class="optlist">
-      ${opt('support', 'Apoio externo', `Agências parceiras reforçam uma zona: +25 de cobertura por 2 rodadas. Cada uso encarece (${APOIO_PRECOS.join(' → ')}); ${Math.max(0, APOIO_PRECOS.length - G.supportUsed - G.queue.filter(q => q.kind === 'apoio').length)} restantes.`, apoioCost(), 'addapoio', '', { disabled: noSlot || ivq || G.credits < apoioCost() || G.supportUsed + G.queue.filter(q => q.kind === 'apoio').length >= APOIO_PRECOS.length })}
-      <div class="row" style="padding-left:40px;margin-top:-2px"><select id="apoioZone" data-chg="apoiozone" aria-label="Zona do apoio externo"><option value="">zona do apoio…</option>${zoneOpts}</select></div>
-      ${opt('pause', 'Pausa de Comando', `“Subir à sacada”: ${G.team.includes('diego') ? 'duas pistas' : 'uma pista'} sobre variáveis ocultas, visão sistêmica e −10 de pressão na equipe. Consome uma decisão; a crise continua andando.`, '', 'addpausa', '', { disabled: noSlot || ivq || G.queue.some(q => q.kind === 'pausa'), pressed: G.queue.some(q => q.kind === 'pausa') })}
-      ${opt('tired', 'Horas extras', `Recupera 2 rodadas de fadiga em campo e encerra a Fadiga crítica. O preço cresce com o efetivo em campo (${deployed().length} agentes).`, horasCost(), 'addhoras', '', { disabled: noSlot || ivq || G.credits < horasCost() || G.queue.some(q => q.kind === 'horas') })}
-      ${UI.ivConfirm ? `<div class="insight bad">${icon('alert', '', 1.8)}<span><b>Ordenar a intervenção agora?</b> Prontidão ${Math.round(intervPower())}%, chance estimada ${pLabel(ip)} (${Math.round(clamp(ip - band, 0, 1) * 100)}–${Math.round(clamp(ip + band, 0, 1) * 100)}%). Ocupa todas as decisões e encerra a crise nesta rodada.${blindTxt}</span></div><div class="row"><button class="btn danger" data-act="ivyes">Confirmar intervenção</button><button class="btn ghost" data-act="ivno">Cancelar</button></div>` :
+      ${opt('support', 'Apoio externo', `Agências parceiras reforçam uma zona: +25 de cobertura por 2 rodadas. Cada uso encarece (${APOIO_PRECOS.join(' → ')}); ${apoioLeft} ${plural(apoioLeft, 'restante', 'restantes')}.`, apoioCost(), 'addapoio', '', { why: wApoio })}
+      <label class="subfield"><span>Zona do apoio</span><select id="apoioZone" data-chg="apoiozone"><option value="">escolher…</option>${zoneOpts}</select></label>
+      ${opt('pause', 'Pausa de Comando', `“Subir à sacada”: ${G.team.includes('diego') ? 'duas pistas' : 'uma pista'} sobre variáveis ocultas, visão sistêmica e −10 de pressão na equipe. Consome uma decisão; a crise continua andando.`, '', 'addpausa', '', { why: whyNot({ inPlan: pausaQ }), pressed: pausaQ })}
+      ${opt('tired', 'Horas extras', `Recupera 2 rodadas de fadiga em campo e encerra a Fadiga crítica. O preço cresce com o efetivo em campo (${deployed().length} ${plural(deployed().length, 'agente', 'agentes')}).`, horasCost(), 'addhoras', '', { why: whyNot({ inPlan: horasQ, cost: horasCost() }), pressed: horasQ })}
+      ${UI.ivConfirm ? `<div class="insight bad">${icon('alert', '', 1.8)}<span><b>Ordenar a intervenção agora?</b> Prontidão ${Math.round(intervPower())}%, chance estimada ${pLabel(ip)} (${Math.round(clamp(ip - band, 0, 1) * 100)}–${Math.round(clamp(ip + band, 0, 1) * 100)}%). Ocupa todas as decisões e encerra a crise nesta rodada.${blindTxt}</span></div><div class="row"><button class="btn danger" data-act="ivyes">Confirmar intervenção</button><button class="btn ghost" data-act="ivno">Cancelar <span class="faint" style="font-weight:400">(Esc)</span></button></div>` :
         opt('shield', 'Intervenção', `Ação direta, o BATNA da força-tarefa. Prontidão ${Math.round(intervPower())}% · chance estimada <b>${pLabel(ip)}</b> (±${Math.round(band * 100)}%). Depende de inteligência, tática e agitação.${blindTxt}`, '', 'iv', '', { danger: true, pressed: ivq })}
     </div>`;
 }
 function tabNego() {
   const n = G.nego, cur = n.step, q = G.queue.find(x => x.kind === 'nego');
   const ags = avail(), negId = getNegotiator();
-  const ladder = STEPS.map(s => `<div class="step ${s.n < cur ? 'done' : s.n === cur ? 'cur' : ''}"><b>${s.n < cur ? '✓' : s.n}</b><span>${s.nome}<br><small>${s.sub}</small></span><small>${s.n === cur ? 'você está aqui' : ''}</small></div>`).join('');
+  const ladder = STEPS.map(s => `<div class="step ${s.n < cur ? 'done' : s.n === cur ? 'cur' : ''}"><b>${s.n < cur ? '✓' : s.n}</b><span>${s.nome}<br><small>${s.sub}</small></span><small>${s.n === cur ? 'você está aqui' : s.n < cur ? 'concluído' : ''}</small></div>`).join('');
+  const wN = whyNot({ free: !!q });   // trocar a postura não gasta decisão nova
   const posts = POSTURES.map(p => {
     const np = negoParts(p.t), tag = np.compat ? '<span class="pill green">compatível</span>' : np.skip ? '<span class="pill red">pula etapa</span>' : '<span class="pill">consolidar</span>';
-    return opt(p.kind === 'emp' ? 'ear' : 'stairs', `${p.t}. ${p.nome} ${tag}`, `${p.d}<br><span class="faint">Chance de avançar: <b style="color:var(--${pCls(np.p) === 'red' ? 'red' : pCls(np.p) === 'amber' ? 'amber' : pCls(np.p) === 'blue' ? 'blue' : 'green'})">${pLabel(np.p)}</b></span>`, '', 'addnego', `data-t="${p.t}"`, { pressed: !!q && q.p.tech === p.t, disabled: G.queue.some(x => x.kind === 'interv') });
+    return opt(p.kind === 'emp' ? 'ear' : 'stairs', `${p.t}. ${p.nome} ${tag}`, `${p.d}<br><span class="faint">Chance de avançar: <b style="color:var(--${pCls(np.p) === 'red' ? 'red' : pCls(np.p) === 'amber' ? 'amber' : pCls(np.p) === 'blue' ? 'blue' : 'green'})">${pLabel(np.p)}</b></span>`, '', 'addnego', `data-t="${p.t}"`, { pressed: !!q && q.p.tech === p.t, why: wN });
   }).join('');
   const hot = `<div class="hotline"><div class="eyebrow">${icon('phone', 'ico" style="width:15px;height:15px;vertical-align:-3px;margin-right:6px;color:var(--amber)')}Linha direta</div>
     <p class="scene">${n.contact ? STEP_SCENE[cur] : NO_CONTACT}</p>
@@ -2719,52 +2913,60 @@ function tabNego() {
   return `${hot}<div class="ladder">${ladder}</div>
     <label class="field">Negociador
       <select id="negotiator" data-chg="negotiator">${ags.map(id => `<option value="${id}" ${negId === id ? 'selected' : ''}>${shortName(agentById(id).nome)} · Negoc. ${stat(id, 'neg')}${G.az[id] && G.az[id] !== 'reserva' ? ' (em campo)' : ' (comando)'}</option>`).join('') || '<option>Comandante (você)</option>'}</select></label>
-    <p class="faint" style="font-size:11.5px">Postura compatível com o degrau atual: +20%. Pular etapa: −25% e metade da chance, com 20% de regredir. Pressionar sobe a agitação. Fadiga e pressão alta reduzem a habilidade do negociador (hoje ${negoSkill().toFixed(1)}). Com o canal aberto, as famílias contam como atendidas na rodada e cada avanço de degrau dá +3 a elas, um alívio quando as decisões são poucas.</p>
-    <div class="optlist">${posts}${opt('alert', 'Pressionar (ultimato)', `Sobe a agitação em +${PR_().press} (valor real). Pode regredir a negociação.`, '', 'addnego', 'data-t="press"', { danger: true, pressed: !!q && q.p.tech === 'press', disabled: G.queue.some(x => x.kind === 'interv') })}</div>`;
+    <p class="faint" style="font-size:12px">Postura compatível com o degrau atual: +20%. Pular etapa: −25% e metade da chance, com 20% de regredir. Pressionar sobe a agitação. Fadiga e pressão alta reduzem a habilidade do negociador (hoje ${dec(negoSkill())}). Com o canal aberto, as famílias contam como atendidas na rodada e cada avanço de degrau dá +3 a elas, um alívio quando as decisões são poucas.</p>
+    <div class="optlist">${posts}${opt('alert', 'Pressionar (ultimato)', `Sobe a agitação em +${PR_().press} (valor real). Pode regredir a negociação.`, '', 'addnego', 'data-t="press"', { danger: true, pressed: !!q && q.p.tech === 'press', why: wN })}</div>`;
 }
 function tabIntel() {
   const K = G.K, done = { perfil: K.profile, rota: !!K.route, efetivo: K.count, cofre: K.vault, refens: K.hostages, cumplice: K.accomplice };
   const pr = intelProb(false);
-  return `<p class="faint" style="font-size:12px">Confiabilidade estimada com a sua equipe: <b>${pLabel(pr)}</b>. O resultado chega no início da próxima rodada, e você paga mesmo se der inconclusivo.</p>
+  return `<p class="faint" style="font-size:12.5px">Confiabilidade estimada com a sua equipe: <b>${pLabel(pr)}</b>. O resultado chega no início da próxima rodada, e você paga mesmo se der inconclusivo.</p>
     <div class="optlist">${INTEL.map(i => {
-      const pend = G.pendingIntel.some(o => o.id === i.id) || G.queue.some(q => q.kind === 'intel' && q.p.id === i.id), c = intelCost(i.id);
-      const disabled = done[i.id] || pend || G.credits < c || slotsLeft() <= 0 || G.queue.some(q => q.kind === 'interv');
-      return opt(i.ic, `${i.nome}${done[i.id] ? ' <span class="pill green">revelado</span>' : pend ? ' <span class="pill amber">em andamento</span>' : ''}`, i.desc, c, 'addintel', `data-id="${i.id}"`, { disabled });
+      const queued = G.queue.some(q => q.kind === 'intel' && q.p.id === i.id), pend = G.pendingIntel.some(o => o.id === i.id), c = intelCost(i.id);
+      const w = whyNot({ state: done[i.id] ? 'Esta variável já foi revelada.' : pend ? 'Em andamento: o resultado chega no início da próxima rodada.' : null, inPlan: queued, cost: c });
+      return opt(i.ic, `${i.nome}${done[i.id] ? ' <span class="pill green">revelado</span>' : pend ? ' <span class="pill amber">em andamento</span>' : ''}`, i.desc, c, 'addintel', `data-id="${i.id}"`, { why: w, pressed: queued });
     }).join('')}</div>`;
 }
-function tabCom() {
-  const rows = STK_KEYS.map(k => {
+function stkRows(withSub) {
+  return STK_KEYS.map(k => {
     const s = G.stk[k], c = s.sat < 35 ? 'r' : s.sat < 60 ? 'a' : 'g';
-    return `<div class="stkrow"><div class="nm"><span>${STK[k].nome}</span><small>${STK[k].sub}</small></div>${meter(s.sat, c)}<span class="mono ${s.sem >= 2 ? 'alert' : ''}" title="${s.sem} rodada(s) sem atenção">${Math.round(s.sat)}</span></div>`;
+    return `<div class="stkrow"><div class="nm"><span>${STK[k].nome}</span>${withSub ? `<small>${STK[k].sub}</small>` : ''}</div>${meter(s.sat, c, `data-k="stk${k}" data-val="${Math.round(s.sat)}"`)}<span class="mono ${s.sem >= 2 ? 'alert' : ''}" title="${s.sem} ${plural(s.sem, 'rodada', 'rodadas')} sem atenção">${Math.round(s.sat)}${s.sem >= 2 ? ' !' : ''}</span></div>`;
   }).join('');
-  return `<div class="stk">${rows}</div>
-    <p class="faint" style="font-size:11.5px">Cada stakeholder ignorado perde 3 pontos × rodadas sem atenção (máx. 9 por rodada), além dos efeitos do que acontece na operação.</p>
-    <div class="optlist">${COMMS.map(c => opt(c.s === 'imprensa' ? 'mic' : c.s === 'prefeito' ? 'mayor' : c.s === 'banco' ? 'bank' : c.s === 'familias' ? 'family' : 'news', c.nome, c.d, c.custo || '', 'addcom', `data-id="${c.id}"`, { disabled: slotsLeft() <= 0 || G.credits < c.custo || G.queue.some(q => q.kind === 'com' && q.p.cid === c.id) || G.queue.some(q => q.kind === 'interv'), pressed: G.queue.some(q => q.kind === 'com' && q.p.cid === c.id) })).join('')}</div>`;
 }
+function tabCom() {
+  return `<div class="stk">${stkRows(true)}</div>
+    <p class="faint" style="font-size:12px">Cada stakeholder ignorado perde 3 pontos × rodadas sem atenção (máx. 9 por rodada), além dos efeitos do que acontece na operação. O sinal ! marca quem está há 2 rodadas ou mais sem atenção.</p>
+    <div class="optlist">${COMMS.map(c => { const q = G.queue.some(x => x.kind === 'com' && x.p.cid === c.id); return opt(c.s === 'imprensa' ? 'mic' : c.s === 'prefeito' ? 'mayor' : c.s === 'banco' ? 'bank' : c.s === 'familias' ? 'family' : 'news', c.nome, c.d, c.custo || '', 'addcom', `data-id="${c.id}"`, { why: whyNot({ inPlan: q, cost: c.custo }), pressed: q }); }).join('')}</div>`;
+}
+const TABS = [['tatica', 'Tática'], ['nego', 'Negociação'], ['intel', 'Inteligência'], ['com', 'Comunicação']];
 function colC() {
   const n = D_().slots, used = n - slotsLeft();
-  const tabs = [['tatica', 'Tática'], ['nego', 'Negociação'], ['intel', 'Inteligência'], ['com', 'Comunicação']];
   const body = UI.tab === 'tatica' ? tabTatica() : UI.tab === 'nego' ? tabNego() : UI.tab === 'intel' ? tabIntel() : tabCom();
-  const q = G.queue.map(d => `<div class="qitem"><span>${icon(FRONT_IC[d.front], 'ico" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px')}${d.label}${d.cost ? ` <span class="mono" style="color:var(--amber)">−${d.cost}</span>` : ''}</span><span class="faint" style="font-size:11px">${d.slots > 1 ? 'toda a rodada' : '1 decisão'}</span><button class="btn sm ghost" data-act="rmq" data-id="${d.id}" aria-label="Remover do plano">✕</button></div>`).join('');
-  const guide = G.round === 1 ? `<div class="card guide"><h3>Primeira rodada · como ler esta tela</h3><ol>
-      <li><b>Perceba</b> no centro: mapa, relatos de campo e o que ainda é desconhecido.</li>
-      <li><b>Compreenda e projete</b> logo abaixo: o painel traduz os dados e aponta tendências.</li>
-      <li><b>Decida</b> aqui: até ${n} ações nas quatro abas. Elas entram no plano e só acontecem quando você executa.</li></ol>
-      <p class="faint" style="font-size:11.5px">Nesta rodada e na próxima o relógio dá tempo extra para você se orientar.</p></div>` : '';
-  return `<div class="colC">${guide}<div class="card"><h3>Decisões da rodada <span class="slots" aria-label="${used} de ${n} decisões usadas">${Array.from({ length: n }, (_, i) => `<i class="slot ${i < used ? 'on' : ''}"></i>`).join('')}</span></h3>
-      <div class="tabs" role="tablist">${tabs.map(([k, l]) => `<button class="tab" role="tab" data-act="tab" data-t="${k}" aria-selected="${UI.tab === k}">${l}</button>`).join('')}</div>
-      <div class="grid" style="gap:10px;margin-top:12px">${body}</div></div>
-    <div class="card"><h3>Plano da rodada</h3><div class="queue">${q || '<p class="faint" style="font-size:12.5px">Nenhuma decisão ainda. Você pode executar sem decisões, mas o cofre e a mídia continuam andando.</p>'}</div>
-      <button class="btn primary lg" style="width:100%;margin-top:12px" data-act="execute">${G.queue.length ? 'Executar rodada' : 'Aguardar (sem decisões)'}</button></div>
+  const guide = G.round === 1 ? `<div class="card guide"><h2 class="h3">Primeira rodada · como ler esta tela</h2><ol>
+      <li><b>Perceba</b> no centro: alertas, mapa e a aba 1 do painel do comandante (relatos e o que ainda é desconhecido).</li>
+      <li><b>Compreenda e projete</b> nas abas 2 e 3 do painel: o que os dados significam e para onde vão.</li>
+      <li><b>Decida</b> aqui: até ${n} ações nas quatro frentes. Elas entram no plano (barra inferior) e só acontecem quando você executa.</li></ol>
+      <p class="muted" style="font-size:12px">Nesta rodada e na próxima o relógio dá tempo extra para você se orientar.</p></div>` : '';
+  return `<div class="colC">${guide}<div class="card decide"><h2 class="h3">Decisões da rodada <span class="slotc" aria-label="${used} de ${n} decisões no plano">${Array.from({ length: n }, (_, i) => `<i class="slot ${i < used ? 'on' : ''}"></i>`).join('')}<b class="mono">${used}/${n}</b></span></h2>
+      <div class="tabs" role="tablist" aria-label="Frentes de decisão">${TABS.map(([k, l]) => `<button class="tab" role="tab" id="tab-${k}" aria-controls="tabp" data-act="tab" data-t="${k}" aria-selected="${UI.tab === k}" tabindex="${UI.tab === k ? 0 : -1}">${icon(FRONT_IC[k], 'ico')}<span>${l}</span>${G.queue.some(d => d.front === k) ? '<i class="tdot" title="Há decisão desta frente no plano"></i>' : ''}</button>`).join('')}</div>
+      <div class="grid tabp${UI.tabAnim ? ' swap' : ''}" id="tabp" role="tabpanel" aria-labelledby="tab-${UI.tab}" style="gap:10px;margin-top:12px">${planBanner()}${body}</div></div>
     ${planPreviewHTML()}
-    <div class="card"><h3>Stakeholders</h3><div class="stk">${STK_KEYS.map(k => { const s = G.stk[k]; return `<div class="stkrow"><div class="nm"><span>${STK[k].nome}</span></div>${meter(s.sat, s.sat < 35 ? 'r' : s.sat < 60 ? 'a' : 'g')}<span class="mono ${s.sem >= 2 ? 'alert' : ''}">${Math.round(s.sat)}</span></div>`; }).join('')}</div></div></div>`;
+    ${UI.tab === 'com' ? '' : `<div class="card"><h2 class="h3">Stakeholders</h2><div class="stk">${stkRows(false)}</div></div>`}</div>`;
 }
 function radioCard() {
-  return `<div class="card"><h3>Rádio</h3><div class="radio">${G.radio.slice(0, 6).map(l => `<p class="${l.c || ''}">${l.t}</p>`).join('')}</div></div>`;
+  return `<div class="card"><h2 class="h3">Rádio</h2><div class="radio">${G.radio.slice(0, 6).map(l => `<p class="${l.c || ''}">${l.t}</p>`).join('')}</div></div>`;
+}
+/* Barra do plano: o que vai ser executado, quantas decisões restam e o botão de executar, sempre à vista. */
+function panelBar() {
+  const n = D_().slots, used = n - slotsLeft();
+  const chips = G.queue.map(d => `<span class="qchip" title="${attr(d.label)}${d.cost ? ' · −' + d.cost + ' créditos' : ''}">${icon(FRONT_IC[d.front], 'ico')}<span class="ql">${d.label}</span>${d.cost ? `<span class="mono qc">−${d.cost}</span>` : ''}<button class="qx" data-act="rmq" data-id="${d.id}" aria-label="Remover ${attr(d.label)} do plano">✕</button></span>`).join('');
+  return `<div class="absum"><span class="abk">Plano da rodada</span><span class="slotc">${Array.from({ length: n }, (_, i) => `<i class="slot ${i < used ? 'on' : ''}"></i>`).join('')}<b class="mono">${used}/${n}</b></span></div>
+    <div class="qchips" aria-live="polite">${chips || `<span class="faint">Nenhuma decisão ainda. Escolha até ${n} nas abas; sem decisões, o cofre e a mídia seguem andando.</span>`}</div>
+    <button class="btn primary lg" data-act="execute">${G.queue.length ? 'Executar rodada →' : 'Aguardar sem decisões'}</button>`;
 }
 function renderPanel() {
-  const mapCard = `<div class="card" style="padding:10px"><h3>Perímetro <span class="faint" style="text-transform:none;letter-spacing:0;font-family:var(--sans);font-size:11.5px">clique numa zona para usá-la como destino</span></h3><div class="mapwrap" style="padding:2px">${mapSVG({ interactive: G.stage === 'panel', act: 'zonepick', sel: UI.pickZone })}</div>${legendHTML()}</div>`;
-  return `${hudHTML()}<div class="siege screen">${colA()}<div class="colB">${alertsHTML()}${tocWidget()}${mapCard}${endsleyHTML()}</div>${colC()}</div>`;
+  const mapCard = `<div class="card mapcard"><h2 class="h3">Perímetro <span class="faint sub">clique numa zona para usá-la como destino</span></h2><div class="mapwrap" style="padding:2px">${mapSVG({ interactive: G.stage === 'panel', act: 'zonepick', sel: UI.pickZone })}</div>${legendHTML()}</div>`;
+  setBar(panelBar());
+  return `${hudHTML()}<div class="siege screen"><h1 class="sr">Rodada ${G.round} de ${MAX_ROUNDS}: painel de comando</h1>${colA()}<div class="colB">${alertsHTML()}${mapCard}${tocWidget()}${endsleyHTML()}</div>${colC()}</div>`;
 }
 
 /* ---------- Atualização da rodada ---------- */
@@ -2778,20 +2980,21 @@ const STANCE = { esperar: ['green', 'pede paciência'], intervir: ['red', 'quer 
 function councilHTML(list) {
   if (!list || !list.length) return '';
   const conflict = list.some(c => c.stance === 'intervir') && list.some(c => c.stance === 'esperar');
-  return `<div class="card"><h3>Mesa de comando <span class="faint" style="text-transform:none;letter-spacing:0;font-family:var(--sans);font-size:11.5px">cada um vê uma parte do problema</span></h3>
+  return `<div class="card"><h2 class="h3">Mesa de comando <span class="faint sub">cada um vê uma parte do problema</span></h2>
     <div class="council">${list.map(c => `<div class="adv"><div class="sil">${sil(c.id, 40)}</div><div><b>${shortName(c.nome)}</b> <span class="pill ${STANCE[c.stance][0]}">${STANCE[c.stance][1]}</span><p>“${c.t}”</p></div></div>`).join('')}</div>
     ${conflict ? ins('warn', 'split', 'Os conselhos se contradizem. Ninguém na mesa tem a informação inteira: integrar as partes é o seu trabalho.') : ''}</div>`;
 }
 function tocShiftHTML(u) {
   if (!u.toc) return '';
   const X = TOCS[u.toc], shifted = u.tocPrev && u.tocPrev !== u.toc;
-  if (!shifted && G.round === 1) return `<div class="card tocshift"><h3>O gargalo agora</h3><div class="tsrow">${icon(X.ic, 'ico')}<div><b>${X.nome}</b><p>${X.por} Em toda operação existe um elo mais fraco que decide o resultado. Ele muda ao longo do cerco: informação no início, pessoal no meio, tempo e fadiga no fim.</p></div></div></div>`;
+  if (!shifted && G.round === 1) return `<div class="card tocshift"><h2 class="h3">O gargalo agora</h2><div class="tsrow">${icon(X.ic, 'ico')}<div><b>${X.nome}</b><p>${X.por} Em toda operação existe um elo mais fraco que decide o resultado. Ele muda ao longo do cerco: informação no início, pessoal no meio, tempo e fadiga no fim.</p></div></div></div>`;
   if (!shifted) return `<div class="card tocshift calm"><div class="tsrow">${icon(X.ic, 'ico')}<div><b>O gargalo continua: ${X.nome}.</b> ${X.elevar}</div></div></div>`;
   const P = TOCS[u.tocPrev];
-  return `<div class="card tocshift"><h3>A restrição mudou</h3><div class="tsrow">${icon('split', 'ico')}<div><b>${P.nome} → ${X.nome}</b><p>${X.por}</p><p><b>Pare de:</b> ${X.parar}</p><p><b>Eleve agora:</b> ${X.elevar}</p></div></div></div>`;
+  return `<div class="card tocshift"><h2 class="h3">A restrição mudou</h2><div class="tsrow">${icon('split', 'ico')}<div><b>${P.nome} → ${X.nome}</b><p>${X.por}</p><p><b>Pare de:</b> ${X.parar}</p><p><b>Eleve agora:</b> ${X.elevar}</p></div></div></div>`;
 }
 function renderUpdate() {
   const u = G.update;
+  setBar(`<div class="absum"><span class="abk">Rodada ${G.round} de ${MAX_ROUNDS} · ${u.time}</span><span>${G.noLimit ? 'Sem limite de tempo.' : `Você terá <b class="mono">${roundTimer()}</b> segundos${G.round <= 2 ? ' (tempo extra de orientação)' : ''}`} e <b class="mono">${D_().slots}</b> decisões. O relógio só corre no painel.</span></div><span class="spacer"></span><button class="btn primary lg" data-act="takepanel">Assumir o painel →</button>`);
   const reps = u.reports.map(r => `<div class="report"><span class="src">${r.ag} · ${ZONE[r.z].curto}</span><span>${r.txt}. <span class="faint">Confiança ${r.conf}.</span></span></div>`).join('');
   return `${hudHTML()}<div class="resol screen">
     <div class="skyband r${G.round}">${skyline()}<i class="siren r"></i><i class="siren b"></i>
@@ -2800,14 +3003,14 @@ function renderUpdate() {
     ${siegeTrack()}
     <p class="serif intro">${u.intro || roundIntro()}</p>
     ${tocShiftHTML(u)}
+    ${G.round === 1 && (G.perimLog || []).length ? `<div class="card"><h2 class="h3">Reconhecimento do perímetro</h2><div class="grid" style="gap:6px">${G.perimLog.map(t => ins('good', 'eye', t)).join('')}</div></div>` : ''}
     ${u.quiet ? ins('good', 'wait', '<b>Calmaria.</b> Por alguns minutos, nada acontece. Pelo rádio, alguém pede café. Depois de uma rodada pesada, este é o momento de pensar, não de reagir: nenhuma carta de evento vai interromper esta rodada.') : ''}
-    <div class="card"><h3>Mensagens de rádio</h3><div class="radio" style="max-height:none">${u.radio.map(l => `<p class="${l.c || ''}">${l.t}</p>`).join('')}</div></div>
+    <div class="card"><h2 class="h3">Mensagens de rádio</h2><div class="radio live" style="max-height:none">${u.radio.map((l, i) => `<p class="${l.c || ''}" style="--i:${i}">${l.t}</p>`).join('')}</div></div>
     ${u.call ? `<div class="call">${icon('call', 'ico')}<div><small>Ligação recebida · ${u.call.who}</small><p>“${u.call.t}”</p></div></div>` : ''}
-    ${u.intel.length ? `<div class="card"><h3>Resultados da inteligência</h3><div class="dossiers">${u.intel.map(dossierHTML).join('')}</div></div>` : ''}
-    ${u.hint ? `<div class="card">${ins('info', 'light', u.hint)}</div>` : ''}
+    ${u.intel.length ? `<div class="card"><h2 class="h3">Resultados da inteligência</h2><div class="dossiers">${u.intel.map(dossierHTML).join('')}</div></div>` : ''}
+    ${u.hint ? `<div class="card">${ins('info', 'light', br(u.hint))}</div>` : ''}
     ${councilHTML(u.council)}
-    <div class="card"><h3>Relatos de campo</h3>${reps || '<p class="faint" style="font-size:13px">Nenhum relato novo. Zonas sem agentes não geram relatos.</p>'}</div>
-    <div class="row"><button class="btn primary lg" data-act="takepanel">Assumir o painel</button><span class="faint" style="font-size:12.5px">${G.noLimit ? 'Sem limite de tempo.' : `Você terá ${roundTimer()} segundos${G.round <= 2 ? ' (tempo extra de orientação)' : ''} e ${D_().slots} decisões.`}</span></div></div>`;
+    <div class="card"><h2 class="h3">Relatos de campo</h2>${reps || '<p class="faint" style="font-size:13px">Nenhum relato novo. Zonas sem agentes não geram relatos.</p>'}</div></div>`;
 }
 
 /* ---------- Resolução / feedback ---------- */
@@ -2823,8 +3026,8 @@ function waterfall(title, parts, exact, upBad = true) {
   const mag = v => Math.abs(v) < 2 ? 'leve' : Math.abs(v) < 6 ? 'moderado' : 'forte';
   return `<div class="wf"><div class="eyebrow">${title}</div>${ps.map(p => {
     const w = Math.abs(p.v) / mx * 50, bad = (p.v > 0) === upBad;
-    return `<div class="wfr"><span>${p.k}</span><div class="wfb"><i class="${bad ? 'bad' : 'good'}" style="${p.v > 0 ? 'left:50%' : `left:${50 - w}%`};width:${w}%"></i></div><b class="mono">${exact ? (p.v > 0 ? '+' : '−') + Math.abs(p.v).toFixed(1) : (p.v > 0 ? '↑ ' : '↓ ') + mag(p.v)}</b></div>`;
-  }).join('')}<div class="wfr tot"><span>Resultado</span><div></div><b class="mono">${exact ? (tot >= 0 ? '+' : '−') + Math.abs(tot).toFixed(1) : tot > .5 ? '↑ sobe' : tot < -.5 ? '↓ desce' : '→ estável'}</b></div></div>`;
+    return `<div class="wfr"><span>${p.k}</span><div class="wfb"><i class="${bad ? 'bad' : 'good'}" style="${p.v > 0 ? 'left:50%' : `left:${50 - w}%`};width:${w}%"></i></div><b class="mono">${exact ? (p.v > 0 ? '+' : '−') + dec(Math.abs(p.v)) : (p.v > 0 ? '↑ ' : '↓ ') + mag(p.v)}</b></div>`;
+  }).join('')}<div class="wfr tot"><span>Resultado</span><div></div><b class="mono">${exact ? (tot >= 0 ? '+' : '−') + dec(Math.abs(tot)) : tot > .5 ? '↑ sobe' : tot < -.5 ? '↓ desce' : '→ estável'}</b></div></div>`;
 }
 function stkWhyHTML(R, a, b) {
   return STK_KEYS.map(k => {
@@ -2841,14 +3044,14 @@ function hchgHTML(list) {
   if (fr.length) out.push(`<div class="hc out">${icon('check', 'ico')}<span><b>Saíram:</b> ${fr.map(id => `${HOST[id].nome} (${HOST[id].idade})`).join(', ')}.</span></div>`);
   if (hu.length) out.push(`<div class="hc hurt">${icon('heart', 'ico')}<span><b>${G.K.hostages ? 'Feridos:' : 'Ferimentos:'}</b> ${G.K.hostages ? hu.map(id => HOST[id].nome).join(', ') : `${hu.length} ${hu.length > 1 ? 'pessoas feridas' : 'pessoa ferida'} lá dentro, sem identificação confirmada`}.</span></div>`);
   if (de.length) out.push(`<div class="hc dead">${icon('heart', 'ico')}<span><b>Vidas perdidas:</b> ${de.map(id => `${HOST[id].nome}, ${HOST[id].idade} anos, ${HOST[id].papel}`).join('; ')}.</span></div>`);
-  return `<div class="card"><h3>Reféns nesta rodada</h3><div class="grid" style="gap:6px">${out.join('')}</div></div>`;
+  return `<div class="card"><h2 class="h3">Reféns nesta rodada</h2><div class="grid" style="gap:6px">${out.join('')}</div></div>`;
 }
 const SECS = [['dec', 'Suas decisões'], ['mundo', 'O mundo reagiu'], ['ev', 'Evento'], ['fim', 'Fim da rodada']];
 function linesBySec(lines, anim = true) {
   let k = 0;
   return SECS.map(([sec, t]) => {
     const ls = lines.filter(l => (l.sec || 'dec') === sec); if (!ls.length) return '';
-    return `<div class="sec"><div class="eyebrow">${t}</div>${ls.map(l => `<div class="res-line ${l.tone}" style="${anim ? `animation-delay:${(k++) * 90}ms` : 'animation:none'}">${icon(l.ic, '', 1.8)}<span>${l.text}</span></div>`).join('')}</div>`;
+    return `<div class="sec"><div class="eyebrow">${t}</div>${ls.map(l => `<div class="res-line ${l.tone}" style="${anim ? `animation-delay:${(k++) * 90}ms` : 'animation:none'}">${icon(l.ic, '', 1.8)}<span>${br(l.text)}</span></div>`).join('')}</div>`;
   }).join('');
 }
 function renderResult() {
@@ -2863,32 +3066,35 @@ function renderResult() {
     deltaCell('Pressão da equipe', a.p, b.p, v => Math.round(v), false, 'v')
   ].join('');
   const last = !!G.end, exactA = G.nego.contact && G.K.profile;
-  const cause = R.agitParts ? `<div class="card"><h3>Causa e efeito</h3><div class="grid" style="gap:14px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))">
+  const cause = R.agitParts ? `<div class="card"><h2 class="h3">Causa e efeito</h2><div class="grid" style="gap:14px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))">
       ${waterfall('Agitação do líder' + (exactA ? '' : ' (só a direção: sem perfil e canal, você não mede)'), R.agitParts, exactA)}
       ${waterfall('Pressão da mídia', R.mediaParts, true)}</div>
-      <p class="faint" style="font-size:11.5px;margin-top:8px">Eventos mudam a agitação e a mídia por fora destes fatores.</p></div>` : '';
+      <p class="faint" style="font-size:12px;margin-top:8px">Eventos mudam a agitação e a mídia por fora destes fatores.</p></div>` : '';
   const sw = stkWhyHTML(R, a, b);
+  setBar(`<div class="absum"><span class="abk">Resolução · rodada ${G.round} de ${MAX_ROUNDS}</span><span>${R.decs.length ? `${R.decs.length} ${plural(R.decs.length, 'decisão executada', 'decisões executadas')}` : 'Rodada sem decisões'}${last ? ' · a crise chegou ao fim' : ''}</span></div><span class="spacer"></span><button class="btn primary lg" data-act="cont">${last ? 'Ver o desfecho →' : G.round >= MAX_ROUNDS ? 'Encerrar →' : `Seguir para a rodada ${G.round + 1} →`}</button>`);
   return `${hudHTML()}<div class="resol screen">
-    <div><div class="eyebrow">Resolução · rodada ${G.round} de ${MAX_ROUNDS}</div><h1 style="font-family:var(--cond);font-size:clamp(28px,4vw,46px);letter-spacing:.03em;margin:6px 0 0">O que as suas decisões provocaram</h1></div>
+    <div><div class="eyebrow">Resolução · rodada ${G.round} de ${MAX_ROUNDS}</div><h1 class="rtitle">O que as suas decisões provocaram</h1></div>
     ${R.decs.length ? `<div class="row">${R.decs.map(d => `<span class="pill blue">${icon(FRONT_IC[d.front], 'ico" style="width:14px;height:14px')}${d.label}</span>`).join('')}</div>` : '<p class="muted">Você aguardou sem decisões nesta rodada. A crise não esperou.</p>'}
     <div class="grid" style="gap:14px">${linesBySec(R.lines)}</div>
     ${hchgHTML(R.hchg)}
-    <div class="card"><h3>Painel de feedback</h3><div class="delta">${cells}</div></div>
+    <div class="card"><h2 class="h3">Painel de feedback</h2><div class="delta">${cells}</div></div>
     ${cause}
-    ${sw ? `<div class="card"><h3>Stakeholders: por que mudaram</h3><div class="grid" style="gap:6px">${sw}</div></div>` : ''}
-    <div class="row"><button class="btn primary lg" data-act="cont">${last ? 'Ver o desfecho' : G.round >= MAX_ROUNDS ? 'Encerrar' : `Seguir para a rodada ${G.round + 1}`}</button></div></div>`;
+    ${sw ? `<div class="card"><h2 class="h3">Stakeholders: por que mudaram</h2><div class="grid" style="gap:6px">${sw}</div></div>` : ''}
+    </div>`;
 }
+/* Carta de evento: escolha obrigatória. Foco vai para a carta, Tab fica preso nela e as teclas 1–3 escolhem. */
 function eventModal() {
   const e = EVDEF[G.pendingEvent], fx = EVENT_FX[G.pendingEvent];
-  return `<div class="modalback"><div class="evcard" role="dialog" aria-modal="true" aria-label="${e.titulo}">
-    <div class="row" style="flex-wrap:nowrap"><div class="evico">${icon(e.ic)}</div><div><div class="eyebrow">Carta de evento</div><h2>${e.titulo}</h2></div></div>
-    <p class="radio-q">${e.radio}</p><p class="d">${e.desc}</p>
-    <div class="optlist">${fx.choices.map((c, i) => `<button class="opt" data-act="evchoice" data-i="${i}" ${c.cost && G.credits < c.cost ? 'disabled' : ''}><span></span><span><b>${c.label}</b><span class="d">${c.hint}</span></span>${c.cost ? `<span class="c">${c.cost}</span>` : '<span></span>'}</button>`).join('')}</div></div></div>`;
+  return `<div class="modalback"><div class="evcard" role="dialog" aria-modal="true" aria-labelledby="evt" aria-describedby="evd">
+    <div class="row" style="flex-wrap:nowrap"><div class="evico">${icon(e.ic)}</div><div><div class="eyebrow">Carta de evento</div><h2 id="evt">${e.titulo}</h2></div></div>
+    <p class="radio-q">${e.radio}</p><p class="d" id="evd">${e.desc}</p>
+    <div class="optlist">${fx.choices.map((c, i) => { const no = c.cost && G.credits < c.cost, why = no ? `Faltam ${fmt(c.cost - G.credits)} créditos (reserva ${fmt(G.credits)}).` : ''; return `<button class="opt evopt" data-act="evchoice" data-i="${i}" ${no ? `aria-disabled="true" data-why="${attr(why)}"` : ''}><span class="okey" aria-hidden="true">${i + 1}</span><span><b>${c.label}</b><span class="d">${c.hint}</span>${no ? `<span class="unav">${why}</span>` : ''}</span>${c.cost ? `<span class="c">${c.cost}</span>` : '<span></span>'}</button>`; }).join('')}</div>
+    <p class="faint" style="font-size:12px">Uma escolha é obrigatória. Atalho: teclas ${fx.choices.map((_, i) => i + 1).join(', ').replace(/, (\d)$/, ' ou $1')}.</p></div></div>`;
 }
 function renderEventStage() {
   const R = G.R;
-  const lines = R.lines.map(l => `<div class="res-line ${l.tone}">${icon(l.ic, '', 1.8)}<span>${l.text}</span></div>`).join('');
-  return `${hudHTML()}<div class="resol screen"><div><div class="eyebrow">Resolução · rodada ${G.round}</div><h1 style="font-family:var(--cond);font-size:clamp(28px,4vw,46px);margin:6px 0 0">Um evento interrompe a rodada</h1></div><div class="grid" style="gap:8px">${lines}</div></div>${eventModal()}`;
+  const lines = R.lines.map(l => `<div class="res-line ${l.tone}">${icon(l.ic, '', 1.8)}<span>${br(l.text)}</span></div>`).join('');
+  return `${hudHTML()}<div class="resol screen"><div><div class="eyebrow">Resolução · rodada ${G.round}</div><h1 class="rtitle">Um evento interrompe a rodada</h1></div><div class="grid" style="gap:8px">${lines}</div></div>${eventModal()}`;
 }
 /* =====================================================================
    INTERFACE — Desfecho, pós-jogo, ações e inicialização
@@ -2988,17 +3194,17 @@ function outName(E) { return (OUTN[E.type] || E.type) + (E.variant && OUTV[E.var
 function scoreHTML() {
   const S = G.score, H = G.hostages, E = G.end;
   const dims = [
-    { k: 'Vidas', v: S.vidas, w: .40, why: `${H.dead} mortos e ${H.hurt} feridos entre ${HOSTAGES} reféns (cada morte pesa 2, cada ferido 0,5).` },
+    { k: 'Vidas', v: S.vidas, w: .40, why: `${H.dead} ${plural(H.dead, 'morto', 'mortos')} e ${H.hurt} ${plural(H.hurt, 'ferido', 'feridos')} entre ${HOSTAGES} reféns (cada morte pesa 2, cada ferido 0,5).` },
     { k: 'Prisões', v: S.captura, w: .20, why: `${outName(E)}: ${Math.round(S.captura * 100)}% dos responsáveis presos.` },
-    { k: 'Valores', v: S.valores, w: .15, why: `Cofre em ${Math.round(G.vault)}% no desfecho; fator de perda do desfecho ${E.lootF}.` },
+    { k: 'Valores', v: S.valores, w: .15, why: `Cofre em ${Math.round(G.vault)}% no desfecho; fator de perda do desfecho ${String(E.lootF).replace('.', ',')}.` },
     { k: 'Eficiência', v: S.eficiencia, w: .10, why: `${fmt(G.credits)} créditos sobraram e a crise durou ${G.round} rodadas. O plantão custou ${fmt(G.spent.plantao)} no total${G.deficit ? ` e ${G.deficit} ${plural(G.deficit, 'rodada', 'rodadas')} ficaram no vermelho` : ''}.` },
     { k: 'Confiança', v: S.confianca, w: .15, why: `Média ponderada dos stakeholders: ${STK_KEYS.map(k => `${STK[k].nome} ${Math.round(G.stk[k].sat)}`).join(' · ')}.` }
   ];
   return `<div class="scorehead"><div style="text-align:center">${radarSVG(dims)}</div>
-    <div class="grid" style="gap:10px"><div class="eyebrow">Nota final</div><div class="grade ${S.grade}">${S.grade}</div><div class="bigscore">${S.total.toFixed(1)} / 100</div>
-    ${S.capped ? `<div class="insight warn">${icon('alert', '', 1.8)}<span>Teto aplicado: a pontuação bruta (${S.raw.toFixed(1)}) foi limitada a ${S.cap} porque houve ${H.dead} ${plural(H.dead, 'refém morto', 'reféns mortos')}. Nesta simulação, vidas perdidas limitam a nota máxima.</span></div>` : ''}
+    <div class="grid" style="gap:10px"><div class="eyebrow">Nota final</div><h1 class="sr">Pontuação final: nota ${S.grade}, ${dec(S.total)} de 100</h1><div class="grade ${S.grade}" aria-hidden="true">${S.grade}</div><div class="bigscore" aria-hidden="true">${dec(S.total)} / 100</div>
+    ${S.capped ? `<div class="insight warn">${icon('alert', '', 1.8)}<span>Teto aplicado: a pontuação bruta (${dec(S.raw)}) foi limitada a ${S.cap} porque houve ${H.dead} ${plural(H.dead, 'refém morto', 'reféns mortos')}. Nesta simulação, vidas perdidas limitam a nota máxima.</span></div>` : ''}
     <p class="muted" style="max-width:520px">${S.grade === 'S' ? 'Operação exemplar.' : S.grade === 'A' ? 'Excelente condução, com pouco a corrigir.' : S.grade === 'B' ? 'Boa condução, com trade-offs visíveis.' : S.grade === 'C' ? 'Resultado aceitável, mas com perdas evitáveis.' : S.grade === 'D' ? 'Resultado fraco: as decisões se acumularam contra você.' : 'Operação malsucedida. A falha também ensina: veja o debrief.'}</p></div></div>
-    <div class="card" style="margin-top:18px"><h3>Composição</h3>${dims.map(d => `<div class="dimrow"><div><b>${d.k}</b><small>peso ${Math.round(d.w * 100)}%</small></div><div><div class="meter tall ${d.v >= .7 ? 'g' : d.v >= .4 ? 'a' : 'r'}"><i style="width:${d.v * 100}%"></i></div><small class="faint">${d.why}</small></div><div class="mono" style="text-align:right">${Math.round(d.v * 100)}% → ${(d.v * d.w * 100).toFixed(1)} pts</div></div>`).join('')}</div>`;
+    <div class="card" style="margin-top:18px"><h2 class="h3">Composição</h2>${dims.map(d => `<div class="dimrow"><div><b>${d.k}</b><small>peso ${Math.round(d.w * 100)}%</small></div><div><div class="meter tall ${d.v >= .7 ? 'g' : d.v >= .4 ? 'a' : 'r'}"><i style="width:0%" data-to="${Math.round(d.v * 100)}"></i></div><small class="faint">${d.why}</small></div><div class="mono" style="text-align:right">${Math.round(d.v * 100)}% → ${dec(d.v * d.w * 100)} pts</div></div>`).join('')}</div>`;
 }
 
 /* ---------- Gazeta ---------- */
@@ -3069,7 +3275,7 @@ function badgeEarned(id) {
 }
 function badgesHTML() {
   const got = BADGES.filter(b => badgeEarned(b.id)).length;
-  return `<p class="muted" style="margin-bottom:12px">${got} de ${BADGES.length} selos conquistados.</p><div class="badges">${BADGES.map(b => { const on = badgeEarned(b.id); return `<div class="badge ${on ? 'on' : 'off'}"><div class="seal">${icon(b.ic, 'ico" style="width:26px;height:26px')}</div><b>${b.nome}</b><p>${b.d}</p><span class="pill ${on ? 'amber' : ''}">${on ? 'conquistado' : 'não conquistado'}</span></div>`; }).join('')}</div>`;
+  return `<h1 class="sr">Conquistas</h1><p class="muted" style="margin-bottom:12px">${got} de ${BADGES.length} selos conquistados.</p><div class="badges">${BADGES.map(b => { const on = badgeEarned(b.id); return `<div class="badge ${on ? 'on' : 'off'}"><div class="seal">${icon(b.ic, 'ico" style="width:26px;height:26px')}</div><b>${b.nome}</b><p>${b.d}</p><span class="pill ${on ? 'amber' : ''}">${on ? '✓ conquistado' : 'não conquistado'}</span></div>`; }).join('')}</div>`;
 }
 
 /* ---------- Replay ---------- */
@@ -3086,13 +3292,13 @@ function chartSVG() {
 }
 function replayHTML() {
   const r = clamp(UI.replayR, 1, Math.max(1, G.log.length)), rec = G.log[r - 1];
-  const nodes = Array.from({ length: MAX_ROUNDS }, (_, i) => { const l = G.log[i]; return l ? `<button class="tnode" data-act="rnode" data-r="${i + 1}" aria-selected="${r === i + 1}"><b>R${i + 1}</b>${l.time}<br><span class="faint">${l.decs.length} decisão${l.decs.length === 1 ? '' : 'ões'}${l.ev ? ' · evento' : ''}</span></button>` : `<div class="tnode na"><b>R${i + 1}</b>—</div>`; }).join('');
-  const d = rec ? `<div class="card"><h3>Rodada ${r} · ${rec.time}</h3>
+  const nodes = Array.from({ length: MAX_ROUNDS }, (_, i) => { const l = G.log[i]; return l ? `<button class="tnode" role="tab" data-act="rnode" data-r="${i + 1}" aria-selected="${r === i + 1}" tabindex="${r === i + 1 ? 0 : -1}"><b>R${i + 1}</b>${l.time}<br><span class="faint">${l.decs.length} ${plural(l.decs.length, 'decisão', 'decisões')}${l.ev ? ' · evento' : ''}</span></button>` : `<div class="tnode na" aria-label="Rodada ${i + 1}: não jogada"><b>R${i + 1}</b>não jogada</div>`; }).join('');
+  const d = rec ? `<div class="card"><h2 class="h3">Rodada ${r} · ${rec.time}</h2>
     <div class="row" style="margin-bottom:10px">${rec.decs.length ? rec.decs.map(x => `<span class="pill blue">${icon(FRONT_IC[x.front], 'ico" style="width:14px;height:14px')}${x.label}</span>`).join('') : '<span class="muted">Sem decisões.</span>'}</div>
     ${rec.ev ? `<div class="insight warn" style="margin-bottom:10px">${icon(EVDEF[rec.ev.id].ic, '', 1.8)}<span><b>${EVDEF[rec.ev.id].titulo}</b>: ${rec.ev.choice}</span></div>` : ''}
-    <div class="grid" style="gap:6px">${rec.lines.map(l => `<div class="res-line ${l.tone}" style="animation:none">${icon(l.ic, '', 1.8)}<span>${l.text}</span></div>`).join('')}</div>
+    <div class="grid" style="gap:6px">${rec.lines.map(l => `<div class="res-line ${l.tone}" style="animation:none">${icon(l.ic, '', 1.8)}<span>${br(l.text)}</span></div>`).join('')}</div>
     <div class="delta" style="margin-top:12px">${[['Agitação', rec.s0.agit, rec.s1.agit], ['Mídia', rec.s0.media, rec.s1.media], ['Cofre', rec.s0.vault, rec.s1.vault], ['Pressão da equipe', rec.s0.p, rec.s1.p], ...STK_KEYS.map(k => [STK[k].nome, rec.s0.stk[k], rec.s1.stk[k]])].map(([k, a, b]) => `<div class="dcell"><div class="top"><span>${k}</span><b>${Math.round(a)} → ${Math.round(b)}</b></div></div>`).join('')}</div></div>` : '';
-  return `<div class="timeline">${nodes}</div>${d}<div class="card" style="margin-top:14px"><h3>Curvas da operação (dados reais, sem névoa)</h3>${chartSVG()}</div>`;
+  return `<h1 class="sr">Replay da operação</h1><div class="timeline" role="tablist" aria-label="Rodadas">${nodes}</div>${d}<div class="card" style="margin-top:14px"><h2 class="h3">Curvas da operação (dados reais, sem névoa)</h2>${chartSVG()}</div>`;
 }
 
 /* ---------- Debrief: dinheiro e gargalos (L1.3) ---------- */
@@ -3113,7 +3319,7 @@ function econHTML() {
     : al.pct >= 60 ? `${al.hit} de ${al.n} ordens de recurso foram direto no elo mais fraco do momento (${al.costHit} de ${al.cost} créditos). Você subordinou o gasto à restrição.`
     : al.pct >= 30 ? `${al.hit} de ${al.n} ordens miraram o gargalo do momento. O restante foi para pontos que já não eram o elo mais fraco.`
     : `Só ${al.hit} de ${al.n} ordens miraram o gargalo do momento. Muito esforço foi para onde a corrente já era forte.`;
-  return `<div class="card econ"><h3>Dinheiro e gargalos: o que a operação custou</h3>
+  return `<div class="card econ"><h2 class="h3">Dinheiro e gargalos: o que a operação custou</h2>
     <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:20px">
       <div><div class="eyebrow">Para onde foram os 1.000 créditos</div>
         <div class="stack" style="margin-top:8px" role="img" aria-label="Distribuição dos gastos">${cats.filter(c => c.v > 0).map(c => `<i style="width:${c.v / tot * 100}%;background:${c.c}" title="${c.k}: ${Math.round(c.v)}"></i>`).join('')}</div>
@@ -3156,17 +3362,17 @@ function debriefHTML() {
   ];
   const qs = ['Qual era a restrição da sua operação em cada fase? Você percebeu quando ela mudou?', 'Quanto você investiu em informação antes de agir? Esse investimento se pagou?', 'Em que momento a negociação avançou ou regrediu? O que você fez para isso acontecer?', 'Houve algum momento em que você insistiu num plano que já não funcionava? Por quê?', 'Se os pesos do placar fossem outros, você teria agido de outra forma?'];
   const bridge = [['Reféns', 'Clientes, dados de clientes ou colaboradores afetados por uma crise'], ['Assaltantes', 'Um ataque de ransomware, um concorrente agressivo ou uma crise reputacional'], ['Cofre', 'Caixa, ativos estratégicos ou propriedade intelectual'], ['Perímetro e rotas de fuga', 'Controles internos e vulnerabilidades operacionais'], ['Negociação com o líder', 'Negociação com contrapartes hostis: sindicatos, credores, atacantes'], ['Imprensa e prefeito', 'Mídia, redes sociais, conselho de administração e reguladores'], ['Agências parceiras', 'Fornecedores, parceiros e áreas fora da sua hierarquia'], ['Fadiga da equipe', 'Burnout em equipes de resposta a incidentes']];
-  return `<div class="grid" style="gap:16px">${econHTML()}<div><div class="eyebrow">Ciclo de Kolb</div><div class="kolb" style="margin-top:8px">${kolb.map(([a, b]) => `<div class="concept"><h4>${a}</h4><p class="les">${b}</p></div>`).join('')}</div></div>
+  return `<h1 class="sr">Debrief</h1><div class="grid" style="gap:16px">${econHTML()}<div><div class="eyebrow">Ciclo de Kolb</div><div class="kolb" style="margin-top:8px">${kolb.map(([a, b]) => `<div class="concept"><h4>${a}</h4><p class="les">${b}</p></div>`).join('')}</div></div>
     <div><div class="eyebrow">Suas decisões e os conceitos</div><div class="grid" style="gap:12px;margin-top:8px;grid-template-columns:repeat(auto-fit,minmax(340px,1fr))">${C.map(c => `<div class="concept"><h4>${c.n}</h4><span class="ref">${c.ref}</span><div class="you">${c.you}</div><p class="les">${c.les}</p></div>`).join('')}</div></div>
-    <div class="card"><h3>Perguntas para a reflexão</h3><ul style="margin:0;padding-left:18px;display:grid;gap:6px">${qs.map(q => `<li>${q}</li>`).join('')}</ul></div>
-    <div class="card"><h3>Da simulação para a gestão de crises corporativas</h3><div class="scroll-x"><table class="table"><thead><tr><th>Na simulação</th><th>Na empresa</th></tr></thead><tbody>${bridge.map(([a, b]) => `<tr><td><b>${a}</b></td><td>${b}</td></tr>`).join('')}</tbody></table></div></div></div>`;
+    <div class="card"><h2 class="h3">Perguntas para a reflexão</h2><ul style="margin:0;padding-left:18px;display:grid;gap:6px">${qs.map(q => `<li>${q}</li>`).join('')}</ul></div>
+    <div class="card"><h2 class="h3">Da simulação para a gestão de crises corporativas</h2><div class="scroll-x"><table class="table"><thead><tr><th>Na simulação</th><th>Na empresa</th></tr></thead><tbody>${bridge.map(([a, b]) => `<tr><td><b>${a}</b></td><td>${b}</td></tr>`).join('')}</tbody></table></div></div></div>`;
 }
 const POST_TABS = [['score', 'Pontuação'], ['news', 'Gazeta'], ['badges', 'Conquistas'], ['replay', 'Replay'], ['debrief', 'Debrief']];
 function renderPost() {
   const i = POST_TABS.findIndex(t => t[0] === UI.post), nx = POST_TABS[i + 1];
   const body = UI.post === 'score' ? scoreHTML() : UI.post === 'news' ? newsHTML() : UI.post === 'badges' ? badgesHTML() : UI.post === 'replay' ? replayHTML() : debriefHTML();
-  return `<div class="screen"><div class="postnav" role="tablist">${POST_TABS.map(([k, l]) => `<button class="pn" role="tab" data-act="ptab" data-t="${k}" aria-selected="${UI.post === k}">${l}</button>`).join('')}<span class="spacer"></span><button class="btn sm ghost" data-act="tomenu">Menu</button></div>
-    <div class="post">${body}<div class="row" style="margin-top:24px">${nx ? `<button class="btn primary" data-act="ptab" data-t="${nx[0]}">${nx[1]} →</button>` : ''}<button class="btn" data-act="again">Jogar novamente</button></div></div></div>`;
+  return `<div class="screen"><div class="postnav"><div class="pntabs" role="tablist" aria-label="Resultado da operação">${POST_TABS.map(([k, l]) => `<button class="pn" role="tab" id="pt-${k}" aria-controls="postp" data-act="ptab" data-t="${k}" aria-selected="${UI.post === k}" tabindex="${UI.post === k ? 0 : -1}">${l}</button>`).join('')}</div><span class="spacer"></span><button class="btn sm ghost" data-act="tomenu">Menu</button></div>
+    <div class="post" id="postp" role="tabpanel" aria-labelledby="pt-${UI.post}">${body}<div class="row" style="margin-top:24px">${nx ? `<button class="btn primary" data-act="ptab" data-t="${nx[0]}" data-nav="1">Próximo: ${nx[1]} →</button>` : ''}<button class="btn" data-act="again">Jogar novamente</button></div></div></div>`;
 }
 
 /* ===================================================================
@@ -3174,15 +3380,24 @@ function renderPost() {
    =================================================================== */
 const ACT = {}, CHG = {};
 const warn = m => toast('COMANDO', m, 'warn');
+/* Depois de uma ação que some com o botão focado, o foco vai para o próximo lugar útil. */
+const focusFirst = (...sels) => { for (const q of sels) { const el = $app.querySelector(q); if (el) { el.focus({ preventScroll: true }); return; } } };
 function setPhase(p) { G.phase = p; saveGame(); render(); }
 
 ACT.diff = d => { UI.diffSel = d.v; render(); };
 ACT.start = () => { newGame(UI.diffSel, { noLimit: UI.noLimit }); UI.sel = null; UI.tab = 'tatica'; UI.post = 'score'; UI.emptyConfirm = false; setPhase('briefing'); };
-ACT.continue = () => { const s = loadSave(); if (!s) { render(); return; } G = s; UI.timerRound = -1; if (G.stage === 'resolving') G.stage = 'result'; render(); if (G.phase === 'siege' && G.stage === 'update') radioToasts(G.update.radio); };
+ACT.continue = () => { const s = loadSave(); if (!s) { render(); return; } G = s; UI.timerRound = -1; if (G.stage === 'resolving') G.stage = 'result'; render(); };
 ACT.howto = () => { UI.tutor = true; render(); };
-ACT.closehowto = () => { UI.tutor = false; render(); };
+ACT.closehowto = () => { UI.tutor = false; render(); const b = $app.querySelector('[data-act=howto]'); if (b) b.focus({ preventScroll: true }); };
 ACT.tobrief = () => setPhase('recruit');
-ACT.skipbrief = () => { $app.classList.add('noanim'); };
+ACT.skipbrief = (d, el) => { $app.classList.add('noanim'); if (el && el.tagName === 'BUTTON') { const b = $app.querySelector('[data-act=tobrief]'); if (b) b.focus({ preventScroll: true }); } };
+/* Manchetes: pausa sem re-renderizar (o letreiro continua de onde estava). */
+ACT.tkpause = () => {
+  UI.tkPause = !UI.tkPause;
+  document.querySelectorAll('.ticker').forEach(t => t.classList.toggle('paused', UI.tkPause));
+  document.querySelectorAll('.tkp').forEach(b => { const l = (UI.tkPause ? 'Retomar' : 'Pausar') + ' as manchetes'; b.setAttribute('aria-pressed', UI.tkPause); b.setAttribute('aria-label', l); b.title = l; b.textContent = UI.tkPause ? '▶' : '❚❚'; });
+};
+ACT.lvl = d => { UI.lvl = +d.t; UI.tabAnim = true; render(); };
 ACT.cutgo = () => { const c = UI.cut; UI.cut = null; render(); if (c && c.after) c.after(); };
 ACT.hire = d => {
   const a = agentById(d.id);
@@ -3228,32 +3443,35 @@ ACT.tosiege = () => {
   UI.cut = { time: '14h37', title: 'Perímetro fechado', btn: 'Começar o cerco', lines: [
     { t: `As equipes assumem as posições. ${adq} de 7 zonas têm cobertura adequada; nas outras, você está apostando.` },
     { t: 'Dentro da agência, o telefone começa a tocar. É a linha que você mandou ligar.' },
-    { t: '[RÁDIO] Comando, todas as equipes em posição. A partir de agora o relógio é seu. Câmbio.', radio: true }],
-    after: () => { radioToasts(G.update.radio); (G.perimLog || []).forEach((t, i) => setTimeout(() => toast('RECONHECIMENTO', t, 'good'), 600 + i * 1200)); } };
+    { t: '[RÁDIO] Comando, todas as equipes em posição. A partir de agora o relógio é seu. Câmbio.', radio: true }] };
   render();
 };
 
 ACT.takepanel = () => { G.stage = 'panel'; UI.tab = 'tatica'; UI.ivConfirm = false; UI.pickZone = null; saveGame(); render(); };
-ACT.tab = d => { UI.tab = d.t; render(); };
+/* Abas de decisão. Vindo de um alerta ou do gargalo, o foco e a rolagem acompanham a aba aberta. */
+ACT.tab = (d, el) => {
+  UI.tab = d.t; UI.tabAnim = true; render();
+  if (el && !el.classList.contains('tab')) { const t = document.getElementById('tab-' + d.t); if (t) { t.focus({ preventScroll: true }); t.scrollIntoView({ block: 'nearest', behavior: reduceMotion() ? 'auto' : 'smooth' }); } }
+};
 const addD = (d) => { const r = addDecision(d); if (!r.ok) warn(r.msg); else { saveGame(); } render(); };
 ACT.addrepos = () => {
   if (!UI.repoAgent || !UI.repoZone) { warn('Escolha o agente e o destino.'); return; }
   if (G.az[UI.repoAgent] === UI.repoZone) { warn('O agente já está nessa zona.'); return; }
   addD({ front: 'tatica', kind: 'repos', p: { agent: UI.repoAgent, zone: UI.repoZone }, label: `${shortName(agentById(UI.repoAgent).nome)} → ${ZNAME(UI.repoZone)}`, slots: 1 });
 };
-CHG.repoagent = v => { UI.repoAgent = v; }; CHG.repozone = v => { UI.repoZone = v; }; CHG.apoiozone = v => { UI.apoioZone = v; };
+CHG.repoagent = v => { UI.repoAgent = v; render(); }; CHG.repozone = v => { UI.repoZone = v; render(); }; CHG.apoiozone = v => { UI.apoioZone = v; };
 CHG.negotiator = v => { G.nego.negotiator = v; saveGame(); render(); };
 ACT.addapoio = () => { if (!UI.apoioZone) { warn('Escolha a zona do apoio externo.'); return; } addD({ front: 'tatica', kind: 'apoio', p: { zone: UI.apoioZone }, label: `Apoio externo em ${ZNAME(UI.apoioZone)}`, slots: 1, cost: apoioCost() }); };
 ACT.addpausa = () => addD({ front: 'tatica', kind: 'pausa', p: {}, label: 'Pausa de Comando', slots: 1 });
 ACT.addhoras = () => addD({ front: 'tatica', kind: 'horas', p: {}, label: 'Horas extras', slots: 1, cost: horasCost() });
-ACT.iv = () => { UI.ivConfirm = true; render(); };
-ACT.ivno = () => { UI.ivConfirm = false; render(); };
-ACT.ivyes = () => { UI.ivConfirm = false; addD({ front: 'tatica', kind: 'interv', p: {}, label: 'INTERVENÇÃO', slots: D_().slots }); };
+ACT.iv = () => { UI.ivConfirm = true; render(); focusFirst('[data-act=ivno]'); };
+ACT.ivno = () => { UI.ivConfirm = false; render(); focusFirst('[data-act=iv]'); };
+ACT.ivyes = () => { UI.ivConfirm = false; addD({ front: 'tatica', kind: 'interv', p: {}, label: 'INTERVENÇÃO', slots: D_().slots }); focusFirst('[data-act=iv]'); };
 ACT.addnego = d => { const t = d.t === 'press' ? 'press' : +d.t; addD({ front: 'nego', kind: 'nego', p: { tech: t }, label: t === 'press' ? 'Pressionar o líder' : `Negociar: ${POSTURES[t - 1].nome}`, slots: 1 }); };
 ACT.addintel = d => addD({ front: 'intel', kind: 'intel', p: { id: d.id }, label: INTEL.find(i => i.id === d.id).nome, slots: 1, cost: intelCost(d.id) });
 ACT.addcom = d => { const c = COMMS.find(x => x.id === d.id); addD({ front: 'com', kind: 'com', p: { cid: d.id }, label: c.nome, slots: 1, cost: c.custo }); };
-ACT.rmq = d => { removeDecision(+d.id); saveGame(); render(); };
-ACT.zonepick = d => { UI.pickZone = d.z; if (UI.tab === 'tatica') { UI.repoZone = d.z; UI.apoioZone = d.z; } render(); };
+ACT.rmq = (d, el) => { removeDecision(+d.id); saveGame(); render(); if (el) focusFirst('.actbar .qx', '.actbar [data-act=execute]'); };
+ACT.zonepick = d => { UI.pickZone = d.z; UI.tab = 'tatica'; UI.repoZone = d.z; UI.apoioZone = d.z; render(); };
 ACT.execute = () => {
   if (!G || G.phase !== 'siege' || G.stage !== 'panel') return;
   stopTimer(); UI.ivConfirm = false; resolveDecisions(); render();
@@ -3261,7 +3479,7 @@ ACT.execute = () => {
 ACT.evchoice = d => { if (G.stage !== 'event') return; if (!chooseEvent(+d.i)) { warn('Créditos insuficientes para essa escolha.'); return; } render(); };
 ACT.cont = () => {
   if (G.end) { const tb = document.getElementById('toasts'); if (tb) tb.innerHTML = ''; G.phase = 'outcome'; saveGame(); render(); return; }
-  startRound(); render(); radioToasts(G.update.radio);
+  startRound(); render();
 };
 ACT.toscore = () => { G.phase = 'post'; UI.post = 'score'; saveGame(); render(); };
 ACT.ptab = d => { UI.post = d.t; render(); };
@@ -3272,8 +3490,52 @@ ACT.tomenu = () => { stopTimer(); G = null; UI.timerRound = -1; render(); };
 /* ===================================================================
    RENDER / BOOT
    =================================================================== */
-let lastKey = '';
+let lastKey = '', BAR = '';
+const setBar = h => { BAR = h; };
+const T0 = Date.now();
+const reduceMotion = () => !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+/* Assinatura do elemento focado, para devolver o foco depois do re-render (o innerHTML troca todos os nós). */
+const FOCUS_KEYS = ['t', 'id', 'v', 'z', 'i', 'r'];
+function focusSig(el) {
+  if (!el || el === document.body || !$app.contains(el)) return null;
+  let sel = null;
+  if (el.id) sel = '#' + CSS.escape(el.id);
+  else if (el.dataset && el.dataset.act) sel = `[data-act="${el.dataset.act}"]` + FOCUS_KEYS.filter(k => el.dataset[k] != null).map(k => `[data-${k}="${CSS.escape(el.dataset[k])}"]`).join('');
+  if (!sel) return null;
+  return { sel, i: [...$app.querySelectorAll(sel)].indexOf(el) };
+}
+function restoreFocus(sig, changed) {
+  const modal = $app.querySelector('.cut, .modalback');
+  if (modal) {
+    if (!modal.contains(document.activeElement)) { const d = modal.querySelector('[role=dialog]') || modal; d.setAttribute('tabindex', '-1'); d.focus({ preventScroll: true }); }
+    return;
+  }
+  let el = null;
+  if (!changed && sig) { const all = $app.querySelectorAll(sig.sel); el = all[sig.i] || all[0] || null; }
+  if (!el && (changed || sig)) { el = $app.querySelector('h1'); if (el) el.setAttribute('tabindex', '-1'); }
+  if (el && el !== document.activeElement) el.focus({ preventScroll: true });
+}
+/* Medidores e números que mudaram desde o último render deslizam do valor antigo para o novo. */
+function tweenChanged(prev) {
+  $app.querySelectorAll('[data-k]').forEach(el => {
+    const p = prev[el.dataset.k]; if (p == null) return;
+    if (el.dataset.val != null) {
+      const i = el.querySelector('i'); if (!i || +p === +el.dataset.val) return;
+      const to = i.style.width; i.style.transition = 'none'; i.style.width = clamp(+p, 0, 100) + '%'; void i.offsetWidth; i.style.transition = ''; i.style.width = to;
+      el.classList.add('chg');
+    } else if (el.dataset.n != null) {
+      const a = +p, b = +el.dataset.n; if (a === b || !isFinite(a) || !isFinite(b)) return;
+      const t0 = performance.now();
+      el.classList.add('chg');
+      const step = now => { const t = Math.min(1, (now - t0) / 700), e = 1 - Math.pow(1 - t, 3); el.textContent = fmt(a + (b - a) * e); if (t < 1 && el.isConnected) requestAnimationFrame(step); };
+      requestAnimationFrame(step);
+    }
+  });
+}
 function render() {
+  const sig = focusSig(document.activeElement);
+  const prev = {}; $app.querySelectorAll('[data-k]').forEach(el => { prev[el.dataset.k] = el.dataset.val != null ? el.dataset.val : el.dataset.n; });
+  BAR = '';
   let html;
   if (!G) html = renderMenu();
   else if (G.phase === 'briefing') html = renderBriefing();
@@ -3282,11 +3544,17 @@ function render() {
   else if (G.phase === 'siege') html = G.stage === 'update' ? renderUpdate() : G.stage === 'panel' ? renderPanel() : G.stage === 'event' ? renderEventStage() : renderResult();
   else if (G.phase === 'outcome') html = renderOutcome();
   else html = renderPost();
-  $app.innerHTML = html + cutHTML();
-  const key = G ? G.phase + ':' + (G.stage || '') + ':' + G.round + ':' + UI.post : 'menu';
-  if (key !== lastKey) $app.classList.remove('noanim');
-  $app.classList.toggle('still', key === lastKey);
-  if (key !== lastKey) { window.scrollTo(0, 0); lastKey = key; }
+  $app.innerHTML = html + (BAR ? `<div class="actbar" role="region" aria-label="Próximo passo"><div class="actin">${BAR}</div></div>` : '') + cutHTML();
+  document.body.classList.toggle('withbar', !!BAR);
+  UI.tabAnim = false;
+  const key = G ? G.phase + ':' + (G.stage || '') + ':' + G.round + ':' + UI.post : 'menu', changed = key !== lastKey;
+  if (changed) $app.classList.remove('noanim');
+  $app.classList.toggle('still', !changed);
+  if (changed) { window.scrollTo(0, 0); lastKey = key; }
+  // o letreiro segue de onde estava, em vez de recomeçar a cada clique
+  $app.querySelectorAll('.tkin').forEach(t => { t.style.animationDelay = `-${(((Date.now() - T0) / 1000) % 60).toFixed(2)}s`; });
+  restoreFocus(sig, changed);
+  if (!reduceMotion()) tweenChanged(prev);
   const inSiege = G && G.phase === 'siege';
   const edge = document.getElementById('edge');
   if (edge) edge.classList.toggle('hot', !!(inSiege && perceivedAgit().v > 70));
@@ -3297,7 +3565,8 @@ function render() {
 }
 $app.addEventListener('click', e => {
   const el = e.target.closest('[data-act]');
-  if (!el || el.disabled || el.getAttribute('aria-disabled') === 'true') return;
+  if (!el || el.disabled) return;
+  if (el.getAttribute('aria-disabled') === 'true') { if (el.dataset.why) warn(el.dataset.why); return; }
   const fn = ACT[el.dataset.act]; if (fn) fn(el.dataset, el);
 });
 $app.addEventListener('change', e => {
@@ -3306,6 +3575,34 @@ $app.addEventListener('change', e => {
 });
 $app.addEventListener('keydown', e => {
   if ((e.key === 'Enter' || e.key === ' ') && e.target.matches && e.target.matches('g[data-act]')) { e.preventDefault(); e.target.dispatchEvent(new MouseEvent('click', { bubbles: true })); }
+});
+/* Teclado: foco preso nas janelas modais, Esc para cancelar, 1–3 na carta de evento, setas em abas e na dificuldade. */
+document.addEventListener('keydown', e => {
+  const modal = $app.querySelector('.cut, .modalback');
+  if (e.key === 'Tab' && modal) {
+    const f = [...modal.querySelectorAll('button, [href], select, input, [tabindex]:not([tabindex="-1"])')].filter(x => !x.disabled && x.offsetParent !== null);
+    if (!f.length) { e.preventDefault(); return; }
+    const first = f[0], last = f[f.length - 1], inside = modal.contains(document.activeElement);
+    if (e.shiftKey && (document.activeElement === first || !inside)) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && (document.activeElement === last || !inside)) { e.preventDefault(); first.focus(); }
+    return;
+  }
+  if (e.key === 'Escape') {
+    if (UI.tutor) { e.preventDefault(); ACT.closehowto(); }
+    else if (G && G.phase === 'siege' && UI.ivConfirm) { e.preventDefault(); ACT.ivno(); }
+    else if (G && G.phase === 'perimeter' && UI.sel) { e.preventDefault(); UI.sel = null; render(); }
+    return;
+  }
+  if (G && G.phase === 'siege' && G.stage === 'event' && /^[1-9]$/.test(e.key) && !e.ctrlKey && !e.metaKey && !e.altKey) {
+    const b = $app.querySelector(`.evcard [data-act=evchoice][data-i="${+e.key - 1}"]`); if (b) { e.preventDefault(); b.focus(); b.click(); }
+    return;
+  }
+  const t = e.target, grp = t && t.closest && t.closest('[role=tablist],[role=radiogroup]');
+  if (grp && ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'].includes(e.key)) {
+    const items = [...grp.querySelectorAll('[role=tab],[role=radio]')], cur = t.closest('[role=tab],[role=radio]'); let i = items.indexOf(cur); if (i < 0) return;
+    const n = items.length; i = e.key === 'Home' ? 0 : e.key === 'End' ? n - 1 : (i + (e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? -1 : 1) + n) % n;
+    e.preventDefault(); items[i].focus(); items[i].click();
+  }
 });
 window.PERIMETRO = { get G() { return G; }, newGame, startRound, resolveDecisions, chooseEvent, finishRound, addDecision, computeScore, zoneCoverage, intervProb, negoParts, autoPlace, confirmPerimeter, render, ACT, UI };
 render();

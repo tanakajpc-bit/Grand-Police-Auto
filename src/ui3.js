@@ -96,17 +96,17 @@ function outName(E) { return (OUTN[E.type] || E.type) + (E.variant && OUTV[E.var
 function scoreHTML() {
   const S = G.score, H = G.hostages, E = G.end;
   const dims = [
-    { k: 'Vidas', v: S.vidas, w: .40, why: `${H.dead} mortos e ${H.hurt} feridos entre ${HOSTAGES} reféns (cada morte pesa 2, cada ferido 0,5).` },
+    { k: 'Vidas', v: S.vidas, w: .40, why: `${H.dead} ${plural(H.dead, 'morto', 'mortos')} e ${H.hurt} ${plural(H.hurt, 'ferido', 'feridos')} entre ${HOSTAGES} reféns (cada morte pesa 2, cada ferido 0,5).` },
     { k: 'Prisões', v: S.captura, w: .20, why: `${outName(E)}: ${Math.round(S.captura * 100)}% dos responsáveis presos.` },
-    { k: 'Valores', v: S.valores, w: .15, why: `Cofre em ${Math.round(G.vault)}% no desfecho; fator de perda do desfecho ${E.lootF}.` },
+    { k: 'Valores', v: S.valores, w: .15, why: `Cofre em ${Math.round(G.vault)}% no desfecho; fator de perda do desfecho ${String(E.lootF).replace('.', ',')}.` },
     { k: 'Eficiência', v: S.eficiencia, w: .10, why: `${fmt(G.credits)} créditos sobraram e a crise durou ${G.round} rodadas. O plantão custou ${fmt(G.spent.plantao)} no total${G.deficit ? ` e ${G.deficit} ${plural(G.deficit, 'rodada', 'rodadas')} ficaram no vermelho` : ''}.` },
     { k: 'Confiança', v: S.confianca, w: .15, why: `Média ponderada dos stakeholders: ${STK_KEYS.map(k => `${STK[k].nome} ${Math.round(G.stk[k].sat)}`).join(' · ')}.` }
   ];
   return `<div class="scorehead"><div style="text-align:center">${radarSVG(dims)}</div>
-    <div class="grid" style="gap:10px"><div class="eyebrow">Nota final</div><div class="grade ${S.grade}">${S.grade}</div><div class="bigscore">${S.total.toFixed(1)} / 100</div>
-    ${S.capped ? `<div class="insight warn">${icon('alert', '', 1.8)}<span>Teto aplicado: a pontuação bruta (${S.raw.toFixed(1)}) foi limitada a ${S.cap} porque houve ${H.dead} ${plural(H.dead, 'refém morto', 'reféns mortos')}. Nesta simulação, vidas perdidas limitam a nota máxima.</span></div>` : ''}
+    <div class="grid" style="gap:10px"><div class="eyebrow">Nota final</div><h1 class="sr">Pontuação final: nota ${S.grade}, ${dec(S.total)} de 100</h1><div class="grade ${S.grade}" aria-hidden="true">${S.grade}</div><div class="bigscore" aria-hidden="true">${dec(S.total)} / 100</div>
+    ${S.capped ? `<div class="insight warn">${icon('alert', '', 1.8)}<span>Teto aplicado: a pontuação bruta (${dec(S.raw)}) foi limitada a ${S.cap} porque houve ${H.dead} ${plural(H.dead, 'refém morto', 'reféns mortos')}. Nesta simulação, vidas perdidas limitam a nota máxima.</span></div>` : ''}
     <p class="muted" style="max-width:520px">${S.grade === 'S' ? 'Operação exemplar.' : S.grade === 'A' ? 'Excelente condução, com pouco a corrigir.' : S.grade === 'B' ? 'Boa condução, com trade-offs visíveis.' : S.grade === 'C' ? 'Resultado aceitável, mas com perdas evitáveis.' : S.grade === 'D' ? 'Resultado fraco: as decisões se acumularam contra você.' : 'Operação malsucedida. A falha também ensina: veja o debrief.'}</p></div></div>
-    <div class="card" style="margin-top:18px"><h3>Composição</h3>${dims.map(d => `<div class="dimrow"><div><b>${d.k}</b><small>peso ${Math.round(d.w * 100)}%</small></div><div><div class="meter tall ${d.v >= .7 ? 'g' : d.v >= .4 ? 'a' : 'r'}"><i style="width:${d.v * 100}%"></i></div><small class="faint">${d.why}</small></div><div class="mono" style="text-align:right">${Math.round(d.v * 100)}% → ${(d.v * d.w * 100).toFixed(1)} pts</div></div>`).join('')}</div>`;
+    <div class="card" style="margin-top:18px"><h2 class="h3">Composição</h2>${dims.map(d => `<div class="dimrow"><div><b>${d.k}</b><small>peso ${Math.round(d.w * 100)}%</small></div><div><div class="meter tall ${d.v >= .7 ? 'g' : d.v >= .4 ? 'a' : 'r'}"><i style="width:0%" data-to="${Math.round(d.v * 100)}"></i></div><small class="faint">${d.why}</small></div><div class="mono" style="text-align:right">${Math.round(d.v * 100)}% → ${dec(d.v * d.w * 100)} pts</div></div>`).join('')}</div>`;
 }
 
 /* ---------- Gazeta ---------- */
@@ -177,7 +177,7 @@ function badgeEarned(id) {
 }
 function badgesHTML() {
   const got = BADGES.filter(b => badgeEarned(b.id)).length;
-  return `<p class="muted" style="margin-bottom:12px">${got} de ${BADGES.length} selos conquistados.</p><div class="badges">${BADGES.map(b => { const on = badgeEarned(b.id); return `<div class="badge ${on ? 'on' : 'off'}"><div class="seal">${icon(b.ic, 'ico" style="width:26px;height:26px')}</div><b>${b.nome}</b><p>${b.d}</p><span class="pill ${on ? 'amber' : ''}">${on ? 'conquistado' : 'não conquistado'}</span></div>`; }).join('')}</div>`;
+  return `<h1 class="sr">Conquistas</h1><p class="muted" style="margin-bottom:12px">${got} de ${BADGES.length} selos conquistados.</p><div class="badges">${BADGES.map(b => { const on = badgeEarned(b.id); return `<div class="badge ${on ? 'on' : 'off'}"><div class="seal">${icon(b.ic, 'ico" style="width:26px;height:26px')}</div><b>${b.nome}</b><p>${b.d}</p><span class="pill ${on ? 'amber' : ''}">${on ? '✓ conquistado' : 'não conquistado'}</span></div>`; }).join('')}</div>`;
 }
 
 /* ---------- Replay ---------- */
@@ -194,13 +194,13 @@ function chartSVG() {
 }
 function replayHTML() {
   const r = clamp(UI.replayR, 1, Math.max(1, G.log.length)), rec = G.log[r - 1];
-  const nodes = Array.from({ length: MAX_ROUNDS }, (_, i) => { const l = G.log[i]; return l ? `<button class="tnode" data-act="rnode" data-r="${i + 1}" aria-selected="${r === i + 1}"><b>R${i + 1}</b>${l.time}<br><span class="faint">${l.decs.length} decisão${l.decs.length === 1 ? '' : 'ões'}${l.ev ? ' · evento' : ''}</span></button>` : `<div class="tnode na"><b>R${i + 1}</b>—</div>`; }).join('');
-  const d = rec ? `<div class="card"><h3>Rodada ${r} · ${rec.time}</h3>
+  const nodes = Array.from({ length: MAX_ROUNDS }, (_, i) => { const l = G.log[i]; return l ? `<button class="tnode" role="tab" data-act="rnode" data-r="${i + 1}" aria-selected="${r === i + 1}" tabindex="${r === i + 1 ? 0 : -1}"><b>R${i + 1}</b>${l.time}<br><span class="faint">${l.decs.length} ${plural(l.decs.length, 'decisão', 'decisões')}${l.ev ? ' · evento' : ''}</span></button>` : `<div class="tnode na" aria-label="Rodada ${i + 1}: não jogada"><b>R${i + 1}</b>não jogada</div>`; }).join('');
+  const d = rec ? `<div class="card"><h2 class="h3">Rodada ${r} · ${rec.time}</h2>
     <div class="row" style="margin-bottom:10px">${rec.decs.length ? rec.decs.map(x => `<span class="pill blue">${icon(FRONT_IC[x.front], 'ico" style="width:14px;height:14px')}${x.label}</span>`).join('') : '<span class="muted">Sem decisões.</span>'}</div>
     ${rec.ev ? `<div class="insight warn" style="margin-bottom:10px">${icon(EVDEF[rec.ev.id].ic, '', 1.8)}<span><b>${EVDEF[rec.ev.id].titulo}</b>: ${rec.ev.choice}</span></div>` : ''}
-    <div class="grid" style="gap:6px">${rec.lines.map(l => `<div class="res-line ${l.tone}" style="animation:none">${icon(l.ic, '', 1.8)}<span>${l.text}</span></div>`).join('')}</div>
+    <div class="grid" style="gap:6px">${rec.lines.map(l => `<div class="res-line ${l.tone}" style="animation:none">${icon(l.ic, '', 1.8)}<span>${br(l.text)}</span></div>`).join('')}</div>
     <div class="delta" style="margin-top:12px">${[['Agitação', rec.s0.agit, rec.s1.agit], ['Mídia', rec.s0.media, rec.s1.media], ['Cofre', rec.s0.vault, rec.s1.vault], ['Pressão da equipe', rec.s0.p, rec.s1.p], ...STK_KEYS.map(k => [STK[k].nome, rec.s0.stk[k], rec.s1.stk[k]])].map(([k, a, b]) => `<div class="dcell"><div class="top"><span>${k}</span><b>${Math.round(a)} → ${Math.round(b)}</b></div></div>`).join('')}</div></div>` : '';
-  return `<div class="timeline">${nodes}</div>${d}<div class="card" style="margin-top:14px"><h3>Curvas da operação (dados reais, sem névoa)</h3>${chartSVG()}</div>`;
+  return `<h1 class="sr">Replay da operação</h1><div class="timeline" role="tablist" aria-label="Rodadas">${nodes}</div>${d}<div class="card" style="margin-top:14px"><h2 class="h3">Curvas da operação (dados reais, sem névoa)</h2>${chartSVG()}</div>`;
 }
 
 /* ---------- Debrief: dinheiro e gargalos (L1.3) ---------- */
@@ -221,7 +221,7 @@ function econHTML() {
     : al.pct >= 60 ? `${al.hit} de ${al.n} ordens de recurso foram direto no elo mais fraco do momento (${al.costHit} de ${al.cost} créditos). Você subordinou o gasto à restrição.`
     : al.pct >= 30 ? `${al.hit} de ${al.n} ordens miraram o gargalo do momento. O restante foi para pontos que já não eram o elo mais fraco.`
     : `Só ${al.hit} de ${al.n} ordens miraram o gargalo do momento. Muito esforço foi para onde a corrente já era forte.`;
-  return `<div class="card econ"><h3>Dinheiro e gargalos: o que a operação custou</h3>
+  return `<div class="card econ"><h2 class="h3">Dinheiro e gargalos: o que a operação custou</h2>
     <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:20px">
       <div><div class="eyebrow">Para onde foram os 1.000 créditos</div>
         <div class="stack" style="margin-top:8px" role="img" aria-label="Distribuição dos gastos">${cats.filter(c => c.v > 0).map(c => `<i style="width:${c.v / tot * 100}%;background:${c.c}" title="${c.k}: ${Math.round(c.v)}"></i>`).join('')}</div>
@@ -264,17 +264,17 @@ function debriefHTML() {
   ];
   const qs = ['Qual era a restrição da sua operação em cada fase? Você percebeu quando ela mudou?', 'Quanto você investiu em informação antes de agir? Esse investimento se pagou?', 'Em que momento a negociação avançou ou regrediu? O que você fez para isso acontecer?', 'Houve algum momento em que você insistiu num plano que já não funcionava? Por quê?', 'Se os pesos do placar fossem outros, você teria agido de outra forma?'];
   const bridge = [['Reféns', 'Clientes, dados de clientes ou colaboradores afetados por uma crise'], ['Assaltantes', 'Um ataque de ransomware, um concorrente agressivo ou uma crise reputacional'], ['Cofre', 'Caixa, ativos estratégicos ou propriedade intelectual'], ['Perímetro e rotas de fuga', 'Controles internos e vulnerabilidades operacionais'], ['Negociação com o líder', 'Negociação com contrapartes hostis: sindicatos, credores, atacantes'], ['Imprensa e prefeito', 'Mídia, redes sociais, conselho de administração e reguladores'], ['Agências parceiras', 'Fornecedores, parceiros e áreas fora da sua hierarquia'], ['Fadiga da equipe', 'Burnout em equipes de resposta a incidentes']];
-  return `<div class="grid" style="gap:16px">${econHTML()}<div><div class="eyebrow">Ciclo de Kolb</div><div class="kolb" style="margin-top:8px">${kolb.map(([a, b]) => `<div class="concept"><h4>${a}</h4><p class="les">${b}</p></div>`).join('')}</div></div>
+  return `<h1 class="sr">Debrief</h1><div class="grid" style="gap:16px">${econHTML()}<div><div class="eyebrow">Ciclo de Kolb</div><div class="kolb" style="margin-top:8px">${kolb.map(([a, b]) => `<div class="concept"><h4>${a}</h4><p class="les">${b}</p></div>`).join('')}</div></div>
     <div><div class="eyebrow">Suas decisões e os conceitos</div><div class="grid" style="gap:12px;margin-top:8px;grid-template-columns:repeat(auto-fit,minmax(340px,1fr))">${C.map(c => `<div class="concept"><h4>${c.n}</h4><span class="ref">${c.ref}</span><div class="you">${c.you}</div><p class="les">${c.les}</p></div>`).join('')}</div></div>
-    <div class="card"><h3>Perguntas para a reflexão</h3><ul style="margin:0;padding-left:18px;display:grid;gap:6px">${qs.map(q => `<li>${q}</li>`).join('')}</ul></div>
-    <div class="card"><h3>Da simulação para a gestão de crises corporativas</h3><div class="scroll-x"><table class="table"><thead><tr><th>Na simulação</th><th>Na empresa</th></tr></thead><tbody>${bridge.map(([a, b]) => `<tr><td><b>${a}</b></td><td>${b}</td></tr>`).join('')}</tbody></table></div></div></div>`;
+    <div class="card"><h2 class="h3">Perguntas para a reflexão</h2><ul style="margin:0;padding-left:18px;display:grid;gap:6px">${qs.map(q => `<li>${q}</li>`).join('')}</ul></div>
+    <div class="card"><h2 class="h3">Da simulação para a gestão de crises corporativas</h2><div class="scroll-x"><table class="table"><thead><tr><th>Na simulação</th><th>Na empresa</th></tr></thead><tbody>${bridge.map(([a, b]) => `<tr><td><b>${a}</b></td><td>${b}</td></tr>`).join('')}</tbody></table></div></div></div>`;
 }
 const POST_TABS = [['score', 'Pontuação'], ['news', 'Gazeta'], ['badges', 'Conquistas'], ['replay', 'Replay'], ['debrief', 'Debrief']];
 function renderPost() {
   const i = POST_TABS.findIndex(t => t[0] === UI.post), nx = POST_TABS[i + 1];
   const body = UI.post === 'score' ? scoreHTML() : UI.post === 'news' ? newsHTML() : UI.post === 'badges' ? badgesHTML() : UI.post === 'replay' ? replayHTML() : debriefHTML();
-  return `<div class="screen"><div class="postnav" role="tablist">${POST_TABS.map(([k, l]) => `<button class="pn" role="tab" data-act="ptab" data-t="${k}" aria-selected="${UI.post === k}">${l}</button>`).join('')}<span class="spacer"></span><button class="btn sm ghost" data-act="tomenu">Menu</button></div>
-    <div class="post">${body}<div class="row" style="margin-top:24px">${nx ? `<button class="btn primary" data-act="ptab" data-t="${nx[0]}">${nx[1]} →</button>` : ''}<button class="btn" data-act="again">Jogar novamente</button></div></div></div>`;
+  return `<div class="screen"><div class="postnav"><div class="pntabs" role="tablist" aria-label="Resultado da operação">${POST_TABS.map(([k, l]) => `<button class="pn" role="tab" id="pt-${k}" aria-controls="postp" data-act="ptab" data-t="${k}" aria-selected="${UI.post === k}" tabindex="${UI.post === k ? 0 : -1}">${l}</button>`).join('')}</div><span class="spacer"></span><button class="btn sm ghost" data-act="tomenu">Menu</button></div>
+    <div class="post" id="postp" role="tabpanel" aria-labelledby="pt-${UI.post}">${body}<div class="row" style="margin-top:24px">${nx ? `<button class="btn primary" data-act="ptab" data-t="${nx[0]}" data-nav="1">Próximo: ${nx[1]} →</button>` : ''}<button class="btn" data-act="again">Jogar novamente</button></div></div></div>`;
 }
 
 /* ===================================================================
@@ -282,15 +282,24 @@ function renderPost() {
    =================================================================== */
 const ACT = {}, CHG = {};
 const warn = m => toast('COMANDO', m, 'warn');
+/* Depois de uma ação que some com o botão focado, o foco vai para o próximo lugar útil. */
+const focusFirst = (...sels) => { for (const q of sels) { const el = $app.querySelector(q); if (el) { el.focus({ preventScroll: true }); return; } } };
 function setPhase(p) { G.phase = p; saveGame(); render(); }
 
 ACT.diff = d => { UI.diffSel = d.v; render(); };
 ACT.start = () => { newGame(UI.diffSel, { noLimit: UI.noLimit }); UI.sel = null; UI.tab = 'tatica'; UI.post = 'score'; UI.emptyConfirm = false; setPhase('briefing'); };
-ACT.continue = () => { const s = loadSave(); if (!s) { render(); return; } G = s; UI.timerRound = -1; if (G.stage === 'resolving') G.stage = 'result'; render(); if (G.phase === 'siege' && G.stage === 'update') radioToasts(G.update.radio); };
+ACT.continue = () => { const s = loadSave(); if (!s) { render(); return; } G = s; UI.timerRound = -1; if (G.stage === 'resolving') G.stage = 'result'; render(); };
 ACT.howto = () => { UI.tutor = true; render(); };
-ACT.closehowto = () => { UI.tutor = false; render(); };
+ACT.closehowto = () => { UI.tutor = false; render(); const b = $app.querySelector('[data-act=howto]'); if (b) b.focus({ preventScroll: true }); };
 ACT.tobrief = () => setPhase('recruit');
-ACT.skipbrief = () => { $app.classList.add('noanim'); };
+ACT.skipbrief = (d, el) => { $app.classList.add('noanim'); if (el && el.tagName === 'BUTTON') { const b = $app.querySelector('[data-act=tobrief]'); if (b) b.focus({ preventScroll: true }); } };
+/* Manchetes: pausa sem re-renderizar (o letreiro continua de onde estava). */
+ACT.tkpause = () => {
+  UI.tkPause = !UI.tkPause;
+  document.querySelectorAll('.ticker').forEach(t => t.classList.toggle('paused', UI.tkPause));
+  document.querySelectorAll('.tkp').forEach(b => { const l = (UI.tkPause ? 'Retomar' : 'Pausar') + ' as manchetes'; b.setAttribute('aria-pressed', UI.tkPause); b.setAttribute('aria-label', l); b.title = l; b.textContent = UI.tkPause ? '▶' : '❚❚'; });
+};
+ACT.lvl = d => { UI.lvl = +d.t; UI.tabAnim = true; render(); };
 ACT.cutgo = () => { const c = UI.cut; UI.cut = null; render(); if (c && c.after) c.after(); };
 ACT.hire = d => {
   const a = agentById(d.id);
@@ -336,32 +345,35 @@ ACT.tosiege = () => {
   UI.cut = { time: '14h37', title: 'Perímetro fechado', btn: 'Começar o cerco', lines: [
     { t: `As equipes assumem as posições. ${adq} de 7 zonas têm cobertura adequada; nas outras, você está apostando.` },
     { t: 'Dentro da agência, o telefone começa a tocar. É a linha que você mandou ligar.' },
-    { t: '[RÁDIO] Comando, todas as equipes em posição. A partir de agora o relógio é seu. Câmbio.', radio: true }],
-    after: () => { radioToasts(G.update.radio); (G.perimLog || []).forEach((t, i) => setTimeout(() => toast('RECONHECIMENTO', t, 'good'), 600 + i * 1200)); } };
+    { t: '[RÁDIO] Comando, todas as equipes em posição. A partir de agora o relógio é seu. Câmbio.', radio: true }] };
   render();
 };
 
 ACT.takepanel = () => { G.stage = 'panel'; UI.tab = 'tatica'; UI.ivConfirm = false; UI.pickZone = null; saveGame(); render(); };
-ACT.tab = d => { UI.tab = d.t; render(); };
+/* Abas de decisão. Vindo de um alerta ou do gargalo, o foco e a rolagem acompanham a aba aberta. */
+ACT.tab = (d, el) => {
+  UI.tab = d.t; UI.tabAnim = true; render();
+  if (el && !el.classList.contains('tab')) { const t = document.getElementById('tab-' + d.t); if (t) { t.focus({ preventScroll: true }); t.scrollIntoView({ block: 'nearest', behavior: reduceMotion() ? 'auto' : 'smooth' }); } }
+};
 const addD = (d) => { const r = addDecision(d); if (!r.ok) warn(r.msg); else { saveGame(); } render(); };
 ACT.addrepos = () => {
   if (!UI.repoAgent || !UI.repoZone) { warn('Escolha o agente e o destino.'); return; }
   if (G.az[UI.repoAgent] === UI.repoZone) { warn('O agente já está nessa zona.'); return; }
   addD({ front: 'tatica', kind: 'repos', p: { agent: UI.repoAgent, zone: UI.repoZone }, label: `${shortName(agentById(UI.repoAgent).nome)} → ${ZNAME(UI.repoZone)}`, slots: 1 });
 };
-CHG.repoagent = v => { UI.repoAgent = v; }; CHG.repozone = v => { UI.repoZone = v; }; CHG.apoiozone = v => { UI.apoioZone = v; };
+CHG.repoagent = v => { UI.repoAgent = v; render(); }; CHG.repozone = v => { UI.repoZone = v; render(); }; CHG.apoiozone = v => { UI.apoioZone = v; };
 CHG.negotiator = v => { G.nego.negotiator = v; saveGame(); render(); };
 ACT.addapoio = () => { if (!UI.apoioZone) { warn('Escolha a zona do apoio externo.'); return; } addD({ front: 'tatica', kind: 'apoio', p: { zone: UI.apoioZone }, label: `Apoio externo em ${ZNAME(UI.apoioZone)}`, slots: 1, cost: apoioCost() }); };
 ACT.addpausa = () => addD({ front: 'tatica', kind: 'pausa', p: {}, label: 'Pausa de Comando', slots: 1 });
 ACT.addhoras = () => addD({ front: 'tatica', kind: 'horas', p: {}, label: 'Horas extras', slots: 1, cost: horasCost() });
-ACT.iv = () => { UI.ivConfirm = true; render(); };
-ACT.ivno = () => { UI.ivConfirm = false; render(); };
-ACT.ivyes = () => { UI.ivConfirm = false; addD({ front: 'tatica', kind: 'interv', p: {}, label: 'INTERVENÇÃO', slots: D_().slots }); };
+ACT.iv = () => { UI.ivConfirm = true; render(); focusFirst('[data-act=ivno]'); };
+ACT.ivno = () => { UI.ivConfirm = false; render(); focusFirst('[data-act=iv]'); };
+ACT.ivyes = () => { UI.ivConfirm = false; addD({ front: 'tatica', kind: 'interv', p: {}, label: 'INTERVENÇÃO', slots: D_().slots }); focusFirst('[data-act=iv]'); };
 ACT.addnego = d => { const t = d.t === 'press' ? 'press' : +d.t; addD({ front: 'nego', kind: 'nego', p: { tech: t }, label: t === 'press' ? 'Pressionar o líder' : `Negociar: ${POSTURES[t - 1].nome}`, slots: 1 }); };
 ACT.addintel = d => addD({ front: 'intel', kind: 'intel', p: { id: d.id }, label: INTEL.find(i => i.id === d.id).nome, slots: 1, cost: intelCost(d.id) });
 ACT.addcom = d => { const c = COMMS.find(x => x.id === d.id); addD({ front: 'com', kind: 'com', p: { cid: d.id }, label: c.nome, slots: 1, cost: c.custo }); };
-ACT.rmq = d => { removeDecision(+d.id); saveGame(); render(); };
-ACT.zonepick = d => { UI.pickZone = d.z; if (UI.tab === 'tatica') { UI.repoZone = d.z; UI.apoioZone = d.z; } render(); };
+ACT.rmq = (d, el) => { removeDecision(+d.id); saveGame(); render(); if (el) focusFirst('.actbar .qx', '.actbar [data-act=execute]'); };
+ACT.zonepick = d => { UI.pickZone = d.z; UI.tab = 'tatica'; UI.repoZone = d.z; UI.apoioZone = d.z; render(); };
 ACT.execute = () => {
   if (!G || G.phase !== 'siege' || G.stage !== 'panel') return;
   stopTimer(); UI.ivConfirm = false; resolveDecisions(); render();
@@ -369,7 +381,7 @@ ACT.execute = () => {
 ACT.evchoice = d => { if (G.stage !== 'event') return; if (!chooseEvent(+d.i)) { warn('Créditos insuficientes para essa escolha.'); return; } render(); };
 ACT.cont = () => {
   if (G.end) { const tb = document.getElementById('toasts'); if (tb) tb.innerHTML = ''; G.phase = 'outcome'; saveGame(); render(); return; }
-  startRound(); render(); radioToasts(G.update.radio);
+  startRound(); render();
 };
 ACT.toscore = () => { G.phase = 'post'; UI.post = 'score'; saveGame(); render(); };
 ACT.ptab = d => { UI.post = d.t; render(); };
@@ -380,8 +392,52 @@ ACT.tomenu = () => { stopTimer(); G = null; UI.timerRound = -1; render(); };
 /* ===================================================================
    RENDER / BOOT
    =================================================================== */
-let lastKey = '';
+let lastKey = '', BAR = '';
+const setBar = h => { BAR = h; };
+const T0 = Date.now();
+const reduceMotion = () => !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+/* Assinatura do elemento focado, para devolver o foco depois do re-render (o innerHTML troca todos os nós). */
+const FOCUS_KEYS = ['t', 'id', 'v', 'z', 'i', 'r'];
+function focusSig(el) {
+  if (!el || el === document.body || !$app.contains(el)) return null;
+  let sel = null;
+  if (el.id) sel = '#' + CSS.escape(el.id);
+  else if (el.dataset && el.dataset.act) sel = `[data-act="${el.dataset.act}"]` + FOCUS_KEYS.filter(k => el.dataset[k] != null).map(k => `[data-${k}="${CSS.escape(el.dataset[k])}"]`).join('');
+  if (!sel) return null;
+  return { sel, i: [...$app.querySelectorAll(sel)].indexOf(el) };
+}
+function restoreFocus(sig, changed) {
+  const modal = $app.querySelector('.cut, .modalback');
+  if (modal) {
+    if (!modal.contains(document.activeElement)) { const d = modal.querySelector('[role=dialog]') || modal; d.setAttribute('tabindex', '-1'); d.focus({ preventScroll: true }); }
+    return;
+  }
+  let el = null;
+  if (!changed && sig) { const all = $app.querySelectorAll(sig.sel); el = all[sig.i] || all[0] || null; }
+  if (!el && (changed || sig)) { el = $app.querySelector('h1'); if (el) el.setAttribute('tabindex', '-1'); }
+  if (el && el !== document.activeElement) el.focus({ preventScroll: true });
+}
+/* Medidores e números que mudaram desde o último render deslizam do valor antigo para o novo. */
+function tweenChanged(prev) {
+  $app.querySelectorAll('[data-k]').forEach(el => {
+    const p = prev[el.dataset.k]; if (p == null) return;
+    if (el.dataset.val != null) {
+      const i = el.querySelector('i'); if (!i || +p === +el.dataset.val) return;
+      const to = i.style.width; i.style.transition = 'none'; i.style.width = clamp(+p, 0, 100) + '%'; void i.offsetWidth; i.style.transition = ''; i.style.width = to;
+      el.classList.add('chg');
+    } else if (el.dataset.n != null) {
+      const a = +p, b = +el.dataset.n; if (a === b || !isFinite(a) || !isFinite(b)) return;
+      const t0 = performance.now();
+      el.classList.add('chg');
+      const step = now => { const t = Math.min(1, (now - t0) / 700), e = 1 - Math.pow(1 - t, 3); el.textContent = fmt(a + (b - a) * e); if (t < 1 && el.isConnected) requestAnimationFrame(step); };
+      requestAnimationFrame(step);
+    }
+  });
+}
 function render() {
+  const sig = focusSig(document.activeElement);
+  const prev = {}; $app.querySelectorAll('[data-k]').forEach(el => { prev[el.dataset.k] = el.dataset.val != null ? el.dataset.val : el.dataset.n; });
+  BAR = '';
   let html;
   if (!G) html = renderMenu();
   else if (G.phase === 'briefing') html = renderBriefing();
@@ -390,11 +446,17 @@ function render() {
   else if (G.phase === 'siege') html = G.stage === 'update' ? renderUpdate() : G.stage === 'panel' ? renderPanel() : G.stage === 'event' ? renderEventStage() : renderResult();
   else if (G.phase === 'outcome') html = renderOutcome();
   else html = renderPost();
-  $app.innerHTML = html + cutHTML();
-  const key = G ? G.phase + ':' + (G.stage || '') + ':' + G.round + ':' + UI.post : 'menu';
-  if (key !== lastKey) $app.classList.remove('noanim');
-  $app.classList.toggle('still', key === lastKey);
-  if (key !== lastKey) { window.scrollTo(0, 0); lastKey = key; }
+  $app.innerHTML = html + (BAR ? `<div class="actbar" role="region" aria-label="Próximo passo"><div class="actin">${BAR}</div></div>` : '') + cutHTML();
+  document.body.classList.toggle('withbar', !!BAR);
+  UI.tabAnim = false;
+  const key = G ? G.phase + ':' + (G.stage || '') + ':' + G.round + ':' + UI.post : 'menu', changed = key !== lastKey;
+  if (changed) $app.classList.remove('noanim');
+  $app.classList.toggle('still', !changed);
+  if (changed) { window.scrollTo(0, 0); lastKey = key; }
+  // o letreiro segue de onde estava, em vez de recomeçar a cada clique
+  $app.querySelectorAll('.tkin').forEach(t => { t.style.animationDelay = `-${(((Date.now() - T0) / 1000) % 60).toFixed(2)}s`; });
+  restoreFocus(sig, changed);
+  if (!reduceMotion()) tweenChanged(prev);
   const inSiege = G && G.phase === 'siege';
   const edge = document.getElementById('edge');
   if (edge) edge.classList.toggle('hot', !!(inSiege && perceivedAgit().v > 70));
@@ -405,7 +467,8 @@ function render() {
 }
 $app.addEventListener('click', e => {
   const el = e.target.closest('[data-act]');
-  if (!el || el.disabled || el.getAttribute('aria-disabled') === 'true') return;
+  if (!el || el.disabled) return;
+  if (el.getAttribute('aria-disabled') === 'true') { if (el.dataset.why) warn(el.dataset.why); return; }
   const fn = ACT[el.dataset.act]; if (fn) fn(el.dataset, el);
 });
 $app.addEventListener('change', e => {
@@ -414,6 +477,34 @@ $app.addEventListener('change', e => {
 });
 $app.addEventListener('keydown', e => {
   if ((e.key === 'Enter' || e.key === ' ') && e.target.matches && e.target.matches('g[data-act]')) { e.preventDefault(); e.target.dispatchEvent(new MouseEvent('click', { bubbles: true })); }
+});
+/* Teclado: foco preso nas janelas modais, Esc para cancelar, 1–3 na carta de evento, setas em abas e na dificuldade. */
+document.addEventListener('keydown', e => {
+  const modal = $app.querySelector('.cut, .modalback');
+  if (e.key === 'Tab' && modal) {
+    const f = [...modal.querySelectorAll('button, [href], select, input, [tabindex]:not([tabindex="-1"])')].filter(x => !x.disabled && x.offsetParent !== null);
+    if (!f.length) { e.preventDefault(); return; }
+    const first = f[0], last = f[f.length - 1], inside = modal.contains(document.activeElement);
+    if (e.shiftKey && (document.activeElement === first || !inside)) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && (document.activeElement === last || !inside)) { e.preventDefault(); first.focus(); }
+    return;
+  }
+  if (e.key === 'Escape') {
+    if (UI.tutor) { e.preventDefault(); ACT.closehowto(); }
+    else if (G && G.phase === 'siege' && UI.ivConfirm) { e.preventDefault(); ACT.ivno(); }
+    else if (G && G.phase === 'perimeter' && UI.sel) { e.preventDefault(); UI.sel = null; render(); }
+    return;
+  }
+  if (G && G.phase === 'siege' && G.stage === 'event' && /^[1-9]$/.test(e.key) && !e.ctrlKey && !e.metaKey && !e.altKey) {
+    const b = $app.querySelector(`.evcard [data-act=evchoice][data-i="${+e.key - 1}"]`); if (b) { e.preventDefault(); b.focus(); b.click(); }
+    return;
+  }
+  const t = e.target, grp = t && t.closest && t.closest('[role=tablist],[role=radiogroup]');
+  if (grp && ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'].includes(e.key)) {
+    const items = [...grp.querySelectorAll('[role=tab],[role=radio]')], cur = t.closest('[role=tab],[role=radio]'); let i = items.indexOf(cur); if (i < 0) return;
+    const n = items.length; i = e.key === 'Home' ? 0 : e.key === 'End' ? n - 1 : (i + (e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? -1 : 1) + n) % n;
+    e.preventDefault(); items[i].focus(); items[i].click();
+  }
 });
 window.PERIMETRO = { get G() { return G; }, newGame, startRound, resolveDecisions, chooseEvent, finishRound, addDecision, computeScore, zoneCoverage, intervProb, negoParts, autoPlace, confirmPerimeter, render, ACT, UI };
 render();
