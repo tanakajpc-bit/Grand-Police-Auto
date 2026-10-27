@@ -46,7 +46,7 @@ function newGame(diffKey, opts = {}) {
     exposed: 0, powerCut: 0, fatCrit: false, support: {}, supportUsed: 0, deadlineLeft: 0, deadlineFired: false,
     mayorPromise: false, vehicleGiven: false, defector: false, attended: {}, commMedia: 0, usedEvents: [],
     frame: pick(['ganho', 'perda']),
-    stats: { pausas: 0, skips: 0, intel: 0, comms: 0, intervs: 0, repos: 0, horas: 0, apoio: 0, events: 0, minFF: 1, maxFail: 0, initCov: {}, routeKnownAtStart: false, noRecruit: false, material: 0, peakPressure: 0, pressSum: 0, pressN: 0 },
+    stats: { pausas: 0, skips: 0, intel: 0, comms: 0, leaks: 0, intervs: 0, repos: 0, horas: 0, apoio: 0, events: 0, minFF: 1, maxFail: 0, initCov: {}, routeKnownAtStart: false, noRecruit: false, material: 0, peakPressure: 0, pressSum: 0, pressN: 0 },
     queue: [], update: null, R: null, pendingEvent: null, end: null, score: null
   };
   G.pressure = calcPressure();
@@ -98,8 +98,9 @@ function calcPressure() {
     (G.fatCrit ? 5 : 0) + (G.deadlineLeft > 0 ? 4 : 0) + (G.stk.familias.lost ? 6 : 0) + G.stress - G.calm;
   return clamp(Math.round(p), 0, 100);
 }
-/* Yerkes-Dodson: U invertido, pico 1.0 em pressão 50. Piso 0.35 evita eficiência zero nos extremos. */
-function pressureFactor(p) { return clamp(-Math.pow(p / 50 - 1, 2) + 1, .35, 1); }
+/* Yerkes-Dodson: U invertido, pico 1,0 em pressão 50 e 0 em 0 e 100, exatamente a fórmula do projeto: −(p/50 − 1)² + 1.
+   (Até a v10 havia um piso de 0,35; a auditoria L2.1 mediu que ele só atuava com a pressão do agente acima de ~90, e o tirou.) */
+function pressureFactor(p) { return clamp(-Math.pow(p / 50 - 1, 2) + 1, 0, 1); }
 function agentPressure(id) { return clamp(G.pressure * (1.3 - .06 * stat(id, 'res')), 0, 100); }
 const fp = id => pressureFactor(agentPressure(id));
 function ff(id) {
@@ -277,6 +278,22 @@ function sideRoll(i) {
 const addAgit = v => { G.agit = clamp(G.agit + v, 0, 100); };
 const addMedia = v => { G.media = clamp(G.media + v, 0, 100); };
 
+/* Vidas (tabela 10 do documento: −25 por refém morto e −5 por ferido, no mínimo 0, pensada para uns 10 reféns).
+   Com 17 reféns a regra vale proporcionalmente: −2,5 por morto e −0,5 por ferido em 17 (−14,7 e −2,9 pontos, mesma razão de 5 para 1).
+   O placar projetado no painel usa a mesma função, para o HUD e a nota final nunca discordarem. */
+const vidasScore = (H = G.hostages) => clamp(1 - (2.5 * H.dead + .5 * H.hurt) / HOSTAGES, 0, 1);
+/* Penalidade da tabela 10: −10 pontos por agente ferido em ação. Só a entrada põe agentes na linha de fogo: a chance de haver feridos entre
+   eles depende de como a entrada termina (o escudo tático divide por dois) e quem está na Entrada, na linha de frente, é o mais exposto. */
+const AG_RISK = { limpa: .02, baixas: .10, parcial: .22, fracasso: .45 };
+const PENAL_AGENTE = 10;
+function agentsHurtIn(variant) {
+  const part = G.team.filter(id => !isAway(id));
+  if (!part.length || rnd() >= AG_RISK[variant] * (hasGear('escudo') ? .5 : 1)) return [];
+  const n = Math.min(part.length, (variant === 'parcial' || variant === 'fracasso') && rnd() < .3 ? 2 : 1), pool = part.slice(), out = [];
+  for (let i = 0; i < n; i++) { const id = wpick(pool, x => G.az[x] === 'entrada' ? 3 : G.az[x] && G.az[x] !== 'reserva' ? 1.5 : 1); out.push(id); pool.splice(pool.indexOf(id), 1); }
+  return out;
+}
+
 function doIntervention(forced) {
   const D = D_(), P = intervProb(forced ? -.10 : 0), r = rnd(), kit = hasGear('kit');
   let variant, h, d, cap, loot;
@@ -291,7 +308,8 @@ function doIntervention(forced) {
   const hh = Math.min(h, Math.max(0, free)); H.hurt += hh;
   const dd = Math.min(d, HOSTAGES - H.dead); const fromHurt = Math.min(dd, H.hurt); H.hurt -= fromHurt; H.dead += dd;
   H.inside = H.dead; H.freed = HOSTAGES - H.dead; // todos saem do interior; os mortos permanecem contabilizados e só os vivos contam como libertados
-  return { type: 'intervencao', variant, captured: cap, lootF: loot, P, forced: !!forced, newHurt: hh, newDead: dd };
+  const agHurt = agentsHurtIn(variant);
+  return { type: 'intervencao', variant, captured: cap, lootF: loot, P, forced: !!forced, newHurt: hh, newDead: dd, agentsHurt: agHurt };
 }
 function doSurrender() {
   const H = G.hostages; H.freed += H.inside - H.dead; H.inside = H.dead;
@@ -354,12 +372,13 @@ function gradeOf(s) { return s >= 90 ? 'S' : s >= 80 ? 'A' : s >= 65 ? 'B' : s >
 function computeScore() {
   const E = G.end, H = G.hostages;
   if (G.mayorPromise && !(E.type === 'rendicao' || (E.type === 'intervencao' && (E.variant === 'limpa' || E.variant === 'baixas')))) stake('prefeito', -20);
-  const vidas = clamp(1 - (H.dead * 2 + H.hurt * .5) / HOSTAGES, 0, 1);
+  const vidas = vidasScore(H);
   const captura = clamp(E.captured, 0, 1);
   const valores = clamp(1 - E.lootF * (G.vault / 100), 0, 1);
   const eficiencia = eficienciaCusto();
   const confianca = confidence();
-  const raw = (vidas * .40 + captura * .20 + valores * .15 + eficiencia * .10 + confianca * .15) * 100;
+  const raw = Math.min(100, (vidas * .40 + captura * .20 + valores * .15 + eficiencia * .10 + confianca * .15) * 100);
+  const penal = PENAL_AGENTE * (E.agentsHurt ? E.agentsHurt.length : 0);
   // Tetos (perspectiva de quem protege): vidas perdidas e intervenção fracassada nunca contam como boa condução,
   // e acertar uma aposta (entrada voluntária com menos de 50% de chance) é sorte, não método: no máximo nota A.
   const failed = (E.type === 'intervencao' && E.variant === 'fracasso') || (E.type === 'prazo' && E.sub === 'fracasso');
@@ -370,8 +389,8 @@ function computeScore() {
   if (aposta) tetos.push({ v: 89, why: 'aposta' });
   const teto = tetos.sort((a, b) => a.v - b.v)[0] || { v: 100, why: null };
   const cap = teto.v;
-  const total = Math.min(raw, cap);
-  G.score = { vidas, captura, valores, eficiencia, confianca, raw, total, cap, capWhy: teto.why, capped: raw > cap, grade: gradeOf(total) };
+  const total = Math.round(Math.max(0, Math.min(raw, cap) - penal) * 10) / 10;   // uma casa decimal, a mesma que a tela mostra: a nota e a faixa nunca discordam
+  G.score = { vidas, captura, valores, eficiencia, confianca, raw, total, cap, capWhy: teto.why, capped: raw > cap, penal, grade: gradeOf(total) };
   return G.score;
 }
 
@@ -598,8 +617,30 @@ function commMult() {
   return m;
 }
 const why = (R, k, v, t) => { if (R && R.stkWhy && Math.abs(v) >= .5) (R.stkWhy[k] = R.stkWhy[k] || []).push({ v, t }); };
+/* Risco de o comunicado vazar ou sair impreciso (documento, seção 4.6: cada escolha afeta "o risco de vazamento de informações operacionais";
+   tabela 3: a Comunicação cuida do "controle de vazamentos"). Fala pública arrisca mais que o gabinete. Quem comunica bem, quem sabe mais
+   do que está dizendo e a calma da cobertura baixam o risco; mídia saturada e posições expostas o elevam. */
+const LEAKY = { coletiva: 1, geral: 1, prefeito: .5 };
+function leakChance(cid) {
+  const f = LEAKY[cid]; if (!f) return 0;
+  let best = 0; avail().forEach(id => { best = Math.max(best, stat(id, 'com')); }); if (!avail().length) best = 3;
+  const p = .34 - .03 * best - .15 * infoFrac() - (G.team.includes('fernanda') && !isAway('fernanda') ? .05 : 0) + (G.media > 60 ? .06 : 0) + (G.exposed > 0 ? .05 : 0);
+  return clamp(p, .03, .40) * f;
+}
 function applyComm(cid, R) {
   const m = commMult(), c = COMMS.find(x => x.id === cid); G.stats.comms++;
+  const pl = leakChance(cid), leak = pl > 0 && rnd() < pl;
+  if (leak) {
+    /* "vazou/falso": a nota sai da mão do comando. A mídia sobe +10 em vez de ceder, o benefício com o público-alvo se perde e o líder, que acompanha a cobertura, se irrita. */
+    const falso = infoFrac() < .5; G.stats.leaks = (G.stats.leaks || 0) + 1;
+    G.commMedia += 10; addAgit(3);
+    if (cid === 'prefeito') { stake('prefeito', 4 * m); why(R, 'prefeito', 4 * m, 'relatório ao gabinete (parte vazou)'); G.attended.prefeito = true; }
+    else { stake('imprensa', -5); why(R, 'imprensa', -5, 'comunicado ' + (falso ? 'impreciso' : 'vazou')); (cid === 'geral' ? STK_KEYS : [c.s]).forEach(k => { G.attended[k] = true; }); }
+    L(R, 'bad', 'news', falso
+      ? `${c.nome}: você ainda sabia pouco e a nota saiu com um dado que a imprensa desmentiu em minutos. A mídia sobe +10 em vez de ceder, a imprensa perde confiança e o líder, que acompanha a cobertura, se irrita (+3).`
+      : `${c.nome}: detalhes do perímetro escaparam junto com o comunicado. A mídia sobe +10 em vez de ceder${cid === 'prefeito' ? ' e o gabinete ganha só parte do efeito' : ', a imprensa perde confiança'} e o líder, que acompanha a cobertura, se irrita (+3). Quem comunica bem e sabe mais do que diz vaza menos.`);
+    return;
+  }
   if (cid === 'geral') STK_KEYS.forEach(k => why(R, k, 4 * m, 'comunicado geral'));
   else why(R, c.s, 10 * m * (cid === 'coletiva' ? 1.2 : 1), c.nome.toLowerCase());
   if (cid === 'geral') { STK_KEYS.forEach(k => { stake(k, 4 * m); G.attended[k] = true; }); G.commMedia += -3; L(R, 'good', 'news', 'Comunicado geral publicado: os quatro públicos recebem a mesma nota. Efeito menor em cada um, mas ninguém ficou no escuro.'); return; }

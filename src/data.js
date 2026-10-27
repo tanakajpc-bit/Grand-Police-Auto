@@ -202,11 +202,11 @@ const STK = {
 const STK_KEYS = Object.keys(STK);
 
 const COMMS = [
-  { id:'coletiva',  s:'imprensa', nome:'Coletiva transparente',      custo:0,  d:'Informa o que se sabe. Reduz a pressão da mídia (−5) e agrada a imprensa.' },
-  { id:'prefeito',  s:'prefeito', nome:'Relatório de situação ao prefeito', custo:0, d:'Briefing direto no gabinete. Reduz a ansiedade política.' },
+  { id:'coletiva',  s:'imprensa', nome:'Coletiva transparente',      custo:0,  d:'Informa o que se sabe. Reduz a pressão da mídia (−5) e agrada a imprensa. Fala em público: corre o risco de vazar.' },
+  { id:'prefeito',  s:'prefeito', nome:'Relatório de situação ao prefeito', custo:0, d:'Briefing direto no gabinete. Reduz a ansiedade política. O gabinete também vaza, mas menos que a coletiva.' },
   { id:'gerente',   s:'banco',    nome:'Reunião com a diretoria do banco', custo:0, d:'Alinha expectativas. A diretoria entrega a planta do cofre (revela o andamento exato).' },
   { id:'acolhe',    s:'familias', nome:'Sala de acolhimento das famílias', custo:20, d:'Psicólogos e informação. As famílias descrevem os reféns (revela o estado deles).' },
-  { id:'geral',     s:'todos',    nome:'Comunicado geral',           custo:0,  d:'Nota única para os quatro públicos: efeito menor em cada um, mas atende todos.' }
+  { id:'geral',     s:'todos',    nome:'Comunicado geral',           custo:0,  d:'Nota única para os quatro públicos: efeito menor em cada um, mas atende todos. Fala em público: corre o risco de vazar.' }
 ];
 
 /* ---------- EVENTOS ---------- */
@@ -276,5 +276,5 @@ const BADGES = [
   { id:'degraus',  nome:'Um degrau por vez',      ic:'stairs',d:'Chegou ao degrau 4 ou mais sem nunca pular etapa.' },
   { id:'rodizio',  nome:'Equipe descansada',      ic:'tired', d:'Nenhum agente chegou a fator de fadiga abaixo de 0,7.' },
   { id:'equilibrio',nome:'Equilíbrio perfeito',   ic:'radar', d:'Vidas, Prisões, Valores e Confiança acima de 60% e Eficiência acima de 30%: nenhuma dimensão ficou para trás.' },
-  { id:'mao',      nome:'Mão firme',              ic:'shield',d:'Intervenção bem-sucedida sem nenhum refém ferido.' }
+  { id:'mao',      nome:'Mão firme',              ic:'shield',d:'Intervenção bem-sucedida sem nenhum refém ou agente ferido.' }
 ];

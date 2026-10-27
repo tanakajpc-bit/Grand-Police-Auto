@@ -8,7 +8,7 @@ function bscValues() {
   const H = G.hostages, pv = perceivedVault();
   const avg = ZONES.reduce((s, z) => s + zoneCoverage(z.id), 0) / ZONES.length;
   return [
-    { k: 'Vidas', v: G.K.hostages ? clamp(1 - (H.dead * 2 + H.hurt * .5) / HOSTAGES, 0, 1) * 100 : 100, unk: !G.K.hostages, cls: 'g' },
+    { k: 'Vidas', v: G.K.hostages ? vidasScore(H) * 100 : 100, unk: !G.K.hostages, cls: 'g' },
     { k: 'Prisões', v: avg, cls: 'b', unk: false },
     { k: 'Valores', v: 100 - pv.v, unk: !pv.exact, cls: 'a' },
     { k: 'Eficiência', v: eficienciaCusto() * 100, unk: false, cls: 'v' },
@@ -314,7 +314,9 @@ function stkRows(withSub) {
 function tabCom() {
   return `<div class="stk">${stkRows(true)}</div>
     <p class="faint" style="font-size:12px">Cada stakeholder ignorado perde 3 pontos × rodadas sem atenção (máx. 9 por rodada), além dos efeitos do que acontece na operação. O sinal ! marca quem está há 2 rodadas ou mais sem atenção.</p>
-    <div class="optlist">${COMMS.map(c => { const q = G.queue.some(x => x.kind === 'com' && x.p.cid === c.id); return opt(c.s === 'imprensa' ? 'mic' : c.s === 'prefeito' ? 'mayor' : c.s === 'banco' ? 'bank' : c.s === 'familias' ? 'family' : 'news', c.nome, c.d, c.custo || '', 'addcom', `data-id="${c.id}"`, { why: whyNot({ inPlan: q, cost: c.custo }), pressed: q }); }).join('')}</div>`;
+    <div class="optlist">${COMMS.map(c => { const q = G.queue.some(x => x.kind === 'com' && x.p.cid === c.id), lk = leakChance(c.id);
+      const lkTxt = lk > 0 ? `<br><span class="faint">Risco de vazar ou sair impreciso: <b style="color:var(--${lk >= .2 ? 'red' : lk >= .1 ? 'amber' : 'green'})">${Math.round(lk * 100)}%</b>. Cai com quem comunica bem e com o que você já sabe. Se acontecer, a mídia sobe +10 em vez de ceder e o líder se irrita.</span>` : '';
+      return opt(c.s === 'imprensa' ? 'mic' : c.s === 'prefeito' ? 'mayor' : c.s === 'banco' ? 'bank' : c.s === 'familias' ? 'family' : 'news', c.nome, c.d + lkTxt, c.custo || '', 'addcom', `data-id="${c.id}"`, { why: whyNot({ inPlan: q, cost: c.custo }), pressed: q }); }).join('')}</div>`;
 }
 const TABS = [['tatica', 'Tática'], ['nego', 'Negociação'], ['intel', 'Inteligência'], ['com', 'Comunicação']];
 function colC() {

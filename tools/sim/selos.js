@@ -1,13 +1,10 @@
 // Frequência de cada selo por tipo de jogador e dificuldade (% das partidas que o conquistam).
-// badgeEarned() mora na camada de interface (ui3.js): o script extrai a função e a roda no mesmo contexto do motor.
 // uso: node tools/sim/selos.js [N]
-const fs = require('fs'), path = require('path');
+const path = require('path');
 const B = require('./bots'); const E = require('./experts'); const T = require('./tiers');
 const N = +process.argv[2] || 300;
-const SRC = process.env.PERI_SRC || path.join(__dirname, '..', '..', 'src');
-const ui = fs.readFileSync(path.join(SRC, 'ui3.js'), 'utf8');
-const a = ui.indexOf('function badgeEarned(id)'), b = ui.indexOf('function badgesHTML');
-const A = B.load(1, SRC, ui.slice(a, b) + '\nglobalThis.__api.badge = badgeEarned;');
+const A = B.load(1);
+A.badge = A.badgeEarned;
 const ids = A.BADGES.map(x => x.id);
 const cols = [
   ['novato', s => T.novato(s)], ['mid+', s => T.competente(s, { sloppy: .1 })],

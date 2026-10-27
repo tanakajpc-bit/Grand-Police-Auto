@@ -11,10 +11,7 @@ const covCls = c => c >= ADEQ ? 'g' : c >= 30 ? 'a' : 'r';
 const covSym = c => c >= ADEQ ? '✓' : c >= 30 ? '!' : '✕';
 const covTxt = c => c >= ADEQ ? 'adequada' : c >= 30 ? 'parcial' : 'descoberta';
 const initials = n => n.replace(/^(Cap\.|Sgt\.|Det\.|Neg\.|Ag\.)\s*/, '').split(' ').map(s => s[0]).join('').slice(0, 2).toUpperCase();
-const shortName = n => n.split(' ').slice(0, 2).join(' ');
 const mmss = s => String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
-const pLabel = p => p < .2 ? 'Baixa' : p < .45 ? 'Média' : p < .7 ? 'Boa' : 'Alta';
-const pCls = p => p < .2 ? 'red' : p < .45 ? 'amber' : p < .7 ? 'blue' : 'green';
 const dec = (n, d = 1) => Number(n).toFixed(d).replace('.', ',');   // decimal com vírgula (pt-BR)
 const br = t => String(t).replace(/(\d)\.(\d)(?!\d)/g, '$1,$2');   // textos do motor: 9.0 → 9,0 (milhar 1.000 fica intacto)
 
@@ -60,25 +57,6 @@ function tick() {
   el.textContent = mmss(left); el.classList.toggle('low', left <= 30);
   if (left <= 0) { stopTimer(); toast('COMANDO', 'Tempo esgotado: o plano atual é executado.', 'hot'); ACT.execute({}); }
 }
-
-/* ---------- Percepção com névoa ---------- */
-function perceivedAgit(a = G.agit) {
-  const off = ((G.round * 13) % 11) - 5;
-  const band = a < 30 ? 'Baixa' : a < 55 ? 'Média' : a < 75 ? 'Alta' : 'Crítica';
-  if (G.nego.contact && G.K.profile) return { v: Math.round(a), txt: String(Math.round(a)), band, exact: true };
-  if (G.nego.contact) { const v = clamp(Math.round((a + off) / 5) * 5, 0, 100); return { v, txt: '≈' + v, band, exact: false }; }
-  return { v: a + off, txt: band, band, exact: false };
-}
-function perceivedVault(vv = G.vault) {
-  if (G.K.vault) return { txt: Math.round(vv) + '%', v: vv, exact: true };
-  const off = ((G.round * 37) % 21) - 10, lo = clamp(Math.round((vv + off - 12) / 5) * 5, 0, 100), hi = clamp(lo + 25, 0, 100);
-  return { txt: `≈ ${lo}–${hi}%`, v: (lo + hi) / 2, exact: false };
-}
-const hostagesFramed = () => {
-  const H = G.hostages, safe = H.inside - H.hurt - H.dead;
-  if (G.K.hostages) return G.frame === 'ganho' ? `${safe} de ${H.inside} reféns ilesos` : `${H.hurt + H.dead} de ${H.inside} reféns feridos ou em risco`;
-  return G.frame === 'ganho' ? `~${H.inside} reféns no interior (sem confirmar quantos estão ilesos)` : `~${H.inside} reféns no interior (sem confirmar quantos estão em risco)`;
-};
 
 /* ---------- Mapa ---------- */
 function mapSVG(o = {}) {

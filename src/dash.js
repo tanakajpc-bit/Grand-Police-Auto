@@ -4,6 +4,32 @@
    Quando uma prévia precisa simular uma ordem, ela altera o estado e o restaura na mesma chamada.
    ===================================================================== */
 
+/* Rótulos usados tanto pelos painéis quanto pelas prévias e alertas (por isso moram aqui, e não na interface) */
+const shortName = n => n.split(' ').slice(0, 2).join(' ');
+const pLabel = p => p < .2 ? 'Baixa' : p < .45 ? 'Média' : p < .7 ? 'Boa' : 'Alta';
+const pCls = p => p < .2 ? 'red' : p < .45 ? 'amber' : p < .7 ? 'blue' : 'green';
+
+/* ---------- Percepção com névoa ----------
+   O que o comandante enxerga da agitação e do cofre antes de medir. Vive aqui, e não na interface, para os painéis e alertas
+   poderem ser testados sem navegador. */
+function perceivedAgit(a = G.agit) {
+  const off = ((G.round * 13) % 11) - 5;
+  const band = a < 30 ? 'Baixa' : a < 55 ? 'Média' : a < 75 ? 'Alta' : 'Crítica';
+  if (G.nego.contact && G.K.profile) return { v: Math.round(a), txt: String(Math.round(a)), band, exact: true };
+  if (G.nego.contact) { const v = clamp(Math.round((a + off) / 5) * 5, 0, 100); return { v, txt: '≈' + v, band, exact: false }; }
+  return { v: a + off, txt: band, band, exact: false };
+}
+function perceivedVault(vv = G.vault) {
+  if (G.K.vault) return { txt: Math.round(vv) + '%', v: vv, exact: true };
+  const off = ((G.round * 37) % 21) - 10, lo = clamp(Math.round((vv + off - 12) / 5) * 5, 0, 100), hi = clamp(lo + 25, 0, 100);
+  return { txt: `≈ ${lo}–${hi}%`, v: (lo + hi) / 2, exact: false };
+}
+const hostagesFramed = () => {
+  const H = G.hostages, safe = H.inside - H.hurt - H.dead;
+  if (G.K.hostages) return G.frame === 'ganho' ? `${safe} de ${H.inside} reféns ilesos` : `${H.hurt + H.dead} de ${H.inside} reféns feridos ou em risco`;
+  return G.frame === 'ganho' ? `~${H.inside} reféns no interior (sem confirmar quantos estão ilesos)` : `~${H.inside} reféns no interior (sem confirmar quantos estão em risco)`;
+};
+
 /* ---------- Orçamento: estoque + fluxo ---------- */
 const FIELD_MIN_TAT = 5;   // a distribuição automática só põe em campo quem tem Tática ≥ 5
 function budgetForecast(ids = G.team) {
@@ -78,7 +104,8 @@ function planPreview() {
   }
   const cm = q.filter(d => d.kind === 'com').reduce((s, d) => s + (d.p.cid === 'geral' ? -3 : d.p.cid === 'coletiva' ? -5 : 0), 0);
   const mg = (8 + G.round * 2) * D.media + cm - (hasGear('jammer') ? 2 : 0);
-  rows.push({ k: 'Pressão da mídia', a: G.media, b: clamp(G.media + mg, 0, 100), f: v => Math.round(v), goodUp: false, note: cm ? `comunicado ${cm}` : 'sem comunicado, a mídia sobe sozinha' });
+  const lkMax = Math.max(0, ...q.filter(d => d.kind === 'com').map(d => leakChance(d.p.cid)));
+  rows.push({ k: 'Pressão da mídia', a: G.media, b: clamp(G.media + mg, 0, 100), f: v => Math.round(v), goodUp: false, note: cm ? `comunicado ${cm}${lkMax > 0 ? ` (${Math.round(lkMax * 100)}% de risco de vazar: aí sobe +10)` : ''}` : 'sem comunicado, a mídia sobe sozinha' });
   if (G.K.vault) rows.push({ k: 'Cofre', a: G.vault, b: clamp(G.vault + vd, 0, 100), f: v => Math.round(v) + '%', goodUp: false, note: nEnt ? `${nEnt} na Entrada segura o ritmo` : 'sem ninguém na Entrada' });
   const nd = q.find(d => d.kind === 'nego');
   if (nd && nd.p.tech !== 'press') { const np = negoParts(nd.p.tech); rows.push({ k: 'Avanço na negociação', txt: pLabel(np.p), tone: pCls(np.p), note: np.compat ? 'postura compatível com o degrau' : np.skip ? 'pula etapa: metade da chance e risco de regredir' : 'consolida o degrau atual' }); }
@@ -130,4 +157,25 @@ function milestones() {
   const bk = burnToEnd(); if (G.credits < bk && plantaoCost() > 0) out.push({ r: r + Math.floor(runway()), t: 'A verba acaba', tone: 'red' });
   { const u = ultimatumView(); out.push({ r: MAX_ROUNDS, t: `Ultimato final (cede com ${u.cede})`, tone: 'red' }); }
   return out.filter(m => m.r <= MAX_ROUNDS + 2).sort((a, b) => a.r - b.r);
+}
+
+/* ---------- Conquistas (selos) ----------
+   Só leem o estado final da partida. Ficam fora da interface para a bancada de testes medir a frequência de cada selo com a função real. */
+function badgeEarned(id) {
+  const H = G.hostages, S = G.score, E = G.end, st = G.stats;
+  switch (id) {
+    case 'ninguem': return H.hurt + H.dead === 0;
+    case 'escuta': return E.type === 'rendicao' && G.nego.concessions === 0 && !(st.press);
+    case 'sacada': return st.pausas >= 2 && st.pausas <= 3 && S.total >= 50;
+    case 'aposta': return (st.initCov[G.route] || 0) >= ADEQ && !st.routeKnownAtStart;
+    case 'olhos': return knownCount() >= 5;
+    case 'cofre': return G.vault < 40;
+    case 'economia': return G.credits >= 400;
+    case 'porta': return st.comms >= 3 && STK_KEYS.every(k => G.stk[k].sat >= DIFF[G.diff].porta);
+    case 'degraus': return G.nego.maxStep >= 4 && G.nego.skips === 0;
+    case 'rodizio': return st.minFF >= .7;
+    case 'equilibrio': return [S.vidas, S.captura, S.valores, S.confianca].every(x => x > .6) && S.eficiencia > .3;
+    case 'mao': return E.type === 'intervencao' && ['limpa', 'baixas'].includes(E.variant) && H.hurt + H.dead === 0 && !(E.agentsHurt || []).length;
+  }
+  return false;
 }

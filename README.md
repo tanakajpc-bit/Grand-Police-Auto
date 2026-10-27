@@ -19,7 +19,7 @@ Artefato publicado: https://claude.ai/artifact/7yQmLNrrYJrJQpEDKrXH5P (versão 1
 | `build.sh` | Junta tudo em `perimetro.html`, que fica versionado: rode antes de cada commit |
 | `tools/` | Simulação sem navegador e testes de navegador; veja `tools/README.md` |
 
-O motor não depende da interface, com três exceções que ficam na camada de interface: `siegeAlerts()`, `milestones()` e `badgeEarned()`.
+O motor e o `dash.js` não dependem da interface: tudo o que decide, prevê ou alerta roda sem navegador (`tools/sim/`), e a interface só desenha.
 
 ## Fluxo de trabalho
 

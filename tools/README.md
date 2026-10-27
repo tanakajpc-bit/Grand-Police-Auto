@@ -15,11 +15,13 @@ Carrega `data.js`, `story.js`, `engine.js` e `dash.js` num contexto `vm` isolado
 | `node tools/sim/notas.js [N]` | Fração das partidas que passa de cada limiar de nota (S e A) por jogador e dificuldade, incluindo equipes enxutas e cheias. |
 | `node tools/sim/selos.js [N]` | Frequência de cada selo por jogador e dificuldade, com uma equipe enxuta que comunica toda rodada. Acusa selo impossível ou ganho pelo motivo errado. |
 | `node tools/sim/equipe.js [N] [paz\|agr]` | Valor do tamanho da equipe: o especialista joga com 2 a 6 agentes e mostra se o agente a mais se paga (a nota já desconta a eficiência de custo). |
+| `node tools/sim/audit.js [N]` | Auditoria das fórmulas do motor contra a especificação (L2.1): cobertura, pressão (Yerkes-Dodson), fadiga, probabilidade de avanço da negociação, agitação, mídia, vazamento de comunicado, cofre e pontuação (pesos, faixas de nota, Vidas, penalidade por agente ferido), mais os 5 cenários extremos com o rastro de uma partida de cada. Sai com erro se alguma verificação falhar. |
+| `node tools/sim/alertas.js [N]` | Roda `siegeAlerts()`, `milestones()`, as prévias e as previsões de `dash.js` em cada rodada de `N` partidas: acusa exceção, texto quebrado, gravidade ou aba inválida, ordem errada e qualquer função de leitura que altere o estado do jogo. |
 | `node tools/sim/comparar.js [ref-git] [N]` | Teste diferencial: mesmas sementes com o motor de uma versão anterior (`git show`) e com o atual; conta as partidas que divergem. Zero divergência prova que uma mudança de interface ou de texto não mexeu no jogo. |
 
 `PERI_SRC=/outra/pasta/src` simula uma variante do código sem mexer no repositório. Os robôs ficam em `bots.js` (políticas e corredor de partidas; `policyComunicador` joga só negociação e comunicação com a equipe que se escolher), `experts.js` e `tiers.js`.
 
-Limite conhecido: `siegeAlerts()` e `milestones()` usam funções da camada de interface (por exemplo `perceivedAgit`), então só rodam no navegador; o fuzz de interface os cobre.
+Tudo o que o painel calcula (alertas, marcos, prévias, percepção com névoa, selos) mora em `dash.js` e roda aqui; a interface só desenha.
 
 ## Navegador (`tools/ui/`, Playwright)
 
@@ -30,20 +32,20 @@ Precisam do Playwright (`NODE_PATH=$(npm root -g)` se ele estiver instalado glob
 | `node tools/ui/e2e.js <plano> <dificuldade> [noshots]` | Fluxo completo (menu, briefing, recrutamento, perímetro, 8 rodadas, desfecho, as abas do pós-jogo, Continuar partida e Jogar novamente). Planos: `negociadora`, `agressiva`, `equilibrada`, `semEquipe`, `lento`, `gastaTudo`. Acusa erro de console, texto quebrado e tela sem saída. Capturas em `$PERI_SHOTS` (padrão: pasta temporária). |
 | `node tools/ui/uifuzz.js [N]` | Joga `N` partidas pelo motor real dentro da página e renderiza todas as telas em cada estado, procurando `undefined`, `NaN`, `[object Object]`, exceções e telas vazias. |
 
-## Números de referência (L1.5, N = 300 por célula)
+## Números de referência (Loop 2, depois da L2.1, N = 300 por célula)
 
-Nota média por nível de jogador (Protocolar / Complexo / Caótico):
+Nota média por nível de jogador (Protocolar / Complexo / Caótico). A L2.1 trouxe a nota de Vidas e a penalidade por agente ferido para o que o documento pede, o vazamento de comunicado e o fator de pressão sem piso; isso baixou todas as médias em 2 a 5 pontos em relação à L1.5 (novato 62,2 / 58,2 / 53,9, especialista de paz 83,7 / 78,4 / 69,1).
 
 | Nível | Protocolar | Complexo | Caótico |
 | --- | --- | --- | --- |
-| novato | 62,2 | 58,2 | 53,9 |
-| mid | 65,0 | 57,3 | 51,7 |
-| mid+ | 67,7 | 60,1 | 53,0 |
-| especialista, paz | 83,7 | 78,4 | 69,1 |
-| especialista, equilibrado | 82,4 | 75,0 | 63,6 |
-| especialista, agressivo | 75,1 | 69,3 | 52,4 |
+| novato | 58,3 | 53,9 | 50,3 |
+| mid | 62,7 | 53,1 | 47,0 |
+| mid+ | 67,0 | 55,8 | 49,5 |
+| especialista, paz | 83,0 | 77,6 | 67,5 |
+| especialista, equilibrado | 81,7 | 71,8 | 62,0 |
+| especialista, agressivo | 75,6 | 66,1 | 47,9 |
 
-Valor dos equipamentos (`itens.js 2000 equilibrada gratis`): nota ganha com o item de graça em Protocolar / Complexo / Caótico.
+Valor dos equipamentos (L1.5, `itens.js 2000 equilibrada gratis`; a L2.3 mede de novo): nota ganha com o item de graça em Protocolar / Complexo / Caótico.
 
 | Item (custo) | Ganho de nota |
 | --- | --- |

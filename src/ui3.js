@@ -10,6 +10,11 @@ function harmSentence() {
   if (H.hurt) return `${H.hurt} ${plural(H.hurt, 'refém ficou ferido', 'reféns ficaram feridos')}; os demais saíram ilesos.`;
   return `Todos os ${HOSTAGES} reféns saíram ilesos.`;
 }
+function agentsSentence() {
+  const ids = (G.end && G.end.agentsHurt) || []; if (!ids.length) return '';
+  const nm = ids.map(id => shortName(agentById(id).nome)), list = nm.length > 1 ? nm.slice(0, -1).join(', ') + ' e ' + nm[nm.length - 1] : nm[0];
+  return ` Na entrada, ${list} ${plural(ids.length, 'ficou ferido', 'ficaram feridos')}.`;
+}
 function vaultSentence() {
   const v = G.vault;
   return v < 25 ? 'O cofre permaneceu praticamente intocado.' : v < 60 ? 'Os assaltantes chegaram a trabalhar no cofre, mas não o abriram.' : v < 100 ? 'O cofre estava perto de ceder quando a crise terminou.' : 'O cofre foi aberto antes do desfecho.';
@@ -42,7 +47,7 @@ function outcomeStory() {
     p.push(`${t}. O relógio do posto de comando marca o fim do prazo. O ultimato final chega pelo telefone, e dessa vez o líder cede${st >= 4 ? ': o que foi construído na linha pesou, e ele já falava em “depois”, em quem recebe e por onde sai' : st >= 2 ? ': cansado, com o perímetro fechado à frente e a conversa ainda no degrau ' + st : ': sem acordo nenhum, apenas cansado e sem saída'}.`);
     p.push(G.agit < 40 ? 'A tensão lá dentro já tinha baixado, e a entrega foi mais calma do que o prazo fazia supor. Não foi a saída mais limpa, mas terminou sem uma ação armada.' : 'A rendição acontece sob pressão máxima, com a equipe esgotada e o noticiário ao vivo na esquina. Não foi a saída mais limpa, mas terminou sem uma ação armada.');
   }
-  p.push(harmSentence() + ' ' + vaultSentence());
+  p.push(harmSentence() + agentsSentence() + ' ' + vaultSentence());
   return { p, title, tag, cls: 'o-' + E.type };
 }
 /* ---------- A verdade por trás da névoa (revelação final) ---------- */
@@ -101,10 +106,10 @@ function capReason(S, H, E) {
 }
 /* O que separa o resultado da próxima nota: as duas maiores perdas da composição (só para A e B, sem teto aplicado). */
 const GRADE_NEXT = { A: ['S', 90], B: ['A', 80] };
-const DIM_LOSS = { Vidas: 'reféns feridos ou mortos', Prisões: 'assaltantes que não foram presos', Valores: 'perda do cofre', Eficiência: 'verba gasta e duração da crise', Confiança: 'stakeholders insatisfeitos' };
+const DIM_LOSS = { Vidas: 'reféns feridos ou mortos', Prisões: 'assaltantes que não foram presos', Valores: 'perda do cofre', Eficiência: 'verba gasta e duração da crise', Confiança: 'stakeholders insatisfeitos', Penalidade: 'agentes feridos em ação' };
 function nextGradeHint(S, dims) {
   const nx = GRADE_NEXT[S.grade]; if (!nx || S.capped) return '';
-  const loss = dims.map(d => ({ k: d.k, l: (1 - d.v) * d.w * 100 })).sort((a, b) => b.l - a.l).slice(0, 2);
+  const loss = dims.map(d => ({ k: d.k, l: (1 - d.v) * d.w * 100 })).concat(S.penal ? [{ k: 'Penalidade', l: S.penal }] : []).sort((a, b) => b.l - a.l).slice(0, 2);
   const eff = loss[0].k === 'Eficiência' && nx[0] === 'S' ? ' O S pede verba sobrando, mas equipe enxuta demais custa proteção em crises difíceis.' : '';
   const gap = nx[1] - S.total;
   return `${gap <= 1 ? 'Faltou' : 'Faltaram'} ${dec(gap)} ${gap <= 1 ? 'ponto' : 'pontos'} para a nota ${nx[0]}. Onde mais se perdeu: ${loss.map(x => `${x.k} (−${dec(x.l)} pts: ${DIM_LOSS[x.k]})`).join('; ')}.${eff}`;
@@ -112,7 +117,7 @@ function nextGradeHint(S, dims) {
 function scoreHTML() {
   const S = G.score, H = G.hostages, E = G.end;
   const dims = [
-    { k: 'Vidas', v: S.vidas, w: .40, why: `${H.dead} ${plural(H.dead, 'morto', 'mortos')} e ${H.hurt} ${plural(H.hurt, 'ferido', 'feridos')} entre ${HOSTAGES} reféns (cada morte pesa 2, cada ferido 0,5).${G.stats.kitSaves ? ` O kit médico evitou ${G.stats.kitSaves} ${plural(G.stats.kitSaves, 'morte', 'mortes')}.` : ''}` },
+    { k: 'Vidas', v: S.vidas, w: .40, why: `${H.dead} ${plural(H.dead, 'morto', 'mortos')} e ${H.hurt} ${plural(H.hurt, 'ferido', 'feridos')} entre ${HOSTAGES} reféns (cada morte tira 14,7 pontos da dimensão e cada ferido 2,9: o −25 e o −5 do documento, proporcionais aos 17 reféns).${G.stats.kitSaves ? ` O kit médico evitou ${G.stats.kitSaves} ${plural(G.stats.kitSaves, 'morte', 'mortes')}.` : ''}` },
     { k: 'Prisões', v: S.captura, w: .20, why: `${outName(E)}: ${Math.round(S.captura * 100)}% dos responsáveis presos.` },
     { k: 'Valores', v: S.valores, w: .15, why: `Cofre em ${Math.round(G.vault)}% no desfecho; fator de perda do desfecho ${String(E.lootF).replace('.', ',')}.` },
     { k: 'Eficiência', v: S.eficiencia, w: .10, why: `${fmt(G.credits)} créditos sobraram e a crise durou ${G.round} rodadas. O plantão custou ${fmt(G.spent.plantao)} no total${G.deficit ? ` e ${G.deficit} ${plural(G.deficit, 'rodada', 'rodadas')} ficaram no vermelho` : ''}.` },
@@ -122,6 +127,7 @@ function scoreHTML() {
   return `<div class="scorehead"><div style="text-align:center">${radarSVG(dims)}</div>
     <div class="grid" style="gap:10px"><div class="eyebrow">Nota final</div><h1 class="sr">Pontuação final: nota ${S.grade}, ${dec(S.total)} de 100</h1><div class="grade ${S.grade}" aria-hidden="true">${S.grade}</div><div class="bigscore" aria-hidden="true">${dec(S.total)} / 100</div>
     ${S.capped ? `<div class="insight warn">${icon('alert', '', 1.8)}<span>Teto aplicado: a pontuação bruta (${dec(S.raw)}) foi limitada a ${S.cap} ${capReason(S, H, E)}</span></div>` : ''}
+    ${S.penal ? `<div class="insight bad">${icon('alert', '', 1.8)}<span>Penalidade: −${S.penal} pontos por ${E.agentsHurt.length} ${plural(E.agentsHurt.length, 'agente ferido', 'agentes feridos')} em ação (${E.agentsHurt.map(id => shortName(agentById(id).nome)).join(', ')}). Quem protege também conta os próprios.</span></div>` : ''}
     <p class="muted" style="max-width:520px">${S.grade === 'S' ? 'Operação exemplar.' : S.grade === 'A' ? 'Excelente condução, com pouco a corrigir.' : S.grade === 'B' ? 'Boa condução, com trade-offs visíveis.' : S.grade === 'C' ? 'Resultado aceitável, mas com perdas evitáveis.' : S.grade === 'D' ? 'Resultado fraco: as decisões se acumularam contra você.' : 'Operação malsucedida. A falha também ensina: veja o debrief.'}</p>
     ${hint ? `<p class="faint" style="max-width:520px;font-size:13px">${hint}</p>` : ''}</div></div>
     <div class="card" style="margin-top:18px"><h2 class="h3">Composição</h2>${dims.map(d => `<div class="dimrow"><div><b>${d.k}</b><small>peso ${Math.round(d.w * 100)}%</small></div><div><div class="meter tall ${d.v >= .7 ? 'g' : d.v >= .4 ? 'a' : 'r'}"><i style="width:0%" data-to="${Math.round(d.v * 100)}"></i></div><small class="faint">${d.why}</small></div><div class="mono" style="text-align:right">${Math.round(d.v * 100)}% → ${dec(d.v * d.w * 100)} pts</div></div>`).join('')}</div>`;
@@ -168,34 +174,16 @@ function newsHTML() {
     <div class="cols">
       <p>PORTO ALTO — A crise que paralisou o centro da cidade na tarde desta sexta-feira terminou às ${t}, depois de ${hrs} ${plural(hrs, 'hora', 'horas')} de cerco à Agência Central do Banco Meridiano. Dos ${HOSTAGES} reféns, ${safe} ${plural(safe, 'saiu ileso', 'saíram ilesos')}${H.hurt ? `, ${H.hurt} ${plural(H.hurt, 'ficou ferido', 'ficaram feridos')}` : ''}${H.dead ? ` e ${H.dead} ${plural(H.dead, 'morreu', 'morreram')}` : ''}.${deadIds.length ? ` A polícia confirmou ${plural(deadIds.length, 'a morte de', 'as mortes de')} ${deadIds.map(id => `${HOST[id].nome}, ${HOST[id].idade} anos`).join('; ')}.` : ''}</p>
       <p>${E.type === 'rendicao' ? `Segundo a polícia, a negociação foi decisiva. A conversa com o líder do grupo chegou ao degrau ${nsteps} de um processo de cinco etapas, da escuta ativa ao acordo sobre a saída, e a rendição foi acertada sem disparos.` : E.type === 'fuga' ? `Os assaltantes tentaram deixar o local por ${z}${E.adapted ? ' depois de mudarem o plano inicial' : ''}. ${E.variant === 'barrada' ? `A cobertura da zona, de ${E.cov}%, impediu a saída.` : E.variant === 'perseguicao' ? 'A perseguição foi encerrada na Avenida Principal.' : `A cobertura da zona era de ${E.cov}% e não impediu a fuga.`}` : E.type === 'prazo' ? `Ao fim do prazo estipulado pelos assaltantes, ${E.variant === 'cedeu' ? 'o líder do grupo aceitou se render, depois de uma negociação que chegou ao degrau ' + nsteps : 'o comando autorizou a entrada na agência'}.` : `A operação foi autorizada na rodada ${G.round}${E.forced ? ', sob determinação do gabinete do prefeito' : ''}. ${v === 'limpa' ? 'Segundo fontes, a informação reunida antes da entrada foi decisiva para o resultado.' : v === 'fracasso' ? 'Fontes do isolamento afirmam que faltou informação sobre o interior.' : 'Houve resistência no interior e a situação levou alguns minutos para ser contida.'}`}</p>
-      <p>${vaultSentence()} A operação consumiu ${Math.round((1000 - G.credits) / 10)}% da verba disponível${G.credits < 100 ? ', deixando o comando praticamente sem margem' : ''}.</p>
+      <p>${vaultSentence()} A operação consumiu ${Math.round((1000 - G.credits) / 10)}% da verba disponível${G.credits < 100 ? ', deixando o comando praticamente sem margem' : ''}.${(E.agentsHurt || []).length ? ` ${E.agentsHurt.length} ${plural(E.agentsHurt.length, 'agente da força-tarefa ficou ferido', 'agentes da força-tarefa ficaram feridos')} na entrada.` : ''}${(G.stats.leaks || 0) ? ` Durante o cerco, ${G.stats.leaks > 1 ? G.stats.leaks + ' comunicados do comando vazaram ou foram desmentidos' : 'um comunicado do comando vazou ou foi desmentido'}, o que alimentou a cobertura.` : ''}</p>
       ${quotes.join('')}
       <div class="box"><b>Perfil do líder</b>Segundo investigadores, o líder do grupo agia com perfil <i>${PR_().nome.toLowerCase()}</i>. ${PR_().desc} A polícia não divulgou nomes.</div>
       <h3>${edit[0]}</h3><p>${edit[1]}</p>
       ${key ? `<div class="box"><b>Linha do tempo</b><ul style="margin:0;padding-left:18px">${key}</ul></div>` : ''}
-      <div class="box"><b>Placar da operação</b>Nota ${S.grade} (${S.total.toFixed(0)}/100). Vidas ${Math.round(S.vidas * 100)}% · Prisões ${Math.round(S.captura * 100)}% · Valores ${Math.round(S.valores * 100)}% · Confiança ${Math.round(S.confianca * 100)}%.</div>
+      <div class="box"><b>Placar da operação</b>Nota ${S.grade} (${dec(S.total)}/100). Vidas ${Math.round(S.vidas * 100)}% · Prisões ${Math.round(S.captura * 100)}% · Valores ${Math.round(S.valores * 100)}% · Confiança ${Math.round(S.confianca * 100)}%.</div>
     </div></div>`;
 }
 
 /* ---------- Conquistas ---------- */
-function badgeEarned(id) {
-  const H = G.hostages, S = G.score, E = G.end, st = G.stats;
-  switch (id) {
-    case 'ninguem': return H.hurt + H.dead === 0;
-    case 'escuta': return E.type === 'rendicao' && G.nego.concessions === 0 && !(st.press);
-    case 'sacada': return st.pausas >= 2 && st.pausas <= 3 && S.total >= 50;
-    case 'aposta': return (st.initCov[G.route] || 0) >= ADEQ && !st.routeKnownAtStart;
-    case 'olhos': return knownCount() >= 5;
-    case 'cofre': return G.vault < 40;
-    case 'economia': return G.credits >= 400;
-    case 'porta': return st.comms >= 3 && STK_KEYS.every(k => G.stk[k].sat >= DIFF[G.diff].porta);
-    case 'degraus': return G.nego.maxStep >= 4 && G.nego.skips === 0;
-    case 'rodizio': return st.minFF >= .7;
-    case 'equilibrio': return [S.vidas, S.captura, S.valores, S.confianca].every(x => x > .6) && S.eficiencia > .3;
-    case 'mao': return E.type === 'intervencao' && ['limpa', 'baixas'].includes(E.variant) && H.hurt + H.dead === 0;
-  }
-  return false;
-}
 function badgesHTML() {
   const got = BADGES.filter(b => badgeEarned(b.id)).length;
   return `<h1 class="sr">Conquistas</h1><p class="muted" style="margin-bottom:12px">${got} de ${BADGES.length} selos conquistados.</p><div class="badges">${BADGES.map(b => { const on = badgeEarned(b.id); return `<div class="badge ${on ? 'on' : 'off'}"><div class="seal">${icon(b.ic, 'ico" style="width:26px;height:26px')}</div><b>${b.nome}</b><p>${b.d}</p><span class="pill ${on ? 'amber' : ''}">${on ? '✓ conquistado' : 'não conquistado'}</span></div>`; }).join('')}</div>`;
@@ -278,7 +266,7 @@ function debriefHTML() {
     { n: 'Métricas concorrentes', ref: 'Kaplan & Norton (1992); Kerr (1975)', you: `Dimensão mais fraca: ${weakest}. Placar: vidas ${Math.round(S.vidas * 100)}%, prisões ${Math.round(S.captura * 100)}%, valores ${Math.round(S.valores * 100)}%, eficiência ${Math.round(S.eficiencia * 100)}%, confiança ${Math.round(S.confianca * 100)}%.`, les: 'Nenhuma métrica isolada resume uma operação, e quem a perseguia sozinha distorceu as outras. Se os pesos fossem outros, você teria agido diferente? Isso revela os incentivos que a sua organização usa.' }
   ];
   const kolb = [
-    ['1. Experiência concreta', `Você comandou ${G.round} rodadas e terminou com ${S.grade} (${S.total.toFixed(0)}). O desfecho foi: ${outcomeStory().tag}.`],
+    ['1. Experiência concreta', `Você comandou ${G.round} rodadas e terminou com ${S.grade} (${dec(S.total)}). O desfecho foi: ${outcomeStory().tag}.`],
     ['2. Observação reflexiva', 'Qual foi o momento decisivo? Onde faltou informação? Que stakeholder dominou a sua atenção sem merecer?'],
     ['3. Conceituação abstrata', 'Os conceitos ao lado explicam o que aconteceu. Qual deles você não tinha nomeado antes?'],
     ['4. Experimentação ativa', `Na próxima partida, tente ${next}.`]
