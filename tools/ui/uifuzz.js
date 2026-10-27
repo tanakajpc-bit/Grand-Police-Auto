@@ -39,6 +39,8 @@ const N = +process.argv[2] || 120;
       let m = txt.match(bres); if (m) fz.bad.push(`${tag}: texto "${m[0]}" → …${txt.slice(Math.max(0, txt.indexOf(m[0]) - 60), txt.indexOf(m[0]) + 40).replace(/\s+/g, ' ')}…`);
       const raw = html.replace(/<svg[\s\S]*?<\/svg>/g, '');
       m = raw.match(/="(undefined|NaN|null|Infinity|\[object Object\])"|(undefined|NaN)px|NaN%|undefined%/); if (m) fz.bad.push(`${tag}: atributo quebrado ${m[0]}`);
+      // dentro dos SVG (mapa, curvas, radar) um NaN vira caminho quebrado sem aparecer em texto nenhum
+      for (const sv of html.match(/<svg[\s\S]*?<\/svg>/g) || []) { const b = sv.match(/\s(?:d|points|cx|cy|x|y|x1|x2|y1|y2|r|width|height|transform|viewBox)="[^"]*(?:NaN|undefined|Infinity)[^"]*"/); if (b) { fz.bad.push(`${tag}: SVG com número quebrado →${b[0].slice(0, 90)}`); break; } }
     };
     const safe = (tag, fn) => { try { const h = fn(); check(tag, h); return h; } catch (e) { fz.bad.push(`${tag}: EXCEÇÃO ${e.message} @ ${(e.stack || '').split('\n')[1]}`); return ''; } };
     const diffs = ['protocolar', 'complexo', 'caotico'];

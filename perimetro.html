@@ -1622,7 +1622,7 @@ function doEscape(cause) {
   // no Caótico o líder testa o cerco: reage a rotas cobertas já a partir de 50% (nas demais, só a partir de 80%)
   if ((G.exposed > 0 || covR >= (D.adaptAt || 80)) && rnd() < (G.exposed > 0 ? .8 : Math.max(P.adapt, D.adaptMin || 0))) {
     const alts = G.routes.filter(r => r !== z).sort((a, b) => zoneCoverage(a) - zoneCoverage(b));
-    if (alts.length) { z = alts[0]; G.routeNow = z; adapted = true; }
+    if (alts.length && zoneCoverage(alts[0]) < covR) { z = alts[0]; G.routeNow = z; adapted = true; }   // L2.4: o líder só desvia de uma rota coberta para outra menos coberta
   }
   let cov = zoneCoverage(z);
   if (G.accomplice) cov *= hasGear('jammer') ? .92 : (G.K.accomplice ? .9 : .78);
@@ -1726,30 +1726,33 @@ function genReports() {
   });
   return out;
 }
-/* Pista parcial (Pausa de Comando, Veterana, etc.) */
+/* Pista parcial (Pausa de Comando, Veterana, etc.). Cada categoria se esgota: perfil e efetivo uma vez, rotas improváveis até acabarem
+   (e uma nota de que só restam candidatas), reféns uma vez para cada situação (sem feridos, com feridos). Esgotado tudo, a visão sistêmica avisa. */
 function revealHint() {
-  const K = G.K, c = [];
+  const K = G.K, c = [], dado = k => G.hints.some(h => h.k === k);
+  const non = ZONES.map(z => z.id).filter(z => !G.routes.includes(z) && !K.cleared.includes(z));
+  const tagH = 'hostages' + (G.hostages.hurt + G.hostages.dead > 0 ? '+' : '-');
   if (!K.profile && !K.profileHint) c.push('profile');
-  if (!K.route) c.push('route');
+  if (!K.route && (non.length || !dado('route-fim'))) c.push('route');
   if (!K.count && !K.countHint) c.push('count');
-  if (!K.hostages) c.push('hostages');
+  if (!K.hostages && !dado(tagH)) c.push('hostages');
   if (!c.length) return 'Visão sistêmica: não há incertezas críticas restantes além das que só a investigação resolve.';
-  const k = pick(c); let t;
+  const k = pick(c); let t, tag = k;
   if (k === 'profile') {
     const other = pick(Object.keys(PROFILES).filter(p => p !== G.profile));
     K.profileHint = [G.profile, other].sort();
     t = `O comportamento do líder é compatível com os perfis ${PROFILES[K.profileHint[0]].nome} ou ${PROFILES[K.profileHint[1]].nome}.`;
   } else if (k === 'route') {
-    const non = ZONES.map(z => z.id).filter(z => !G.routes.includes(z) && !K.cleared.includes(z));
     if (non.length) { const z = pick(non); K.cleared.push(z); t = `${ZONE[z].nome} parece improvável como rota de fuga. Pode-se economizar atenção ali.`; }
-    else t = 'As rotas improváveis já foram descartadas; o desafio agora é escolher entre as candidatas.';
+    else { t = 'As rotas improváveis já foram descartadas; o desafio agora é escolher entre as candidatas.'; tag = 'route-fim'; }
   } else if (k === 'count') {
     K.countHint = [Math.max(2, G.assail - 1), G.assail + 1];
     t = `Pelo volume de sinais, há entre ${K.countHint[0]} e ${K.countHint[1]} pessoas armadas no interior.`;
   } else {
+    tag = tagH;
     t = G.hostages.hurt + G.hostages.dead > 0 ? 'Há indícios de pelo menos um refém com lesão, sem confirmação.' : 'Não há sinais de reféns gravemente feridos até agora (sem confirmação).';
   }
-  G.hints.push({ r: G.round, t });
+  G.hints.push({ r: G.round, t, k: tag });
   return t;
 }
 /* Restrição dominante (Teoria das Restrições).
@@ -2058,7 +2061,7 @@ function resolveDecisions() {
     L(R, 'bad', 'coin', `Verba esgotada: o plantão custava ${pcost} e só havia ${ppaid}. A operação segue no vermelho: o banco, que cobre a diferença, perde confiança (−5)${sob ? ' e a equipe, trabalhando sem folga, sente a pressão (+3)' : '; a equipe já está no limite e a pressão não sobe mais por causa disso'}.`);
   }
   // mídia: 8 + rodada×2 (escalados pela dificuldade) + comunicado
-  const mgain = (8 + G.round * 2) * D.media + G.commMedia - (hasGear('jammer') ? 2 : 0) - (G.team.includes('fernanda') ? 0 : 0);
+  const mgain = (8 + G.round * 2) * D.media + G.commMedia - (hasGear('jammer') ? 2 : 0);
   addMedia(mgain);
   R.mediaParts = [{ k: 'Escalada natural da cobertura', v: (8 + G.round * 2) * D.media }, { k: 'Seus comunicados', v: G.commMedia }, { k: 'Jammer', v: hasGear('jammer') ? -2 : 0 }];
   L(R, G.media > 70 ? 'warn' : 'info', 'mic', `Pressão da mídia ${mgain >= 0 ? '+' : ''}${Math.round(mgain)} → ${Math.round(G.media)}.`);
@@ -2125,7 +2128,7 @@ function stakePassives(R) {
   const lost = STK_KEYS.filter(k => G.stk[k].sat <= 15 && !G.stk[k].lost);
   lost.forEach(k => {
     G.stk[k].lost = true;
-    if (k === 'banco') { const cut = Math.min(60, Math.max(0, G.credits)); G.credits -= cut; G.spent.corte = (G.spent.corte || 0) + cut; L(R, 'bad', 'bank', 'O banco perdeu a confiança: a diretoria aciona o seguro e corta 60 créditos da verba operacional.'); }
+    if (k === 'banco') { const cut = Math.min(60, Math.max(0, G.credits)); G.credits -= cut; G.spent.corte = (G.spent.corte || 0) + cut; L(R, 'bad', 'bank', cut > 0 ? `O banco perdeu a confiança: a diretoria aciona o seguro e corta ${cut} créditos da verba operacional.` : 'O banco perdeu a confiança: a diretoria aciona o seguro, mas já não há verba para cortar.'); }
     if (k === 'imprensa') L(R, 'bad', 'mic', 'A imprensa rompeu com o comando: a cobertura passa a ser hostil e a pressão da mídia ganha +8 por rodada.');
     if (k === 'prefeito') L(R, 'bad', 'mayor', 'O prefeito perdeu a paciência com o comando. Se ele continuar sem confiança a partir da rodada 6, vai ordenar a intervenção por conta própria, contra a sua recomendação técnica.');
     if (k === 'familias') L(R, 'bad', 'family', 'As famílias rompem o isolamento em protesto. A pressão sobre a equipe sobe.');
@@ -2177,7 +2180,7 @@ const EVENT_FX = {
     { label: 'Pedir que a plataforma derrube a live', hint: 'Menos exposição, menos informação.', run: R => {
       addMedia(10); stake('imprensa', -8); stake('familias', -4); addAgit(3);
       L(R, 'warn', 'live', 'A transmissão cai. A mídia sobe menos (+10), mas a imprensa reclama de censura (−8), as famílias perdem a única janela (−4) e o líder se irrita (+3).'); } }] },
-  proposta:  { elig: g => g.hostages.inside - g.hostages.dead >= 6, choices: [
+  proposta:  { elig: g => g.hostages.inside - g.hostages.dead >= 6 && g.hostages.inside - g.hostages.dead - g.hostages.hurt >= 3, choices: [
     { label: 'Aceitar a troca (3 reféns por 1 veículo)', hint: 'Vidas já, mobilidade para a fuga.', run: R => {
       const H = G.hostages, n = Math.min(3, H.inside - H.dead - H.hurt); H.inside -= n; H.freed += n; G.vehicleGiven = true; G.nego.concessions++; G.stats.material++;
       addAgit(-8); stake('familias', 12); stake('prefeito', 6);
@@ -2299,7 +2302,7 @@ function finishRound() {
   Object.keys(G.support).forEach(z => { if (G.support[z].left > 0) G.support[z].left--; });
   if (G.exposed > 0) G.exposed--;
   if (G.powerCut > 0) G.powerCut--;
-  if (G.calm > 0) G.calm = Math.max(0, G.calm - 10);
+  if (G.calm > 0 && !R.decs.some(d => d.kind === 'pausa')) G.calm = Math.max(0, G.calm - 10);   // L2.4: o alívio da Pausa vale o resto da rodada e a seguinte inteira; só outra Pausa o renova
   if (G.fatCrit && !deployed().some(id => (G.fat[id] || 0) >= 2)) G.fatCrit = false;
   if (G.deadlineLeft > 0) {
     G.deadlineLeft--;
@@ -2479,7 +2482,7 @@ function siegeAlerts() {
   if (tired.length) add(2, 'tired', 'Equipe cansada', `${tired.length} em campo abaixo de 75% pela fadiga. Horas extras custam ${horasCost()}; rodízio custa cobertura.`, 'tatica', 'Horas extras ou rodízio');
   const away = G.team.filter(isAway);
   if (away.length) add(2, 'alert', 'Agente reconvocado', `${away.map(id => shortName(agentById(id).nome)).join(', ')} fora por mais ${Math.max(...away.map(id => G.away[id]))} rodada(s). As zonas deles estão abertas.`, 'tatica', 'Cobrir as zonas');
-  if (G.pressure > 75) add(2, 'bolt', 'Equipe sobrecarregada', `Pressão ${G.pressure}: acima da zona ótima (≈50) a eficiência cai. A Pausa de Comando reduz 10.`, 'tatica', 'Subir à sacada');
+  if (G.pressure > 75) add(2, 'bolt', 'Equipe sobrecarregada', `Pressão ${G.pressure}: acima da zona ótima (≈50) a eficiência cai. A Pausa de Comando reduz 10, nesta rodada e na seguinte.`, 'tatica', 'Subir à sacada');
   if (G.deadlineLeft > 0) add(3, 'clock', 'Noticiário das 20h', `Faltam ${G.deadlineLeft} rodada${G.deadlineLeft > 1 ? 's' : ''}. Se não houver desfecho, o prefeito perde 15 pontos.`, 'com', 'Falar com o prefeito');
   else if (r === 5 && !po) add(1, 'mayor', 'Prefeito em urgência na rodada 6', 'Perdas de confiança dele passam a ser maiores. Comunicar agora é mais barato que depois.', 'com', 'Antecipar');
   if (r === MAX_ROUNDS) { const u = ultimatumView(); add(3, 'clock', 'Última rodada', `Depois desta vem o ultimato final. Como está, o líder cede com ${u.cede} de chance; se não ceder, a entrada é forçada (${u.forca} de sucesso). O que você mexer agora ainda conta.`, 'nego', 'Fechar a negociação'); }
@@ -2914,6 +2917,7 @@ function hudHTML() {
 
 /* ---------- Sparkline ---------- */
 function spark(series, color, proj) {
+  series = series.filter(Number.isFinite);   // um valor ausente viraria NaN no caminho do SVG
   const W = 220, Hh = 46, n = Math.max(series.length, 1) + (proj ? 2 : 0);
   const X = i => 6 + (W - 14) * (n <= 1 ? 0 : i / (n - 1)), Y = v => Hh - 6 - (Hh - 12) * clamp(v, 0, 100) / 100;
   if (!series.length) return `<svg class="spark" viewBox="0 0 ${W} ${Hh}" aria-hidden="true"><path d="M6 ${Hh - 6}H${W - 8}" stroke="var(--line)" /></svg>`;
@@ -3006,7 +3010,7 @@ function endsleyHTML() {
 /* ===================================================================
    DASHBOARDS DE OPERAÇÃO (L1.3): caixa, gargalo, alertas, prévias
    =================================================================== */
-const creditSeries = () => { const h = G.creditsHist.slice(1, G.round + 1).map(v => v / 10); return h.length ? h : [G.credits / 10]; };
+const creditSeries = () => { const h = Array.from({ length: G.round }, (_, i) => G.creditsHist[i + 1]).filter(Number.isFinite).map(v => v / 10); return h.length ? h : [G.credits / 10]; };   // L2.4: sem buracos nem nulos (save antigo, sem histórico de verba)
 const TOCCLS = { violet: 'v', blue: 'b', amber: 'a' };
 
 function cashCard() {
@@ -3154,7 +3158,7 @@ function tabTatica() {
     <div class="optlist">
       ${opt('support', 'Apoio externo', `Agências parceiras reforçam uma zona: +25 de cobertura por 2 rodadas. Cada uso encarece (${APOIO_PRECOS.join(' → ')}); ${apoioLeft} ${plural(apoioLeft, 'restante', 'restantes')}.`, apoioCost(), 'addapoio', '', { why: wApoio })}
       <label class="subfield"><span>Zona do apoio</span><select id="apoioZone" data-chg="apoiozone"><option value="">escolher…</option>${zoneOpts}</select></label>
-      ${opt('pause', 'Pausa de Comando', `“Subir à sacada”: ${G.team.includes('diego') ? 'duas pistas' : 'uma pista'} sobre variáveis ocultas, visão sistêmica e −10 de pressão na equipe. Consome uma decisão; a crise continua andando.`, '', 'addpausa', '', { why: whyNot({ inPlan: pausaQ }), pressed: pausaQ })}
+      ${opt('pause', 'Pausa de Comando', `“Subir à sacada”: ${G.team.includes('diego') ? 'duas pistas' : 'uma pista'} sobre variáveis ocultas, visão sistêmica e −10 de pressão na equipe, nesta rodada e na seguinte. Consome uma decisão; a crise continua andando.`, '', 'addpausa', '', { why: whyNot({ inPlan: pausaQ }), pressed: pausaQ })}
       ${opt('tired', 'Horas extras', `Recupera 2 rodadas de fadiga em campo e encerra a Fadiga crítica. O preço cresce com o efetivo em campo (${deployed().length} ${plural(deployed().length, 'agente', 'agentes')}).`, horasCost(), 'addhoras', '', { why: whyNot({ inPlan: horasQ, cost: horasCost() }), pressed: horasQ })}
       ${UI.ivConfirm ? `<div class="insight bad">${icon('alert', '', 1.8)}<span><b>Ordenar a intervenção agora?</b> Prontidão ${Math.round(intervPower())}%, chance estimada ${pLabel(ip)} (${Math.round(clamp(ip - band, 0, 1) * 100)}–${Math.round(clamp(ip + band, 0, 1) * 100)}%). Ocupa todas as decisões e encerra a crise nesta rodada.${blindTxt}${apostaTxt}</span></div><div class="row"><button class="btn danger" data-act="ivyes">Confirmar intervenção</button><button class="btn ghost" data-act="ivno">Cancelar <span class="faint" style="font-weight:400">(Esc)</span></button></div>` :
         opt('shield', 'Intervenção', `Ação direta, o BATNA da força-tarefa. Prontidão ${Math.round(intervPower())}% · chance estimada <b>${pLabel(ip)}</b> (±${Math.round(band * 100)}%). Depende de inteligência, tática e agitação.${blindTxt}${apostaTxt}`, '', 'iv', '', { danger: true, pressed: ivq })}
@@ -3388,7 +3392,8 @@ function outcomeStory() {
   if (E.type === 'rendicao') {
     tag = 'Rendição negociada'; title = 'A porta se abre sem armas';
     p.push(`${t}. A porta lateral da Agência Central se abre devagar. Primeiro uma mão, depois a outra: vazias, espalmadas. O líder do grupo cruza o limiar sem pressa e sem arma.`);
-    p.push(G.nego.skips === 0 ? `Foram ${G.round} rodadas de conversa. A escada foi subida degrau por degrau: escuta, empatia, rapport, influência e, por fim, a saída combinada. Ninguém pulou etapa.` : `Foram ${G.round} rodadas de conversa. Nem todos os degraus foram subidos em ordem, mas a escada foi concluída e o líder aceitou a saída.`);
+    const conv = `Foram ${G.round} rodadas de cerco, ${G.nego.tries} delas com o canal aberto.`;
+    p.push(G.nego.skips === 0 ? `${conv} A escada foi subida degrau por degrau: escuta, empatia, rapport, influência e, por fim, a saída combinada. Ninguém pulou etapa.` : `${conv} Nem todos os degraus foram subidos em ordem, mas a escada foi concluída e o líder aceitou a saída.`);
     p.push(E.variant === 'serena' ? 'A agitação havia baixado o bastante para que a rendição fosse quase uma formalidade. Lá fora, ninguém ousou aplaudir ainda.' : 'Houve hesitação até o último segundo. A tensão ainda estava no ar quando o primeiro refém saiu, mas a decisão já estava tomada do outro lado da linha.');
     if (E.defector) p.push('Um dos integrantes do grupo, que já havia dado sinais de querer sair, foi o primeiro a se entregar.');
   } else if (E.type === 'intervencao' || (E.type === 'prazo' && E.variant === 'forcado')) {
@@ -3398,7 +3403,8 @@ function outcomeStory() {
     if (E.type === 'prazo') p.push(`${t}. O relógio do posto de comando marca o fim do prazo. O ultimato final chega pelo telefone e a voz do outro lado não aceita mais proposta. Você autoriza a ação.`);
     else if (E.forced) p.push(`${t}. A ordem vem de cima, e não da sua avaliação técnica. O gabinete do prefeito determina a intervenção. Você transmite o sinal.`);
     else p.push(`${t}. O comando dá o sinal. As equipes avançam em sincronia, cada uma por uma zona, e o silêncio da Agência Central se parte em segundos.`);
-    p.push(v === 'limpa' ? 'A informação certa e a prontidão da equipe fizeram o que a improvisação não faria: tudo termina antes que o medo tenha tempo de virar tragédia.' : v === 'baixas' ? 'A equipe controla o interior, mas a agitação lá dentro cobrou seu preço: houve feridos, e a confusão durou mais do que o planejado.' : v === 'parcial' ? 'Parte do grupo resistiu e a situação só foi contida depois de longos minutos. O cerco acabou, mas não do jeito que alguém desejava.' : 'A falta de informação e a agitação do líder transformaram a entrada em desordem. O que deveria ser uma operação precisa virou o pior cenário.');
+    const sabia = knownCount();
+    p.push(v === 'limpa' ? (sabia >= 3 ? 'A informação certa e a prontidão da equipe fizeram o que a improvisação não faria: tudo termina antes que o medo tenha tempo de virar tragédia.' : 'A prontidão da equipe e uma boa dose de sorte fizeram o que o improviso raramente faz: tudo termina antes que o medo tenha tempo de virar tragédia.') : v === 'baixas' ? 'A equipe controla o interior, mas a agitação lá dentro cobrou seu preço: houve feridos, e a confusão durou mais do que o planejado.' : v === 'parcial' ? 'Parte do grupo resistiu e a situação só foi contida depois de longos minutos. O cerco acabou, mas não do jeito que alguém desejava.' : (sabia >= 4 ? 'Mesmo com boa parte do quadro conhecido, a agitação do líder e a resistência no interior transformaram a entrada em desordem. O que deveria ser uma operação precisa virou o pior cenário.' : 'A falta de informação e a agitação do líder transformaram a entrada em desordem. O que deveria ser uma operação precisa virou o pior cenário.'));
   } else if (E.type === 'fuga') {
     tag = 'Fuga e perseguição';
     title = E.variant === 'barrada' ? 'A rota estava coberta' : E.variant === 'perseguicao' ? 'Pela avenida, até o fim' : 'A rota que ninguém cobriu';
@@ -3509,7 +3515,7 @@ function newsHTML() {
   }
   else if (E.type === 'intervencao' || (E.type === 'prazo' && E.variant === 'forcado')) {
     hl = v === 'limpa' ? (H.dead ? `FORÇA-TAREFA ENCERRA CERCO DE ${horas}; ${harmHl}` : H.hurt ? `FORÇA-TAREFA ENCERRA CERCO DE ${horas} E RETIRA OS REFÉNS; ${harmHl}` : `FORÇA-TAREFA ENCERRA CERCO DE ${horas} E RESGATA TODOS OS REFÉNS`) : v === 'baixas' ? `INTERVENÇÃO ENCERRA CERCO DE ${horas}; ${harmHl}` : v === 'parcial' ? `AÇÃO DA POLÍCIA ENCERRA CERCO, MAS DEIXA ${harmHl}` : `INTERVENÇÃO TERMINA EM TRAGÉDIA NA AGÊNCIA CENTRAL`;
-    sub = E.type === 'prazo' ? 'Sem acordo ao fim do ultimato, comando autoriza entrada na agência do Banco Meridiano' : E.forced ? 'Ordem do gabinete do prefeito antecipa operação, segundo fontes do isolamento' : 'Operação foi autorizada depois de rodadas de negociação e levantamento de informações';
+    sub = E.type === 'prazo' ? 'Sem acordo ao fim do ultimato, comando autoriza entrada na agência do Banco Meridiano' : E.forced ? 'Ordem do gabinete do prefeito antecipa operação, segundo fontes do isolamento' : (() => { const prep = [G.nego.tries ? 'rodadas de negociação' : null, G.stats.intel || knownCount() ? 'levantamento de informações' : null].filter(Boolean); return prep.length ? `Operação foi autorizada depois de ${prep.join(' e ')}` : G.round === 1 ? 'Operação foi autorizada logo no início do cerco, sem negociação nem levantamento prévio' : 'Operação foi autorizada sem conversa com o líder nem levantamento prévio'; })();
   } else if (E.type === 'fuga') {
     hl = E.variant === 'barrada' ? `FUGA É BARRADA EM ${z.toUpperCase()} E GRUPO É PRESO` : E.variant === 'perseguicao' ? 'PERSEGUIÇÃO PELA AVENIDA TERMINA COM PRISÃO DE ASSALTANTES' : `ASSALTANTES ESCAPAM POR ${z.toUpperCase()} E POLÍCIA INICIA BUSCA`;
     sub = E.variant === 'escapou' ? 'Cofre foi aberto e rota de fuga não tinha cobertura suficiente, apontam testemunhas' : 'Cobertura da rota foi decisiva para encerrar o cerco ao Banco Meridiano';
@@ -3536,7 +3542,7 @@ function newsHTML() {
     <h1 class="hl">${hl}</h1><p class="sub">${sub}</p>
     <div class="cols">
       <p>PORTO ALTO — A crise que paralisou o centro da cidade na tarde desta sexta-feira terminou às ${t}, depois de ${hrs} ${plural(hrs, 'hora', 'horas')} de cerco à Agência Central do Banco Meridiano. Dos ${HOSTAGES} reféns, ${safe} ${plural(safe, 'saiu ileso', 'saíram ilesos')}${H.hurt ? `, ${H.hurt} ${plural(H.hurt, 'ficou ferido', 'ficaram feridos')}` : ''}${H.dead ? ` e ${H.dead} ${plural(H.dead, 'morreu', 'morreram')}` : ''}.${deadIds.length ? ` A polícia confirmou ${plural(deadIds.length, 'a morte de', 'as mortes de')} ${deadIds.map(id => `${HOST[id].nome}, ${HOST[id].idade} anos`).join('; ')}.` : ''}</p>
-      <p>${E.type === 'rendicao' ? `Segundo a polícia, a negociação foi decisiva. A conversa com o líder do grupo chegou ao degrau ${nsteps} de um processo de cinco etapas, da escuta ativa ao acordo sobre a saída, e a rendição foi acertada sem disparos.` : E.type === 'fuga' ? `Os assaltantes tentaram deixar o local por ${z}${E.adapted ? ' depois de mudarem o plano inicial' : ''}. ${E.variant === 'barrada' ? `A cobertura da zona, de ${E.cov}%, impediu a saída.` : E.variant === 'perseguicao' ? 'A perseguição foi encerrada na Avenida Principal.' : `A cobertura da zona era de ${E.cov}% e não impediu a fuga.`}` : E.type === 'prazo' ? `Ao fim do prazo estipulado pelos assaltantes, ${E.variant === 'cedeu' ? 'o líder do grupo aceitou se render, depois de uma negociação que chegou ao degrau ' + nsteps : 'o comando autorizou a entrada na agência'}.` : `A operação foi autorizada na rodada ${G.round}${E.forced ? ', sob determinação do gabinete do prefeito' : ''}. ${v === 'limpa' ? 'Segundo fontes, a informação reunida antes da entrada foi decisiva para o resultado.' : v === 'fracasso' ? 'Fontes do isolamento afirmam que faltou informação sobre o interior.' : 'Houve resistência no interior e a situação levou alguns minutos para ser contida.'}`}</p>
+      <p>${E.type === 'rendicao' ? `Segundo a polícia, a negociação foi decisiva. A conversa com o líder do grupo chegou ao degrau ${nsteps} de um processo de cinco etapas, da escuta ativa ao acordo sobre a saída, e a rendição foi acertada sem disparos.` : E.type === 'fuga' ? `Os assaltantes tentaram deixar o local por ${z}${E.adapted ? ' depois de mudarem o plano inicial' : ''}. ${E.variant === 'barrada' ? `A cobertura da zona, de ${E.cov}%, impediu a saída.` : E.variant === 'perseguicao' ? 'A perseguição foi encerrada na Avenida Principal.' : `A cobertura da zona era de ${E.cov}% e não impediu a fuga.`}` : E.type === 'prazo' ? `Ao fim do prazo estipulado pelos assaltantes, ${E.variant === 'cedeu' ? 'o líder do grupo aceitou se render' + (G.nego.tries ? ', depois de uma negociação que chegou ao degrau ' + nsteps : ', sem que tivesse havido conversa com o comando') : 'o comando autorizou a entrada na agência'}.` : `A operação foi autorizada na rodada ${G.round}${E.forced ? ', sob determinação do gabinete do prefeito' : ''}. ${v === 'limpa' ? (knownCount() >= 3 ? 'Segundo fontes, a informação reunida antes da entrada foi decisiva para o resultado.' : 'Segundo fontes, a entrada foi rápida e encontrou pouca resistência.') : v === 'fracasso' ? (knownCount() >= 4 ? 'Fontes do isolamento afirmam que o interior reagiu com mais força do que o previsto.' : 'Fontes do isolamento afirmam que faltou informação sobre o interior.') : 'Houve resistência no interior e a situação levou alguns minutos para ser contida.'}`}</p>
       <p>${vaultSentence()} A operação consumiu ${Math.round((1000 - G.credits) / 10)}% da verba disponível${G.credits < 100 ? ', deixando o comando praticamente sem margem' : ''}.${(E.agentsHurt || []).length ? ` ${E.agentsHurt.length} ${plural(E.agentsHurt.length, 'agente da força-tarefa ficou ferido', 'agentes da força-tarefa ficaram feridos')} na entrada.` : ''}${(G.stats.leaks || 0) ? ` Durante o cerco, ${G.stats.leaks > 1 ? G.stats.leaks + ' comunicados do comando vazaram ou foram desmentidos' : 'um comunicado do comando vazou ou foi desmentido'}, o que alimentou a cobertura.` : ''}</p>
       ${quotes.join('')}
       <div class="box"><b>Perfil do líder</b>Segundo investigadores, o líder do grupo agia com perfil <i>${PR_().nome.toLowerCase()}</i>. ${PR_().desc} A polícia não divulgou nomes.</div>

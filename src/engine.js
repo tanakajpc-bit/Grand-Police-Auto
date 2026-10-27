@@ -436,7 +436,7 @@ function doEscape(cause) {
   // no Caótico o líder testa o cerco: reage a rotas cobertas já a partir de 50% (nas demais, só a partir de 80%)
   if ((G.exposed > 0 || covR >= (D.adaptAt || 80)) && rnd() < (G.exposed > 0 ? .8 : Math.max(P.adapt, D.adaptMin || 0))) {
     const alts = G.routes.filter(r => r !== z).sort((a, b) => zoneCoverage(a) - zoneCoverage(b));
-    if (alts.length) { z = alts[0]; G.routeNow = z; adapted = true; }
+    if (alts.length && zoneCoverage(alts[0]) < covR) { z = alts[0]; G.routeNow = z; adapted = true; }   // L2.4: o líder só desvia de uma rota coberta para outra menos coberta
   }
   let cov = zoneCoverage(z);
   if (G.accomplice) cov *= hasGear('jammer') ? .92 : (G.K.accomplice ? .9 : .78);
@@ -540,30 +540,33 @@ function genReports() {
   });
   return out;
 }
-/* Pista parcial (Pausa de Comando, Veterana, etc.) */
+/* Pista parcial (Pausa de Comando, Veterana, etc.). Cada categoria se esgota: perfil e efetivo uma vez, rotas improváveis até acabarem
+   (e uma nota de que só restam candidatas), reféns uma vez para cada situação (sem feridos, com feridos). Esgotado tudo, a visão sistêmica avisa. */
 function revealHint() {
-  const K = G.K, c = [];
+  const K = G.K, c = [], dado = k => G.hints.some(h => h.k === k);
+  const non = ZONES.map(z => z.id).filter(z => !G.routes.includes(z) && !K.cleared.includes(z));
+  const tagH = 'hostages' + (G.hostages.hurt + G.hostages.dead > 0 ? '+' : '-');
   if (!K.profile && !K.profileHint) c.push('profile');
-  if (!K.route) c.push('route');
+  if (!K.route && (non.length || !dado('route-fim'))) c.push('route');
   if (!K.count && !K.countHint) c.push('count');
-  if (!K.hostages) c.push('hostages');
+  if (!K.hostages && !dado(tagH)) c.push('hostages');
   if (!c.length) return 'Visão sistêmica: não há incertezas críticas restantes além das que só a investigação resolve.';
-  const k = pick(c); let t;
+  const k = pick(c); let t, tag = k;
   if (k === 'profile') {
     const other = pick(Object.keys(PROFILES).filter(p => p !== G.profile));
     K.profileHint = [G.profile, other].sort();
     t = `O comportamento do líder é compatível com os perfis ${PROFILES[K.profileHint[0]].nome} ou ${PROFILES[K.profileHint[1]].nome}.`;
   } else if (k === 'route') {
-    const non = ZONES.map(z => z.id).filter(z => !G.routes.includes(z) && !K.cleared.includes(z));
     if (non.length) { const z = pick(non); K.cleared.push(z); t = `${ZONE[z].nome} parece improvável como rota de fuga. Pode-se economizar atenção ali.`; }
-    else t = 'As rotas improváveis já foram descartadas; o desafio agora é escolher entre as candidatas.';
+    else { t = 'As rotas improváveis já foram descartadas; o desafio agora é escolher entre as candidatas.'; tag = 'route-fim'; }
   } else if (k === 'count') {
     K.countHint = [Math.max(2, G.assail - 1), G.assail + 1];
     t = `Pelo volume de sinais, há entre ${K.countHint[0]} e ${K.countHint[1]} pessoas armadas no interior.`;
   } else {
+    tag = tagH;
     t = G.hostages.hurt + G.hostages.dead > 0 ? 'Há indícios de pelo menos um refém com lesão, sem confirmação.' : 'Não há sinais de reféns gravemente feridos até agora (sem confirmação).';
   }
-  G.hints.push({ r: G.round, t });
+  G.hints.push({ r: G.round, t, k: tag });
   return t;
 }
 /* Restrição dominante (Teoria das Restrições).
@@ -872,7 +875,7 @@ function resolveDecisions() {
     L(R, 'bad', 'coin', `Verba esgotada: o plantão custava ${pcost} e só havia ${ppaid}. A operação segue no vermelho: o banco, que cobre a diferença, perde confiança (−5)${sob ? ' e a equipe, trabalhando sem folga, sente a pressão (+3)' : '; a equipe já está no limite e a pressão não sobe mais por causa disso'}.`);
   }
   // mídia: 8 + rodada×2 (escalados pela dificuldade) + comunicado
-  const mgain = (8 + G.round * 2) * D.media + G.commMedia - (hasGear('jammer') ? 2 : 0) - (G.team.includes('fernanda') ? 0 : 0);
+  const mgain = (8 + G.round * 2) * D.media + G.commMedia - (hasGear('jammer') ? 2 : 0);
   addMedia(mgain);
   R.mediaParts = [{ k: 'Escalada natural da cobertura', v: (8 + G.round * 2) * D.media }, { k: 'Seus comunicados', v: G.commMedia }, { k: 'Jammer', v: hasGear('jammer') ? -2 : 0 }];
   L(R, G.media > 70 ? 'warn' : 'info', 'mic', `Pressão da mídia ${mgain >= 0 ? '+' : ''}${Math.round(mgain)} → ${Math.round(G.media)}.`);
@@ -939,7 +942,7 @@ function stakePassives(R) {
   const lost = STK_KEYS.filter(k => G.stk[k].sat <= 15 && !G.stk[k].lost);
   lost.forEach(k => {
     G.stk[k].lost = true;
-    if (k === 'banco') { const cut = Math.min(60, Math.max(0, G.credits)); G.credits -= cut; G.spent.corte = (G.spent.corte || 0) + cut; L(R, 'bad', 'bank', 'O banco perdeu a confiança: a diretoria aciona o seguro e corta 60 créditos da verba operacional.'); }
+    if (k === 'banco') { const cut = Math.min(60, Math.max(0, G.credits)); G.credits -= cut; G.spent.corte = (G.spent.corte || 0) + cut; L(R, 'bad', 'bank', cut > 0 ? `O banco perdeu a confiança: a diretoria aciona o seguro e corta ${cut} créditos da verba operacional.` : 'O banco perdeu a confiança: a diretoria aciona o seguro, mas já não há verba para cortar.'); }
     if (k === 'imprensa') L(R, 'bad', 'mic', 'A imprensa rompeu com o comando: a cobertura passa a ser hostil e a pressão da mídia ganha +8 por rodada.');
     if (k === 'prefeito') L(R, 'bad', 'mayor', 'O prefeito perdeu a paciência com o comando. Se ele continuar sem confiança a partir da rodada 6, vai ordenar a intervenção por conta própria, contra a sua recomendação técnica.');
     if (k === 'familias') L(R, 'bad', 'family', 'As famílias rompem o isolamento em protesto. A pressão sobre a equipe sobe.');
@@ -991,7 +994,7 @@ const EVENT_FX = {
     { label: 'Pedir que a plataforma derrube a live', hint: 'Menos exposição, menos informação.', run: R => {
       addMedia(10); stake('imprensa', -8); stake('familias', -4); addAgit(3);
       L(R, 'warn', 'live', 'A transmissão cai. A mídia sobe menos (+10), mas a imprensa reclama de censura (−8), as famílias perdem a única janela (−4) e o líder se irrita (+3).'); } }] },
-  proposta:  { elig: g => g.hostages.inside - g.hostages.dead >= 6, choices: [
+  proposta:  { elig: g => g.hostages.inside - g.hostages.dead >= 6 && g.hostages.inside - g.hostages.dead - g.hostages.hurt >= 3, choices: [
     { label: 'Aceitar a troca (3 reféns por 1 veículo)', hint: 'Vidas já, mobilidade para a fuga.', run: R => {
       const H = G.hostages, n = Math.min(3, H.inside - H.dead - H.hurt); H.inside -= n; H.freed += n; G.vehicleGiven = true; G.nego.concessions++; G.stats.material++;
       addAgit(-8); stake('familias', 12); stake('prefeito', 6);
@@ -1113,7 +1116,7 @@ function finishRound() {
   Object.keys(G.support).forEach(z => { if (G.support[z].left > 0) G.support[z].left--; });
   if (G.exposed > 0) G.exposed--;
   if (G.powerCut > 0) G.powerCut--;
-  if (G.calm > 0) G.calm = Math.max(0, G.calm - 10);
+  if (G.calm > 0 && !R.decs.some(d => d.kind === 'pausa')) G.calm = Math.max(0, G.calm - 10);   // L2.4: o alívio da Pausa vale o resto da rodada e a seguinte inteira; só outra Pausa o renova
   if (G.fatCrit && !deployed().some(id => (G.fat[id] || 0) >= 2)) G.fatCrit = false;
   if (G.deadlineLeft > 0) {
     G.deadlineLeft--;

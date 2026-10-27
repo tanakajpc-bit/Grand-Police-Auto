@@ -30,6 +30,7 @@ function hudHTML() {
 
 /* ---------- Sparkline ---------- */
 function spark(series, color, proj) {
+  series = series.filter(Number.isFinite);   // um valor ausente viraria NaN no caminho do SVG
   const W = 220, Hh = 46, n = Math.max(series.length, 1) + (proj ? 2 : 0);
   const X = i => 6 + (W - 14) * (n <= 1 ? 0 : i / (n - 1)), Y = v => Hh - 6 - (Hh - 12) * clamp(v, 0, 100) / 100;
   if (!series.length) return `<svg class="spark" viewBox="0 0 ${W} ${Hh}" aria-hidden="true"><path d="M6 ${Hh - 6}H${W - 8}" stroke="var(--line)" /></svg>`;
@@ -122,7 +123,7 @@ function endsleyHTML() {
 /* ===================================================================
    DASHBOARDS DE OPERAÇÃO (L1.3): caixa, gargalo, alertas, prévias
    =================================================================== */
-const creditSeries = () => { const h = G.creditsHist.slice(1, G.round + 1).map(v => v / 10); return h.length ? h : [G.credits / 10]; };
+const creditSeries = () => { const h = Array.from({ length: G.round }, (_, i) => G.creditsHist[i + 1]).filter(Number.isFinite).map(v => v / 10); return h.length ? h : [G.credits / 10]; };   // L2.4: sem buracos nem nulos (save antigo, sem histórico de verba)
 const TOCCLS = { violet: 'v', blue: 'b', amber: 'a' };
 
 function cashCard() {
@@ -270,7 +271,7 @@ function tabTatica() {
     <div class="optlist">
       ${opt('support', 'Apoio externo', `Agências parceiras reforçam uma zona: +25 de cobertura por 2 rodadas. Cada uso encarece (${APOIO_PRECOS.join(' → ')}); ${apoioLeft} ${plural(apoioLeft, 'restante', 'restantes')}.`, apoioCost(), 'addapoio', '', { why: wApoio })}
       <label class="subfield"><span>Zona do apoio</span><select id="apoioZone" data-chg="apoiozone"><option value="">escolher…</option>${zoneOpts}</select></label>
-      ${opt('pause', 'Pausa de Comando', `“Subir à sacada”: ${G.team.includes('diego') ? 'duas pistas' : 'uma pista'} sobre variáveis ocultas, visão sistêmica e −10 de pressão na equipe. Consome uma decisão; a crise continua andando.`, '', 'addpausa', '', { why: whyNot({ inPlan: pausaQ }), pressed: pausaQ })}
+      ${opt('pause', 'Pausa de Comando', `“Subir à sacada”: ${G.team.includes('diego') ? 'duas pistas' : 'uma pista'} sobre variáveis ocultas, visão sistêmica e −10 de pressão na equipe, nesta rodada e na seguinte. Consome uma decisão; a crise continua andando.`, '', 'addpausa', '', { why: whyNot({ inPlan: pausaQ }), pressed: pausaQ })}
       ${opt('tired', 'Horas extras', `Recupera 2 rodadas de fadiga em campo e encerra a Fadiga crítica. O preço cresce com o efetivo em campo (${deployed().length} ${plural(deployed().length, 'agente', 'agentes')}).`, horasCost(), 'addhoras', '', { why: whyNot({ inPlan: horasQ, cost: horasCost() }), pressed: horasQ })}
       ${UI.ivConfirm ? `<div class="insight bad">${icon('alert', '', 1.8)}<span><b>Ordenar a intervenção agora?</b> Prontidão ${Math.round(intervPower())}%, chance estimada ${pLabel(ip)} (${Math.round(clamp(ip - band, 0, 1) * 100)}–${Math.round(clamp(ip + band, 0, 1) * 100)}%). Ocupa todas as decisões e encerra a crise nesta rodada.${blindTxt}${apostaTxt}</span></div><div class="row"><button class="btn danger" data-act="ivyes">Confirmar intervenção</button><button class="btn ghost" data-act="ivno">Cancelar <span class="faint" style="font-weight:400">(Esc)</span></button></div>` :
         opt('shield', 'Intervenção', `Ação direta, o BATNA da força-tarefa. Prontidão ${Math.round(intervPower())}% · chance estimada <b>${pLabel(ip)}</b> (±${Math.round(band * 100)}%). Depende de inteligência, tática e agitação.${blindTxt}${apostaTxt}`, '', 'iv', '', { danger: true, pressed: ivq })}

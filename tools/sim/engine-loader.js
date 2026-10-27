@@ -27,7 +27,7 @@ function load(seed, srcDir, extra) {
   const setRng = s => { sandbox.__rngfn = mulberry32(s >>> 0); vm.runInContext('Math.random = __rngfn;', ctx); };
   setRng(seed);
   const api = ctx.__api;
-  api.reseed = setRng; api.store = store;
+  api.reseed = setRng; api.store = store; api.sandbox = sandbox;   // sandbox: os testes de armazenamento trocam o localStorage por um que falha
   api.setRandom = f => { sandbox.__rngfn = f; vm.runInContext('Math.random = __rngfn;', ctx); };
   return api;
 }

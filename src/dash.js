@@ -154,7 +154,7 @@ function siegeAlerts() {
   if (tired.length) add(2, 'tired', 'Equipe cansada', `${tired.length} em campo abaixo de 75% pela fadiga. Horas extras custam ${horasCost()}; rodízio custa cobertura.`, 'tatica', 'Horas extras ou rodízio');
   const away = G.team.filter(isAway);
   if (away.length) add(2, 'alert', 'Agente reconvocado', `${away.map(id => shortName(agentById(id).nome)).join(', ')} fora por mais ${Math.max(...away.map(id => G.away[id]))} rodada(s). As zonas deles estão abertas.`, 'tatica', 'Cobrir as zonas');
-  if (G.pressure > 75) add(2, 'bolt', 'Equipe sobrecarregada', `Pressão ${G.pressure}: acima da zona ótima (≈50) a eficiência cai. A Pausa de Comando reduz 10.`, 'tatica', 'Subir à sacada');
+  if (G.pressure > 75) add(2, 'bolt', 'Equipe sobrecarregada', `Pressão ${G.pressure}: acima da zona ótima (≈50) a eficiência cai. A Pausa de Comando reduz 10, nesta rodada e na seguinte.`, 'tatica', 'Subir à sacada');
   if (G.deadlineLeft > 0) add(3, 'clock', 'Noticiário das 20h', `Faltam ${G.deadlineLeft} rodada${G.deadlineLeft > 1 ? 's' : ''}. Se não houver desfecho, o prefeito perde 15 pontos.`, 'com', 'Falar com o prefeito');
   else if (r === 5 && !po) add(1, 'mayor', 'Prefeito em urgência na rodada 6', 'Perdas de confiança dele passam a ser maiores. Comunicar agora é mais barato que depois.', 'com', 'Antecipar');
   if (r === MAX_ROUNDS) { const u = ultimatumView(); add(3, 'clock', 'Última rodada', `Depois desta vem o ultimato final. Como está, o líder cede com ${u.cede} de chance; se não ceder, a entrada é forçada (${u.forca} de sucesso). O que você mexer agora ainda conta.`, 'nego', 'Fechar a negociação'); }
