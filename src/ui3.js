@@ -291,40 +291,67 @@ function renderPost() {
    =================================================================== */
 const ACT = {}, CHG = {};
 const warn = m => toast('COMANDO', m, 'warn');
+/* L2.2: cada ação só vale no estado em que o seu botão existe. Um clique atrasado, um duplo clique ou uma chamada fora de hora
+   não pula etapa nem mexe no jogo. */
+const at = (phase, stage) => !!G && G.phase === phase && (stage === undefined || G.stage === stage);
+const when = (cond, fn) => (...a) => cond() ? fn(...a) : undefined;
+const inMenu = () => !G, panel = () => at('siege', 'panel');
+/* Uma exceção numa ação ou no desenho nunca deixa a tela morta: cai na tela de falha, com saída. */
+const run = f => { try { return f(); } catch (err) { renderFatal(err); } };
 /* Depois de uma ação que some com o botão focado, o foco vai para o próximo lugar útil. */
 const focusFirst = (...sels) => { for (const q of sels) { const el = $app.querySelector(q); if (el) { el.focus({ preventScroll: true }); return; } } };
 function setPhase(p) { G.phase = p; saveGame(); render(); }
 
-ACT.diff = d => { UI.diffSel = d.v; render(); };
-ACT.start = () => { newGame(UI.diffSel, { noLimit: UI.noLimit }); UI.sel = null; UI.tab = 'tatica'; UI.lvl = 1; UI.post = 'score'; UI.emptyConfirm = false; setPhase('briefing'); };
-ACT.continue = () => { const s = loadSave(); if (!s) { render(); return; } G = s; UI.timerRound = -1; if (G.stage === 'resolving') G.stage = 'result'; render(); };
-ACT.howto = () => { UI.tutor = true; render(); };
-ACT.closehowto = () => { UI.tutor = false; render(); const b = $app.querySelector('[data-act=howto]'); if (b) b.focus({ preventScroll: true }); };
-ACT.tobrief = () => setPhase('recruit');
-ACT.skipbrief = (d, el) => { $app.classList.add('noanim'); if (el && el.tagName === 'BUTTON') { const b = $app.querySelector('[data-act=tobrief]'); if (b) b.focus({ preventScroll: true }); } };
+ACT.diff = when(inMenu, d => { UI.diffSel = d.v; render(); });
+function startNew() { SAVE_LOST = false; resetUI(); newGame(UI.diffSel, { noLimit: UI.noLimit }); setPhase('briefing'); }
+/* Iniciar por cima de uma partida em andamento pergunta antes: o botão primário fica ao lado do "Continuar" e um clique errado apagaria o jogo. */
+ACT.start = when(inMenu, () => {
+  const sv = loadSave();
+  if (sv && sv.phase !== 'post' && !UI.newConfirm) { UI.newConfirm = true; render(); return; }
+  startNew();
+});
+ACT.newyes = when(() => inMenu() && UI.newConfirm, () => { UI.newConfirm = false; clearSave(); startNew(); });
+ACT.newno = when(() => inMenu() && UI.newConfirm, () => { UI.newConfirm = false; render(); focusFirst('[data-act=start]'); });
+/* Continuar valida pelo uso: se a tela do save não monta, o save está ruim e é descartado em vez de travar a página. */
+ACT.continue = when(inMenu, () => {
+  const s = loadSave(); if (!s) { render(); return; }
+  resetUI(); G = s; if (G.stage === 'resolving') G.stage = 'result';
+  try { buildScreen(); } catch (err) { G = null; clearSave(); SAVE_LOST = true; }
+  render();
+});
+ACT.howto = when(inMenu, () => { UI.tutor = true; render(); });
+ACT.closehowto = when(() => inMenu() && UI.tutor, () => { UI.tutor = false; render(); const b = $app.querySelector('[data-act=howto]'); if (b) b.focus({ preventScroll: true }); });
+ACT.tobrief = when(() => at('briefing'), () => setPhase('recruit'));
+ACT.skipbrief = when(() => at('briefing'), (d, el) => { $app.classList.add('noanim'); if (el && el.tagName === 'BUTTON') { const b = $app.querySelector('[data-act=tobrief]'); if (b) b.focus({ preventScroll: true }); } });
 /* Manchetes: pausa sem re-renderizar (o letreiro continua de onde estava). */
 ACT.tkpause = () => {
   UI.tkPause = !UI.tkPause;
   document.querySelectorAll('.ticker').forEach(t => t.classList.toggle('paused', UI.tkPause));
   document.querySelectorAll('.tkp').forEach(b => { const l = (UI.tkPause ? 'Retomar' : 'Pausar') + ' as manchetes'; b.setAttribute('aria-pressed', UI.tkPause); b.setAttribute('aria-label', l); b.title = l; b.textContent = UI.tkPause ? '▶' : '❚❚'; });
 };
-ACT.lvl = d => { UI.lvl = +d.t; UI.tabAnim = true; render(); };
-ACT.cutgo = () => { const c = UI.cut; UI.cut = null; render(); if (c && c.after) c.after(); };
-ACT.hire = d => {
+ACT.lvl = when(panel, d => { UI.lvl = +d.t; UI.tabAnim = true; render(); });
+ACT.cutgo = when(() => !!UI.cut, () => { const c = UI.cut; UI.cut = null; render(); if (c && c.after) c.after(); });
+/* Voltar ao menu no meio da partida: a janela de confirmação para o relógio; a partida fica salva. */
+ACT.menu = when(() => !!G && G.phase !== 'post' && !UI.menuConfirm, () => { pauseTimer(); UI.menuConfirm = true; render(); focusFirst('[data-act=menuno]'); });
+ACT.menuno = when(() => !!G && UI.menuConfirm, () => { UI.menuConfirm = false; resumeTimer(); render(); });
+ACT.menuyes = when(() => !!G && UI.menuConfirm, () => { if (UI.timerId) G.tleft = timeLeft(); saveGame(); resetUI(); G = null; render(); });
+ACT.hire = when(() => at('recruit'), d => {
   const a = agentById(d.id);
+  if (!a) return;
   if (G.team.includes(d.id)) { G.team = G.team.filter(x => x !== d.id); G.credits += a.custo; G.spent.rec -= a.custo; delete G.az[d.id]; }
   else if (G.credits >= a.custo) { G.team.push(d.id); G.credits -= a.custo; G.spent.rec += a.custo; G.az[d.id] = 'reserva'; }
   else { warn('Créditos insuficientes para ' + a.nome + '.'); return; }
   UI.emptyConfirm = false; saveGame(); render();
-};
-ACT.buygear = d => {
+});
+ACT.buygear = when(() => at('recruit'), d => {
   const e = EQ[d.id];
+  if (!e) return;
   if (G.gear.includes(d.id)) { G.gear = G.gear.filter(x => x !== d.id); G.credits += e.custo; G.spent.equip -= e.custo; delete G.gz[d.id]; }
   else if (G.credits >= e.custo) { G.gear.push(d.id); G.credits -= e.custo; G.spent.equip += e.custo; G.gz[d.id] = 'reserva'; }
   else { warn('Créditos insuficientes para ' + e.nome + '.'); return; }
   saveGame(); render();
-};
-ACT.torecruit = () => {
+});
+ACT.torecruit = when(() => at('recruit'), () => {
   if (!G.team.length) {
     if (!UI.emptyConfirm) { UI.emptyConfirm = true; render(); return; }
     G.team = ['g1', 'g2']; G.stats.noRecruit = true; G.team.forEach(id => G.az[id] = 'reserva');
@@ -336,19 +363,19 @@ ACT.torecruit = () => {
     { t: `[RÁDIO] ${agentById(lead).nome} para o comando: “Equipe no local. Aguardo a distribuição pelas zonas. O banco tem mais saídas do que parece.” Câmbio.`, radio: true },
     { t: 'Quatro das sete zonas ao redor da agência podem ser rotas de fuga. Você não sabe quais.' }] };
   setPhase('perimeter');
-};
-CHG.camplus = (v, d, el) => { G.camAdj.plus = v; if (G.camAdj.minus === v) G.camAdj.minus = Object.keys(ATTR).find(k => k !== v); saveGame(); render(); };
-CHG.camminus = (v) => { G.camAdj.minus = v; if (G.camAdj.plus === v) G.camAdj.plus = Object.keys(ATTR).find(k => k !== v); saveGame(); render(); };
+});
+CHG.camplus = when(() => at('recruit'), v => { if (!has(ATTR, v)) return; G.camAdj.plus = v; if (G.camAdj.minus === v) G.camAdj.minus = Object.keys(ATTR).find(k => k !== v); saveGame(); render(); });
+CHG.camminus = when(() => at('recruit'), v => { if (!has(ATTR, v)) return; G.camAdj.minus = v; if (G.camAdj.plus === v) G.camAdj.plus = Object.keys(ATTR).find(k => k !== v); saveGame(); render(); });
 CHG.nolimit = (v, d, el) => { UI.noLimit = !!el.checked; };
-ACT.selchip = d => { UI.sel = (UI.sel && UI.sel.t === d.t && UI.sel.id === d.id) ? null : { t: d.t, id: d.id }; render(); };
-ACT.place = d => {
+ACT.selchip = when(() => at('perimeter'), d => { UI.sel = (UI.sel && UI.sel.t === d.t && UI.sel.id === d.id) ? null : { t: d.t, id: d.id }; render(); });
+ACT.place = when(() => at('perimeter'), d => {
   if (UI.sel) { if (UI.sel.t === 'a') G.az[UI.sel.id] = d.z; else G.gz[UI.sel.id] = d.z; UI.sel = null; saveGame(); }
   else UI.pickZone = UI.pickZone === d.z ? null : d.z;
   render();
-};
-ACT.autoplace = () => { autoPlace(); UI.sel = null; saveGame(); render(); };
-ACT.p1intel = d => { const r = phase1Intel(d.id); if (!r) { warn('Créditos insuficientes.'); return; } saveGame(); render(); };
-ACT.tosiege = () => {
+});
+ACT.autoplace = when(() => at('perimeter'), () => { autoPlace(); UI.sel = null; saveGame(); render(); });
+ACT.p1intel = when(() => at('perimeter'), d => { const r = phase1Intel(d.id); if (!r) { warn('Créditos insuficientes.'); return; } saveGame(); render(); });
+ACT.tosiege = when(() => at('perimeter'), () => {
   confirmPerimeter(); G.phase = 'siege'; UI.pickZone = null; startRound();
   const adq = adequateCount();
   UI.cut = { time: '14h37', title: 'Perímetro fechado', btn: 'Começar o cerco', lines: [
@@ -356,47 +383,51 @@ ACT.tosiege = () => {
     { t: 'Dentro da agência, o telefone começa a tocar. É a linha que você mandou ligar.' },
     { t: '[RÁDIO] Comando, todas as equipes em posição. A partir de agora o relógio é seu. Câmbio.', radio: true }] };
   render();
-};
+});
 
-ACT.takepanel = () => { G.stage = 'panel'; UI.tab = 'tatica'; UI.lvl = 1; UI.ivConfirm = false; UI.pickZone = null; saveGame(); render(); };
+ACT.takepanel = when(() => at('siege', 'update'), () => { G.stage = 'panel'; UI.tab = 'tatica'; UI.lvl = 1; UI.ivConfirm = false; UI.pickZone = null; saveGame(); render(); });
 /* Abas de decisão. Vindo de um alerta ou do gargalo, o foco e a rolagem acompanham a aba aberta. */
-ACT.tab = (d, el) => {
+ACT.tab = when(panel, (d, el) => {
   UI.tab = d.t; UI.tabAnim = true; render();
   if (el && !el.classList.contains('tab')) { const t = document.getElementById('tab-' + d.t); if (t) { t.focus({ preventScroll: true }); t.scrollIntoView({ block: 'nearest', behavior: reduceMotion() ? 'auto' : 'smooth' }); } }
-};
-const addD = (d) => { const r = addDecision(d); if (!r.ok) warn(r.msg); else { saveGame(); } render(); };
-ACT.addrepos = () => {
+});
+const addD = (d) => { if (!panel()) return; const r = addDecision(d); if (!r.ok) warn(r.msg); else { saveGame(); } render(); };
+ACT.addrepos = when(panel, () => {
   if (!UI.repoAgent || !UI.repoZone) { warn('Escolha o agente e o destino.'); return; }
+  if (!G.team.includes(UI.repoAgent)) { UI.repoAgent = ''; warn('Escolha o agente e o destino.'); render(); return; }
   if (G.az[UI.repoAgent] === UI.repoZone) { warn('O agente já está nessa zona.'); return; }
   addD({ front: 'tatica', kind: 'repos', p: { agent: UI.repoAgent, zone: UI.repoZone }, label: `${shortName(agentById(UI.repoAgent).nome)} → ${ZNAME(UI.repoZone)}`, slots: 1 });
-};
-CHG.repoagent = v => { UI.repoAgent = v; render(); }; CHG.repozone = v => { UI.repoZone = v; render(); }; CHG.apoiozone = v => { UI.apoioZone = v; };
-CHG.negotiator = v => { G.nego.negotiator = v; saveGame(); render(); };
-ACT.addapoio = () => { if (!UI.apoioZone) { warn('Escolha a zona do apoio externo.'); return; } addD({ front: 'tatica', kind: 'apoio', p: { zone: UI.apoioZone }, label: `Apoio externo em ${ZNAME(UI.apoioZone)}`, slots: 1, cost: apoioCost() }); };
+});
+CHG.repoagent = when(panel, v => { UI.repoAgent = v; render(); }); CHG.repozone = when(panel, v => { UI.repoZone = v; render(); }); CHG.apoiozone = when(panel, v => { UI.apoioZone = v; });
+CHG.negotiator = when(panel, v => { G.nego.negotiator = G.team.includes(v) ? v : null; saveGame(); render(); });
+ACT.addapoio = when(panel, () => { if (!UI.apoioZone) { warn('Escolha a zona do apoio externo.'); return; } addD({ front: 'tatica', kind: 'apoio', p: { zone: UI.apoioZone }, label: `Apoio externo em ${ZNAME(UI.apoioZone)}`, slots: 1, cost: apoioCost() }); });
 ACT.addpausa = () => addD({ front: 'tatica', kind: 'pausa', p: {}, label: 'Pausa de Comando', slots: 1 });
 ACT.addhoras = () => addD({ front: 'tatica', kind: 'horas', p: {}, label: 'Horas extras', slots: 1, cost: horasCost() });
-ACT.iv = () => { UI.ivConfirm = true; render(); focusFirst('[data-act=ivno]'); };
-ACT.ivno = () => { UI.ivConfirm = false; render(); focusFirst('[data-act=iv]'); };
-ACT.ivyes = () => { UI.ivConfirm = false; addD({ front: 'tatica', kind: 'interv', p: {}, label: 'INTERVENÇÃO', slots: D_().slots }); focusFirst('[data-act=iv]'); };
-ACT.addnego = d => { const t = d.t === 'press' ? 'press' : +d.t; addD({ front: 'nego', kind: 'nego', p: { tech: t }, label: t === 'press' ? 'Pressionar o líder' : `Negociar: ${POSTURES[t - 1].nome}`, slots: 1 }); };
-ACT.addintel = d => addD({ front: 'intel', kind: 'intel', p: { id: d.id }, label: INTEL.find(i => i.id === d.id).nome, slots: 1, cost: intelCost(d.id) });
-ACT.addcom = d => { const c = COMMS.find(x => x.id === d.id); addD({ front: 'com', kind: 'com', p: { cid: d.id }, label: c.nome, slots: 1, cost: c.custo }); };
-ACT.rmq = (d, el) => { removeDecision(+d.id); saveGame(); render(); if (el) focusFirst('.actbar .qx', '.actbar [data-act=execute]'); };
-ACT.zonepick = d => { UI.pickZone = d.z; UI.tab = 'tatica'; UI.repoZone = d.z; UI.apoioZone = d.z; render(); };
-ACT.execute = () => {
-  if (!G || G.phase !== 'siege' || G.stage !== 'panel') return;
-  stopTimer(); UI.ivConfirm = false; resolveDecisions(); render();
-};
-ACT.evchoice = d => { if (G.stage !== 'event') return; if (!chooseEvent(+d.i)) { warn('Créditos insuficientes para essa escolha.'); return; } render(); };
-ACT.cont = () => {
+ACT.iv = when(panel, () => { UI.ivConfirm = true; render(); focusFirst('[data-act=ivno]'); });
+ACT.ivno = when(panel, () => { UI.ivConfirm = false; render(); focusFirst('[data-act=iv]'); });
+ACT.ivyes = when(panel, () => { UI.ivConfirm = false; addD({ front: 'tatica', kind: 'interv', p: {}, label: 'INTERVENÇÃO', slots: D_().slots }); focusFirst('[data-act=iv]'); });
+ACT.addnego = d => { if (!panel()) return; const t = d.t === 'press' ? 'press' : +d.t; if (t !== 'press' && !(t >= 1 && t <= 5)) return; addD({ front: 'nego', kind: 'nego', p: { tech: t }, label: t === 'press' ? 'Pressionar o líder' : `Negociar: ${POSTURES[t - 1].nome}`, slots: 1 }); };
+ACT.addintel = d => { const it = INTEL.find(i => i.id === d.id); if (panel() && it) addD({ front: 'intel', kind: 'intel', p: { id: d.id }, label: it.nome, slots: 1, cost: intelCost(d.id) }); };
+ACT.addcom = d => { const c = COMMS.find(x => x.id === d.id); if (panel() && c) addD({ front: 'com', kind: 'com', p: { cid: d.id }, label: c.nome, slots: 1, cost: c.custo }); };
+ACT.rmq = when(panel, (d, el) => { removeDecision(+d.id); saveGame(); render(); if (el) focusFirst('.actbar .qx', '.actbar [data-act=execute]'); });
+ACT.zonepick = when(panel, d => { if (!isZoneId(d.z)) return; UI.pickZone = d.z; UI.tab = 'tatica'; UI.repoZone = d.z; UI.apoioZone = d.z; render(); });
+ACT.execute = when(panel, () => {
+  stopTimer(); G.tleft = null; UI.ivConfirm = false; resolveDecisions(); render();
+});
+ACT.evchoice = when(() => at('siege', 'event'), d => { if (!chooseEvent(+d.i)) { warn('Créditos insuficientes para essa escolha.'); return; } render(); });
+ACT.cont = when(() => at('siege', 'result'), () => {
   if (G.end) { const tb = document.getElementById('toasts'); if (tb) tb.innerHTML = ''; G.phase = 'outcome'; saveGame(); render(); return; }
   startRound(); render();
-};
-ACT.toscore = () => { G.phase = 'post'; UI.post = 'score'; saveGame(); render(); };
-ACT.ptab = d => { UI.post = d.t; render(); };
-ACT.rnode = d => { UI.replayR = +d.r; render(); };
-ACT.again = () => { stopTimer(); clearSave(); G = null; UI.timerRound = -1; render(); };
-ACT.tomenu = () => { stopTimer(); G = null; UI.timerRound = -1; render(); };
+});
+ACT.toscore = when(() => at('outcome'), () => { G.phase = 'post'; UI.post = 'score'; saveGame(); render(); });
+ACT.ptab = when(() => at('post'), d => { UI.post = d.t; render(); });
+ACT.rnode = when(() => at('post'), d => { UI.replayR = +d.r; render(); });
+ACT.again = when(() => at('post'), () => { clearSave(); resetUI(); G = null; render(); });
+ACT.tomenu = when(() => at('post'), () => { resetUI(); G = null; render(); });
+/* Tela de falha: as três saídas funcionam em qualquer estado. */
+ACT.fatalresume = () => { const s = loadSave(); resetUI(); G = s; render(); };
+ACT.fatalmenu = () => { resetUI(); G = null; render(); };
+ACT.fataldrop = () => { clearSave(); resetUI(); G = null; render(); };
 
 /* ===================================================================
    RENDER / BOOT
@@ -443,19 +474,36 @@ function tweenChanged(prev) {
     }
   });
 }
-function render() {
-  const sig = focusSig(document.activeElement);
-  const prev = {}; $app.querySelectorAll('[data-k]').forEach(el => { prev[el.dataset.k] = el.dataset.val != null ? el.dataset.val : el.dataset.n; });
+/* Monta o HTML da tela atual sem tocar na página: o desenho de verdade e a prova de que um save monta (ACT.continue) usam a mesma função. */
+function buildScreen() {
   BAR = '';
   let html;
   if (!G) html = renderMenu();
   else if (G.phase === 'briefing') html = renderBriefing();
   else if (G.phase === 'recruit') html = renderRecruit();
   else if (G.phase === 'perimeter') html = renderPerimeter();
-  else if (G.phase === 'siege') html = G.stage === 'update' ? renderUpdate() : G.stage === 'panel' ? renderPanel() : G.stage === 'event' ? renderEventStage() : renderResult();
+  else if (G.phase === 'siege') html = G.stage === 'update' ? renderUpdate() : G.stage === 'panel' ? renderPanel() : G.stage === 'event' ? renderEventStage() : G.stage === 'result' || G.stage === 'resolving' ? renderResult() : (() => { throw new Error('estágio inválido: ' + G.stage); })();
   else if (G.phase === 'outcome') html = renderOutcome();
-  else html = renderPost();
-  $app.innerHTML = html + (BAR ? `<div class="actbar" role="region" aria-label="Próximo passo"><div class="actin">${BAR}</div></div>` : '') + cutHTML();
+  else if (G.phase === 'post') html = renderPost();
+  else throw new Error('fase inválida: ' + G.phase);
+  return html + (BAR ? `<div class="actbar" role="region" aria-label="Próximo passo"><div class="actin">${BAR}</div></div>` : '') + cutHTML() + (G && UI.menuConfirm ? menuConfirmModal() : '');
+}
+/* Tela de falha: o estado não bateu com o esperado. As três saídas funcionam em qualquer estado, e o último ponto salvo continua guardado. */
+function renderFatal(err) {
+  stopTimer();
+  try { console.error('PERÍMETRO: falha ao montar a tela', err); } catch (_) {}
+  UI.cut = null; UI.menuConfirm = false; UI.newConfirm = false;
+  $app.innerHTML = `<div class="screen"><div class="card fatal" role="alert"><h1 class="h3" style="font-size:20px">Esta tela não pôde ser montada</h1>
+    <p class="muted">Algo no estado da partida não bateu com o esperado. O último ponto salvo continua guardado neste navegador.</p>
+    <div class="row"><button class="btn primary" data-act="fatalresume">Voltar ao último ponto salvo</button><button class="btn" data-act="fatalmenu">Ir para o menu</button><button class="btn" data-act="fataldrop">Descartar a partida salva</button></div></div></div>`;
+  document.body.classList.remove('withbar');
+  const b = $app.querySelector('button'); if (b) b.focus({ preventScroll: true });
+}
+function render() { try { draw(); } catch (err) { renderFatal(err); } }
+function draw() {
+  const sig = focusSig(document.activeElement);
+  const prev = {}; $app.querySelectorAll('[data-k]').forEach(el => { prev[el.dataset.k] = el.dataset.val != null ? el.dataset.val : el.dataset.n; });
+  $app.innerHTML = buildScreen();
   document.body.classList.toggle('withbar', !!BAR);
   UI.tabAnim = false;
   const key = G ? G.phase + ':' + (G.stage || '') + ':' + G.round + ':' + UI.post : 'menu', changed = key !== lastKey;
@@ -477,12 +525,13 @@ function render() {
 $app.addEventListener('click', e => {
   const el = e.target.closest('[data-act]');
   if (!el || el.disabled) return;
+  if (e.detail > 1) return;   // duplo clique: o segundo clique cairia no botão que aparece no mesmo lugar e pularia uma etapa
   if (el.getAttribute('aria-disabled') === 'true') { if (el.dataset.why) warn(el.dataset.why); return; }
-  const fn = ACT[el.dataset.act]; if (fn) fn(el.dataset, el);
+  const fn = has(ACT, el.dataset.act) ? ACT[el.dataset.act] : null; if (fn) run(() => fn(el.dataset, el));
 });
 $app.addEventListener('change', e => {
   const el = e.target.closest('[data-chg]'); if (!el) return;
-  const fn = CHG[el.dataset.chg]; if (fn) fn(el.value, el.dataset, el);
+  const fn = has(CHG, el.dataset.chg) ? CHG[el.dataset.chg] : null; if (fn) run(() => fn(el.value, el.dataset, el));
 });
 $app.addEventListener('keydown', e => {
   if ((e.key === 'Enter' || e.key === ' ') && e.target.matches && e.target.matches('g[data-act]')) { e.preventDefault(); e.target.dispatchEvent(new MouseEvent('click', { bubbles: true })); }
@@ -499,7 +548,9 @@ document.addEventListener('keydown', e => {
     return;
   }
   if (e.key === 'Escape') {
-    if (UI.tutor) { e.preventDefault(); ACT.closehowto(); }
+    if (UI.newConfirm) { e.preventDefault(); ACT.newno(); }
+    else if (UI.menuConfirm) { e.preventDefault(); ACT.menuno(); }
+    else if (UI.tutor) { e.preventDefault(); ACT.closehowto(); }
     else if (G && G.phase === 'siege' && UI.ivConfirm) { e.preventDefault(); ACT.ivno(); }
     else if (G && G.phase === 'perimeter' && UI.sel) { e.preventDefault(); UI.sel = null; render(); }
     return;
@@ -515,5 +566,9 @@ document.addEventListener('keydown', e => {
     e.preventDefault(); items[i].focus(); items[i].click();
   }
 });
+onSaveFail = () => toast('COMANDO', 'Não foi possível salvar a partida neste navegador (armazenamento bloqueado ou cheio). Você pode seguir jogando, mas ela não será retomada se a página for recarregada.', 'warn');
+/* O relógio da rodada espera com a aba oculta, e o que sobrava dele é salvo ao sair da página (recarregar continua de onde parou). */
+document.addEventListener('visibilitychange', () => { if (document.hidden) pauseTimer(); else resumeTimer(); });
+window.addEventListener('pagehide', () => { if (G && UI.timerId) G.tleft = timeLeft(); saveGame(); });
 window.PERIMETRO = { get G() { return G; }, newGame, startRound, resolveDecisions, chooseEvent, finishRound, addDecision, computeScore, zoneCoverage, intervProb, negoParts, autoPlace, confirmPerimeter, render, ACT, UI };
 render();

@@ -2,9 +2,12 @@
    INTERFACE — helpers, menu, briefing, recrutamento, perímetro
    ===================================================================== */
 const $app = document.getElementById('app');
-const UI = { tab: 'tatica', sel: null, repoAgent: '', repoZone: '', apoioZone: '', post: 'score', replayR: 1, diffSel: 'complexo', noLimit: false,
-  timerId: null, deadline: 0, timerRound: -1, tutor: false, ivConfirm: false, emptyConfirm: false, msg: '', pickZone: null,
-  lvl: 1, tkPause: false, tabAnim: false };
+/* Estado de tela que não pertence a nenhuma partida. resetUI() devolve tudo isto ao zero quando a partida muda (nova, retomada, encerrada);
+   as preferências (dificuldade escolhida, cronômetro sem limite, manchetes pausadas) ficam. */
+const UI0 = { tab: 'tatica', sel: null, repoAgent: '', repoZone: '', apoioZone: '', post: 'score', replayR: 1, tutor: false, ivConfirm: false, emptyConfirm: false,
+  newConfirm: false, menuConfirm: false, msg: '', pickZone: null, lvl: 1, tabAnim: false, cut: null, paused: false };
+const UI = Object.assign({ diffSel: 'complexo', noLimit: false, tkPause: false, timerId: null, deadline: 0, timerRound: -1 }, UI0);
+function resetUI() { stopTimer(); Object.assign(UI, UI0, { timerRound: -1, deadline: 0 }); }
 
 const fmt = n => Math.round(n).toLocaleString('pt-BR');
 const covCls = c => c >= ADEQ ? 'g' : c >= 30 ? 'a' : 'r';
@@ -44,19 +47,25 @@ function toast(title, text, tone = '') {
 /* ---------- Timer ---------- */
 /* Pacing: as duas primeiras rodadas são de orientação e dão mais tempo para ler o painel. */
 const roundTimer = () => Math.round(D_().timer * (G.round === 1 ? 1.6 : G.round === 2 ? 1.25 : 1));
-function stopTimer() { if (UI.timerId) { clearInterval(UI.timerId); UI.timerId = null; } }
+const timeLeft = () => Math.max(0, Math.ceil((UI.deadline - Date.now()) / 1000));
+function stopTimer() { if (UI.timerId) { clearInterval(UI.timerId); UI.timerId = null; } UI.paused = false; }
 function startTimer() {
   stopTimer(); UI.timerRound = G.round;
   if (G.noLimit) { UI.deadline = 0; return; }
-  UI.deadline = Date.now() + roundTimer() * 1000;
+  /* G.tleft guarda o que sobrava no relógio: recarregar a página ou voltar à aba continua de onde parou, em vez de dar a rodada inteira de novo. */
+  const left = G.tleft != null ? Math.max(10, G.tleft) : roundTimer();
+  UI.deadline = Date.now() + left * 1000;
   UI.timerId = setInterval(tick, 250); tick();
 }
 function tick() {
-  const el = document.getElementById('clock'); if (!el || !UI.timerId) return;
-  const left = Math.max(0, Math.ceil((UI.deadline - Date.now()) / 1000));
-  el.textContent = mmss(left); el.classList.toggle('low', left <= 30);
-  if (left <= 0) { stopTimer(); toast('COMANDO', 'Tempo esgotado: o plano atual é executado.', 'hot'); ACT.execute({}); }
+  if (!UI.timerId) return;
+  const left = timeLeft(), el = document.getElementById('clock'); G.tleft = left;
+  if (el) { el.textContent = mmss(left); el.classList.toggle('low', left <= 30); }
+  if (left <= 0) { stopTimer(); toast('COMANDO', 'Tempo esgotado: o plano atual é executado.', 'hot'); run(() => ACT.execute({})); }
 }
+/* Aba oculta ou janela de confirmação aberta: o relógio espera. O jogo é de um jogador só, e sair da aba não deve executar o plano às cegas. */
+function pauseTimer() { if (!UI.timerId) return; G.tleft = timeLeft(); stopTimer(); UI.paused = true; saveGame(); }
+function resumeTimer() { if (UI.paused && !UI.menuConfirm && G && G.phase === 'siege' && G.stage === 'panel') startTimer(); }
 
 /* ---------- Mapa ---------- */
 function mapSVG(o = {}) {
@@ -130,8 +139,9 @@ function skyline() {
   }
   return `<svg class="skyline" viewBox="0 0 1600 600" preserveAspectRatio="xMidYMax slice" aria-hidden="true">${out}</svg>`;
 }
+const saveLabel = s => s.phase === 'siege' ? 'rodada ' + s.round : s.phase === 'post' || s.phase === 'outcome' ? 'finalizada' : s.phase === 'recruit' ? 'recrutamento' : s.phase === 'perimeter' ? 'perímetro' : 'briefing';
 function renderMenu() {
-  const save = loadSave();
+  const save = loadSave(), lost = SAVE_LOST; SAVE_LOST = false;
   const dcards = Object.entries(DIFF).map(([k, d]) => `
     <button class="diffcard" role="radio" data-act="diff" data-v="${k}" aria-checked="${UI.diffSel === k}" tabindex="${UI.diffSel === k ? 0 : -1}">
       <span class="dot" aria-hidden="true"></span>
@@ -146,8 +156,9 @@ function renderMenu() {
       <div class="grid">
         <div><div class="eyebrow" id="difflbl">Dificuldade</div><div class="diffs" role="radiogroup" aria-labelledby="difflbl" style="margin-top:8px">${dcards}</div></div>
         <div class="row"><button class="btn primary lg" data-act="start">Iniciar simulação</button>
-          ${save ? `<button class="btn lg" data-act="continue">Continuar partida <span class="faint" style="font-weight:400">(${DIFF[save.diff].nome}, ${save.phase === 'siege' ? 'rodada ' + save.round : save.phase === 'post' || save.phase === 'outcome' ? 'finalizada' : save.phase === 'recruit' ? 'recrutamento' : save.phase === 'perimeter' ? 'perímetro' : 'briefing'})</span></button>` : ''}
+          ${save ? `<button class="btn lg" data-act="continue">Continuar partida <span class="faint" style="font-weight:400">(${DIFF[save.diff].nome}, ${saveLabel(save)})</span></button>` : ''}
         </div>
+        ${lost ? `<div class="insight warn" role="status">${icon('alert', '', 1.8)}<span>A partida salva neste navegador estava corrompida ou era de outra versão e foi descartada. Uma nova simulação começa do zero.</span></div>` : ''}
         <label class="check"><input type="checkbox" id="nolimit" data-chg="nolimit" ${UI.noLimit ? 'checked' : ''}><span>Cronômetro sem limite (acessibilidade): o relógio aparece, mas não encerra a rodada</span></label>
       </div>
       <div class="card">
@@ -157,9 +168,23 @@ function renderMenu() {
         <p class="faint" style="font-size:12px;margin-top:14px">Todos os nomes, lugares e instituições são fictícios. A perspectiva é sempre a de quem protege; as ações táticas são abstratas e não há imagens explícitas.</p>
       </div>
     </div>
-    ${UI.tutor ? tutorModal() : ''}
+    ${UI.tutor ? tutorModal() : ''}${UI.newConfirm && save ? newConfirmModal(save) : ''}
   </div>`;
 }
+function newConfirmModal(save) {
+  return `<div class="modalback"><div class="tutor" role="dialog" aria-modal="true" aria-labelledby="nct">
+    <h2 class="h3" id="nct">Iniciar uma nova partida?</h2>
+    <p class="muted">Há uma partida salva neste navegador (${DIFF[save.diff].nome}, ${saveLabel(save)}). Começar uma nova apaga essa partida e não dá para desfazer.</p>
+    <div class="row"><button class="btn primary" data-act="newyes">Apagar e iniciar</button><button class="btn" data-act="newno">Manter a partida salva</button><span class="faint" style="font-size:12px">Esc também cancela</span></div></div></div>`;
+}
+/* Voltar ao menu no meio da partida: a partida fica salva e o relógio da rodada fica parado (a janela não mostra confirm do navegador). */
+function menuConfirmModal() {
+  return `<div class="modalback"><div class="tutor" role="dialog" aria-modal="true" aria-labelledby="mct">
+    <h2 class="h3" id="mct">Voltar ao menu?</h2>
+    <p class="muted">A partida fica salva neste navegador e pode ser retomada em “Continuar partida”.${G && G.phase === 'siege' && G.stage === 'panel' && !G.noLimit ? ' O relógio desta rodada fica parado até você voltar.' : ''}</p>
+    <div class="row"><button class="btn primary" data-act="menuyes">Voltar ao menu</button><button class="btn" data-act="menuno">Continuar jogando</button><span class="faint" style="font-size:12px">Esc também cancela</span></div></div></div>`;
+}
+const menuBtn = () => '<button class="btn sm ghost hudmenu" type="button" data-act="menu" title="Voltar ao menu (a partida fica salva)">Menu</button>';
 function tutorModal() {
   return `<div class="modalback"><div class="tutor" role="dialog" aria-modal="true" aria-labelledby="tutt">
     <h2 class="h3" id="tutt">Como funciona o PERÍMETRO</h2>
@@ -188,7 +213,7 @@ function renderBriefing() {
   return `<div class="screen brief" data-act="skipbrief">
     ${tickerHTML(['URGENTE · Alarme dispara na Agência Central do Banco Meridiano, no centro de Porto Alto', 'Testemunhas falam em homens armados e clientes presos no interior', 'Polícia isola a Rua Marechal Deodoro; trânsito desviado', 'TV Porto Alto acompanha ao vivo'], 'URGENTE')}
     <h1 class="sr">Briefing: assalto com reféns na Agência Central</h1>
-    <div class="row" style="justify-content:space-between;align-items:flex-end"><div><div class="day">Sexta-feira</div><div class="time">14h07</div></div><button class="btn sm ghost skipb" type="button" data-act="skipbrief">Pular animação</button></div>
+    <div class="row" style="justify-content:space-between;align-items:flex-end"><div><div class="day">Sexta-feira</div><div class="time">14h07</div></div><div class="row">${menuBtn()}<button class="btn sm ghost skipb" type="button" data-act="skipbrief">Pular animação</button></div></div>
     <div class="narr">
       <p>O alarme silencioso da Agência Central do Banco Meridiano acaba de disparar. As primeiras viaturas confirmam: há pelo menos dois homens armados no interior da agência.</p>
       <p>Dezessete pessoas, entre clientes e funcionários, estão impedidas de sair. Uma aposentada que veio pagar contas. Um caixa de 24 anos no segundo mês de emprego. Uma cliente grávida de sete meses.</p>
@@ -236,7 +261,7 @@ function renderRecruit() {
     <label class="field">−1 em<select data-chg="camminus" id="camminus">${Object.keys(ATTR).map(k => `<option value="${k}" ${G.camAdj.minus === k ? 'selected' : ''}>${ATTR[k]}</option>`).join('')}</select></label></div></div>` : '';
   setBar(recruitBar());
   return `<div class="screen">
-    <div class="hud"><div class="hudrow"><span class="brand">PERÍMETRO</span><span class="pill">Fase 0 · Recrutamento</span><span class="spacer"></span><div class="stat"><small>Créditos</small><b style="color:var(--amber)" data-k="cred" data-n="${Math.round(G.credits)}">${fmt(G.credits)}</b></div></div></div>
+    <div class="hud"><div class="hudrow"><span class="brand">PERÍMETRO</span>${menuBtn()}<span class="pill">Fase 0 · Recrutamento</span><span class="spacer"></span><div class="stat"><small>Créditos</small><b style="color:var(--amber)" data-k="cred" data-n="${Math.round(G.credits)}">${fmt(G.credits)}</b></div></div></div>
     <div class="recr">
       <div class="grid" style="gap:18px">
         <div><div class="row" style="justify-content:space-between"><div class="eyebrow">Pool de profissionais</div><a class="jump" href="#equip">Catálogo de equipamentos ↓</a></div><h1 class="ptitle">Quem entra na sua força-tarefa?</h1><p class="serif muted" style="font-size:15.5px;margin-bottom:12px;max-width:820px">14h12. A Secretaria liberou mil créditos e doze profissionais de plantão. Quem você chamar chega em quinze minutos. O que sobrar é tudo o que você terá para investigar, pedir apoio e pagar horas extras até o fim da noite.</p><div class="agents">${agents}</div></div>
@@ -297,7 +322,7 @@ function renderPerimeter() {
   setBar(`<div class="absum"><span class="abk">Perímetro</span><span><b class="mono" style="color:var(--${adq >= 4 ? 'green' : adq >= 3 ? 'amber' : 'red'})">${adq} de 7</b> zonas adequadas · ${reserveA.length} ${plural(reserveA.length, 'agente', 'agentes')} na reserva · plantão <b class="mono">−${plantaoCost()}</b>/rod.</span></div>
     <span class="spacer"></span><button class="btn" data-act="autoplace">Distribuição automática</button><button class="btn primary lg" data-act="tosiege">Confirmar e iniciar o cerco →</button>`);
   return `<div class="screen">
-    <div class="hud"><div class="hudrow"><span class="brand">PERÍMETRO</span><span class="pill">Fase 1 · Posicionamento</span><span class="spacer"></span>
+    <div class="hud"><div class="hudrow"><span class="brand">PERÍMETRO</span>${menuBtn()}<span class="pill">Fase 1 · Posicionamento</span><span class="spacer"></span>
       <div class="stat"><small>Zonas adequadas</small><b style="color:var(--${adq >= 4 ? 'green' : adq >= 3 ? 'amber' : 'red'})">${adq} / 7</b></div>
       <div class="stat"><small>Plantão previsto</small><b>−${plantaoCost()}/rod.</b></div>
       <div class="stat"><small>Créditos</small><b style="color:var(--amber)" data-k="cred" data-n="${Math.round(G.credits)}">${fmt(G.credits)}</b></div></div></div>

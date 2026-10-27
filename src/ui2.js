@@ -18,7 +18,7 @@ function bscValues() {
 function hudHTML() {
   const b = bscValues();
   return `<div class="hud"><div class="hudrow">
-    <span class="brand">PERÍMETRO</span>
+    <span class="brand">PERÍMETRO</span>${menuBtn()}
     <div class="stat"><small>Rodada</small><b>${G.round}/${MAX_ROUNDS}</b></div>
     <div class="stat"><small>Hora</small><b>${fmtTime(G.round)}</b></div>
     ${G.stage === 'panel' ? `<div class="timer" id="clock" role="timer" aria-label="Tempo restante da rodada">${G.noLimit ? '∞' : mmss(Math.max(0, Math.ceil((UI.deadline - Date.now()) / 1000)) || D_().timer)}</div>` : ''}

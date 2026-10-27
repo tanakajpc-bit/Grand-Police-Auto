@@ -708,3 +708,7 @@ b.chg{animation:nflash 1.2s ease}
 .badge .pill.amber{color:#ffc15a}
 .badge .pill{justify-self:start}
 .badge .seal .ico{color:var(--ink3)}.badge.on .seal .ico{color:var(--amber)}
+
+/* L2.2: botão de menu na barra superior e tela de falha */
+.hudmenu{color:var(--ink2)}
+.card.fatal{max-width:640px;margin:12vh auto 0;display:grid;gap:12px}

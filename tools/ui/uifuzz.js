@@ -2,7 +2,7 @@
 // procurando texto quebrado (undefined, NaN, [object Object], null, Infinity), exceções e telas vazias.
 const { chromium } = require('playwright');
 const fs = require('fs'), path = require('path');
-const FILE = process.env.PERI_HTML || path.join(__dirname, '..', '..', 'perimetro.html');
+const FILE = process.env.PERI_HTML || path.join(__dirname, '..', '..', 'perimetro-standalone.html');
 const SIM = path.join(__dirname, '..', 'sim');
 const N = +process.argv[2] || 120;
 

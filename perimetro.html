@@ -713,6 +713,10 @@ b.chg{animation:nflash 1.2s ease}
 .badge .pill.amber{color:#ffc15a}
 .badge .pill{justify-self:start}
 .badge .seal .ico{color:var(--ink3)}.badge.on .seal .ico{color:var(--amber)}
+
+/* L2.2: botão de menu na barra superior e tela de falha */
+.hudmenu{color:var(--ink2)}
+.card.fatal{max-width:640px;margin:12vh auto 0;display:grid;gap:12px}
 </style>
 <div id="edge" class="edge" aria-hidden="true"></div><div id="toasts" role="status" aria-live="polite"></div><div id="app"></div>
 <script>
@@ -1228,24 +1232,31 @@ function newGame(diffKey, opts = {}) {
     mayorPromise: false, vehicleGiven: false, defector: false, attended: {}, commMedia: 0, usedEvents: [],
     frame: pick(['ganho', 'perda']),
     stats: { pausas: 0, skips: 0, intel: 0, comms: 0, leaks: 0, intervs: 0, repos: 0, horas: 0, apoio: 0, events: 0, minFF: 1, maxFail: 0, initCov: {}, routeKnownAtStart: false, noRecruit: false, material: 0, peakPressure: 0, pressSum: 0, pressN: 0 },
-    queue: [], update: null, R: null, pendingEvent: null, end: null, score: null
+    queue: [], update: null, R: null, pendingEvent: null, end: null, score: null, tleft: null
   };
   G.pressure = calcPressure();
   return G;
 }
 
 /* ---------------- Persistência ---------------- */
+/* Sem armazenamento (bloqueado ou cheio) o jogo segue sem salvar; a interface é avisada uma vez para dizer isso ao jogador (onSaveFail). */
+let SAVE_OK = true, onSaveFail = null;
 function saveGame() {
   if (!G || G.phase === 'menu') return;
-  try { localStorage.setItem(SAVE_KEY, JSON.stringify(G)); } catch (e) { /* sem save: segue o jogo */ }
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify(G)); SAVE_OK = true; }
+  catch (e) { if (SAVE_OK && onSaveFail) onSaveFail(); SAVE_OK = false; }
 }
+/* Um save existia mas não pôde ser usado (corrompido ou de outra versão): o menu avisa uma vez. */
+let SAVE_LOST = false;
 function loadSave() {
+  let raw = null;
+  try { raw = localStorage.getItem(SAVE_KEY); } catch (e) { return null; }
+  if (raw == null || raw === '') return null;
   try {
-    const raw = localStorage.getItem(SAVE_KEY); if (!raw) return null;
     const s = JSON.parse(raw);
-    if (!validSave(s)) { localStorage.removeItem(SAVE_KEY); return null; }
-    return migrateSave(s);
-  } catch (e) { try { localStorage.removeItem(SAVE_KEY); } catch (_) {} return null; }
+    if (isObj(s) && s.ver === 2 && isObj(s.K) && isObj(s.hostages)) { migrateSave(s); if (validSave(s)) return s; }
+  } catch (e) { /* ilegível ou inconsistente: cai no descarte */ }
+  clearSave(); SAVE_LOST = true; return null;
 }
 /* Saves da versão anterior (sem a camada narrativa) ganham os campos novos sem perder a partida. */
 function migrateSave(s) {
@@ -1254,16 +1265,122 @@ function migrateSave(s) {
   s.spent = Object.assign({ rec: 0, equip: 0, intel: 0, ops: 0, plantao: 0 }, s.spent || {});
   s.deficit = s.deficit || 0; s.tocLog = s.tocLog || []; s.spendLog = s.spendLog || []; s.creditsHist = s.creditsHist || [];
   Object.keys(s.transit || {}).forEach(id => { const t = s.transit[id]; s.transit[id] = t === true ? 2 : t === false || t == null ? 0 : +t || 0; });
-  if (!Array.isArray(s.hl) || s.hl.length !== HOSTAGE_LIST.length) { s.hl = HOSTAGE_LIST.map(h => ({ id: h.id, in: true, st: 'ok' })); const g = G; G = s; syncHL(null); G = g; }
+  if (s.tleft === undefined) s.tleft = null;   // L2.2: tempo que sobrava no cronômetro da rodada
+  /* campos que só entraram depois: o que faltar ganha o valor neutro (a validação depois exige o tipo certo) */
+  SAVE_NUMS.forEach(k => { if (s[k] === undefined) s[k] = 0; }); SAVE_BOOLS.forEach(k => { if (s[k] === undefined) s[k] = false; });
+  if (s.frame === undefined) s.frame = 'ganho';
+  ['fat', 'away', 'support', 'attended', 'ev', 'p1intel', 'hPref', 'camAdj'].forEach(k => { if (s[k] === undefined) s[k] = k === 'camAdj' ? { plus: 'tat', minus: 'com' } : {}; });
+  ['hints', 'radio', 'pendingIntel', 'usedEvents'].forEach(k => { if (s[k] === undefined) s[k] = []; });
+  if (!Array.isArray(s.hl) || s.hl.length !== HOSTAGE_LIST.length) { s.hl = HOSTAGE_LIST.map(h => ({ id: h.id, in: true, st: 'ok' })); const g = G; G = s; try { syncHL(null); } finally { G = g; } }
   return s;
 }
 function clearSave() { try { localStorage.removeItem(SAVE_KEY); } catch (e) {} }
+
+/* L2.2: um save só entra no jogo se tudo o que a interface e o motor leem existe e está na faixa: tipos, faixas, referências
+   (agentes, zonas, equipamentos, eventos) e a coerência entre fase, estágio e dados da rodada. Na dúvida, descarta: é melhor perder
+   uma partida corrompida do que travar a tela no meio de uma crise. */
+const has = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
+const isObj = v => !!v && typeof v === 'object' && !Array.isArray(v);
+const isNum = (v, a = -Infinity, b = Infinity) => typeof v === 'number' && isFinite(v) && v >= a && v <= b;
+const isInt = (v, a, b) => Number.isInteger(v) && v >= a && v <= b;
+const isZoneId = z => typeof z === 'string' && has(ZONE, z);
+const isPlace = z => z === 'reserva' || isZoneId(z);
+const isAgentId = id => typeof id === 'string' && !!agentById(id);
+const SAVE_NUMS = ['exposed', 'powerCut', 'calm', 'stress', 'deadlineLeft', 'supportUsed', 'commMedia', 'lastVaultDelta', 'deficit', 'quietRound'];
+const SAVE_BOOLS = ['fatCrit', 'deadlineFired', 'mayorPromise', 'vehicleGiven', 'defector'];
+const SAVE_PHASES = ['briefing', 'recruit', 'perimeter', 'siege', 'outcome', 'post'];
+const SAVE_STAGES = ['update', 'panel', 'event', 'result', 'resolving'];
+const FRONTS = ['tatica', 'nego', 'intel', 'com'];
+const END_TYPES = ['intervencao', 'rendicao', 'fuga', 'prazo'];
+const GRADES = ['S', 'A', 'B', 'C', 'D', 'F'];
+function validQueueItem(q) {
+  if (!isObj(q) || !isObj(q.p) || !isNum(q.slots, 0, 9) || typeof q.label !== 'string' || !FRONTS.includes(q.front) || (q.cost != null && !isNum(q.cost, 0, 1e5))) return false;
+  switch (q.kind) {
+    case 'repos': return isAgentId(q.p.agent) && isPlace(q.p.zone);
+    case 'apoio': return isZoneId(q.p.zone);
+    case 'pausa': case 'horas': case 'interv': return true;
+    case 'nego': return q.p.tech === 'press' || isInt(q.p.tech, 1, 5);
+    case 'intel': return INTEL.some(i => i.id === q.p.id);
+    case 'com': return COMMS.some(c => c.id === q.p.cid);
+    default: return false;
+  }
+}
+const validDossier = r => isObj(r) && typeof r.nome === 'string' && typeof r.text === 'string';
+function validUpdate(u, round) {
+  return isObj(u) && u.r === round && typeof u.time === 'string' && has(TOCS, u.toc) && (u.tocPrev == null || has(TOCS, u.tocPrev)) &&
+    Array.isArray(u.radio) && u.radio.every(l => isObj(l) && typeof l.t === 'string') &&
+    Array.isArray(u.intel) && u.intel.every(validDossier) &&
+    Array.isArray(u.reports) && u.reports.every(r => isObj(r) && isZoneId(r.z) && typeof r.ag === 'string' && typeof r.txt === 'string') &&
+    (u.call == null || (isObj(u.call) && typeof u.call.t === 'string'));
+}
+const validSnap = x => isObj(x) && [x.agit, x.media, x.vault, x.credits, x.p].every(v => isNum(v)) && isObj(x.stk) && STK_KEYS.every(k => isNum(x.stk[k]));
+function validRoundRec(R) {
+  return isObj(R) && Array.isArray(R.lines) && R.lines.every(l => isObj(l) && typeof l.text === 'string') && Array.isArray(R.decs) && R.decs.every(d => isObj(d) && FRONTS.includes(d.front) && typeof d.label === 'string') &&
+    validSnap(R.s0) && (R.s1 == null || validSnap(R.s1)) && (R.hchg == null || (Array.isArray(R.hchg) && R.hchg.every(c => isObj(c) && has(HOST, c.id)))) && (R.ev == null || (isObj(R.ev) && has(EVDEF, R.ev.id)));
+}
+function validEnd(E) {
+  return isObj(E) && END_TYPES.includes(E.type) && (E.zone == null || isZoneId(E.zone)) && (E.agentsHurt == null || (Array.isArray(E.agentsHurt) && E.agentsHurt.every(isAgentId)));
+}
+function validScore(S) {
+  return isObj(S) && GRADES.includes(S.grade) && isNum(S.total, 0, 100) && ['vidas', 'captura', 'valores', 'eficiencia', 'confianca'].every(k => isNum(S[k], 0, 1));
+}
 function validSave(s) {
-  return s && s.ver === 2 && DIFF[s.diff] && PROFILES[s.profile] && Array.isArray(s.team) && Array.isArray(s.gear) &&
-    s.hostages && s.nego && s.stk && s.K && Array.isArray(s.log) && Array.isArray(s.queue) &&
-    ['briefing', 'recruit', 'perimeter', 'siege', 'outcome', 'post'].includes(s.phase) &&
-    typeof s.credits === 'number' && s.round >= 0 && s.round <= MAX_ROUNDS && Array.isArray(s.routes) && s.routes.length === 4 &&
-    s.team.every(id => agentById(id)) && STK_KEYS.every(k => s.stk[k] && typeof s.stk[k].sat === 'number');
+  if (!isObj(s) || s.ver !== 2 || !has(DIFF, s.diff) || !has(PROFILES, s.profile) || !SAVE_PHASES.includes(s.phase)) return false;
+  const late = s.phase === 'siege' || s.phase === 'outcome' || s.phase === 'post';
+  if (!isInt(s.round, late ? 1 : 0, late ? MAX_ROUNDS : 0)) return false;
+  if (!isNum(s.credits, -1e5, 1e6) || ![s.agit, s.media, s.vault, s.pressure].every(v => isNum(v, 0, 100))) return false;
+  if (![s.team, s.gear, s.routes, s.queue, s.log, s.hist, s.tocLog, s.spendLog, s.hl, s.pendingIntel, s.hints, s.radio, s.usedEvents].every(Array.isArray)) return false;
+  if (![s.hostages, s.nego, s.stk, s.K, s.az, s.gz, s.fat, s.transit, s.away, s.support, s.spent, s.stats, s.ev, s.p1intel, s.camAdj].every(isObj)) return false;
+  // números e marcas que as fórmulas leem (um texto aqui viraria NaN na tela)
+  if (!isInt(s.assail, 1, 9) || typeof s.accomplice !== 'boolean' || !SAVE_NUMS.every(k => isNum(s[k], -1e5, 1e5)) || !SAVE_BOOLS.every(k => typeof s[k] === 'boolean') || (s.frame !== 'ganho' && s.frame !== 'perda')) return false;
+  if (!Object.entries(s.stats).every(([k, v]) => k === 'initCov' ? isObj(v) && Object.entries(v).every(([z, c]) => isZoneId(z) && isNum(c, 0, 100)) : typeof v === 'boolean' || isNum(v))) return false;
+  if (!isObj(s.attended) || !isObj(s.hPref) || (s.pendingDeath != null && !(isObj(s.pendingDeath) && isNum(s.pendingDeath.left, 0, 99) && isNum(s.pendingDeath.p, 0, 1))) || (s.perimLog != null && !(Array.isArray(s.perimLog) && s.perimLog.every(t => typeof t === 'string')))) return false;
+  // equipe, equipamentos, zonas, fadiga
+  if (s.team.length > ALL_AGENTS.length || new Set(s.team).size !== s.team.length || !s.team.every(isAgentId)) return false;
+  if (new Set(s.gear).size !== s.gear.length || !s.gear.every(id => typeof id === 'string' && has(EQ, id))) return false;
+  if (!s.team.every(id => has(s.az, id)) || !s.gear.every(id => has(s.gz, id))) return false;
+  if (!Object.keys(s.az).every(id => s.team.includes(id) && isPlace(s.az[id])) || !Object.keys(s.gz).every(id => s.gear.includes(id) && isPlace(s.gz[id]))) return false;
+  if (![s.fat, s.transit, s.away].every(o => Object.values(o).every(v => isNum(v, 0, 99)))) return false;
+  if (!Object.entries(s.support).every(([z, x]) => isZoneId(z) && isObj(x) && isNum(x.v, 0, 100) && isNum(x.left, 0, 9))) return false;
+  if (!has(ATTR, s.camAdj.plus) || !has(ATTR, s.camAdj.minus)) return false;
+  if (s.routes.length !== 4 || new Set(s.routes).size !== 4 || !s.routes.every(isZoneId) || !isZoneId(s.route) || !isZoneId(s.routeNow)) return false;
+  // reféns: 17 no total, dentro + fora, e a lista nominal
+  const H = s.hostages;
+  if (!['inside', 'freed', 'hurt', 'dead'].every(k => isInt(H[k], 0, HOSTAGES)) || H.inside + H.freed !== HOSTAGES || H.hurt + H.dead > HOSTAGES) return false;
+  if (s.hl.length !== HOSTAGE_LIST.length || !s.hl.every(h => isObj(h) && has(HOST, h.id) && typeof h.in === 'boolean' && ['ok', 'hurt', 'dead'].includes(h.st))) return false;
+  // negociação, stakeholders, conhecimento
+  const n = s.nego;
+  if (!isInt(n.step, 1, 5) || !isInt(n.maxStep, 1, 5) || !['skips', 'tries', 'concessions', 'failStreak'].every(k => isNum(n[k], 0, 99)) || (n.negotiator != null && typeof n.negotiator !== 'string')) return false;
+  if (!STK_KEYS.every(k => isObj(s.stk[k]) && isNum(s.stk[k].sat, 0, 100) && isNum(s.stk[k].sem, 0, 99) && typeof s.stk[k].lost === 'boolean')) return false;
+  const K = s.K;
+  if (!isObj(K.zrev) || !Object.keys(K.zrev).every(isZoneId) || !Array.isArray(K.cleared) || !K.cleared.every(isZoneId) || (K.route != null && !isZoneId(K.route)) || !isObj(K.at)) return false;
+  if ((K.profileHint != null && !(Array.isArray(K.profileHint) && K.profileHint.every(p => has(PROFILES, p)))) || (K.countHint != null && !(Array.isArray(K.countHint) && K.countHint.every(v => isNum(v, 0, 99))))) return false;
+  if (!Object.keys(s.ev).every(z => isZoneId(z) && isNum(s.ev[z]))) return false;
+  if (!s.pendingIntel.every(o => isObj(o) && INTEL.some(i => i.id === o.id) && isNum(o.due, 0, 99))) return false;
+  if (!Object.keys(s.p1intel).every(k => INTEL.some(i => i.id === k) && (s.p1intel[k] === true || s.p1intel[k] === false || validDossier(s.p1intel[k])))) return false;
+  if (!s.tocLog.every(k => k == null || has(TOCS, k)) || !s.spendLog.every(x => isObj(x) && isNum(x.cost, 0, 1e5))) return false;
+  // histórico
+  if (s.log.length > MAX_ROUNDS || s.hist.length > MAX_ROUNDS) return false;
+  if (!s.log.every(l => isObj(l) && typeof l.time === 'string' && Array.isArray(l.lines) && Array.isArray(l.decs) && validSnap(l.s0) && validSnap(l.s1) && (l.ev == null || (isObj(l.ev) && has(EVDEF, l.ev.id))))) return false;
+  if (!s.hist.every(h => isObj(h) && ['agit', 'media', 'vault', 'p'].every(k => isNum(h[k])))) return false;
+  // fila de decisões e cronômetro
+  if (s.queue.length > 4 || !s.queue.every(validQueueItem) || (s.tleft != null && !isNum(s.tleft, 0, 3600))) return false;
+  // coerência entre fase e dados da rodada
+  if (s.pendingEvent != null && !(has(EVENT_FX, s.pendingEvent) && has(EVDEF, s.pendingEvent))) return false;
+  if (s.update != null && !validUpdate(s.update, s.round)) return false;
+  if (s.R != null && !validRoundRec(s.R)) return false;
+  if (s.phase === 'siege') {
+    if (!SAVE_STAGES.includes(s.stage)) return false;
+    if (!validUpdate(s.update, s.round)) return false;
+    if (s.stage === 'event' && (s.pendingEvent == null || !validRoundRec(s.R))) return false;
+    if ((s.stage === 'result' || s.stage === 'resolving') && !validRoundRec(s.R)) return false;
+    if ((s.stage === 'update' || s.stage === 'panel' || s.stage === 'event') && s.end != null) return false;
+    if (s.end != null && !(validEnd(s.end) && validScore(s.score))) return false;
+  }
+  if (s.phase === 'outcome' || s.phase === 'post') {
+    if (!validEnd(s.end) || !validScore(s.score) || s.log.length < 1) return false;
+  }
+  return true;
 }
 
 /* ---------------- Atributos, pressão, fadiga ---------------- */
@@ -1754,7 +1871,7 @@ function startRound() {
   up.radio = radioLines();
   up.intro = roundIntro(); up.council = council(); up.call = stakeCall(); up.quiet = G.quietRound === G.round;
   G.radio = up.radio.concat(G.radio).slice(0, 12);
-  G.update = up; G.stage = 'update'; G.queue = [];
+  G.update = up; G.stage = 'update'; G.queue = []; G.tleft = null;
   G.attended = {}; G.commMedia = 0;
   saveGame();
 }
@@ -1986,6 +2103,7 @@ function resolveDecisions() {
   const evId = drawEvent();
   if (evId) {
     R.eventId = evId; G.pendingEvent = evId; G.stage = 'event'; G.stats.events++;
+    saveGame();   // L2.2: a carta de evento é salva; recarregar a página não refaz a rodada
     return { event: evId };
   }
   G.stage = 'resolving';
@@ -2387,9 +2505,12 @@ function badgeEarned(id) {
    INTERFACE — helpers, menu, briefing, recrutamento, perímetro
    ===================================================================== */
 const $app = document.getElementById('app');
-const UI = { tab: 'tatica', sel: null, repoAgent: '', repoZone: '', apoioZone: '', post: 'score', replayR: 1, diffSel: 'complexo', noLimit: false,
-  timerId: null, deadline: 0, timerRound: -1, tutor: false, ivConfirm: false, emptyConfirm: false, msg: '', pickZone: null,
-  lvl: 1, tkPause: false, tabAnim: false };
+/* Estado de tela que não pertence a nenhuma partida. resetUI() devolve tudo isto ao zero quando a partida muda (nova, retomada, encerrada);
+   as preferências (dificuldade escolhida, cronômetro sem limite, manchetes pausadas) ficam. */
+const UI0 = { tab: 'tatica', sel: null, repoAgent: '', repoZone: '', apoioZone: '', post: 'score', replayR: 1, tutor: false, ivConfirm: false, emptyConfirm: false,
+  newConfirm: false, menuConfirm: false, msg: '', pickZone: null, lvl: 1, tabAnim: false, cut: null, paused: false };
+const UI = Object.assign({ diffSel: 'complexo', noLimit: false, tkPause: false, timerId: null, deadline: 0, timerRound: -1 }, UI0);
+function resetUI() { stopTimer(); Object.assign(UI, UI0, { timerRound: -1, deadline: 0 }); }
 
 const fmt = n => Math.round(n).toLocaleString('pt-BR');
 const covCls = c => c >= ADEQ ? 'g' : c >= 30 ? 'a' : 'r';
@@ -2429,19 +2550,25 @@ function toast(title, text, tone = '') {
 /* ---------- Timer ---------- */
 /* Pacing: as duas primeiras rodadas são de orientação e dão mais tempo para ler o painel. */
 const roundTimer = () => Math.round(D_().timer * (G.round === 1 ? 1.6 : G.round === 2 ? 1.25 : 1));
-function stopTimer() { if (UI.timerId) { clearInterval(UI.timerId); UI.timerId = null; } }
+const timeLeft = () => Math.max(0, Math.ceil((UI.deadline - Date.now()) / 1000));
+function stopTimer() { if (UI.timerId) { clearInterval(UI.timerId); UI.timerId = null; } UI.paused = false; }
 function startTimer() {
   stopTimer(); UI.timerRound = G.round;
   if (G.noLimit) { UI.deadline = 0; return; }
-  UI.deadline = Date.now() + roundTimer() * 1000;
+  /* G.tleft guarda o que sobrava no relógio: recarregar a página ou voltar à aba continua de onde parou, em vez de dar a rodada inteira de novo. */
+  const left = G.tleft != null ? Math.max(10, G.tleft) : roundTimer();
+  UI.deadline = Date.now() + left * 1000;
   UI.timerId = setInterval(tick, 250); tick();
 }
 function tick() {
-  const el = document.getElementById('clock'); if (!el || !UI.timerId) return;
-  const left = Math.max(0, Math.ceil((UI.deadline - Date.now()) / 1000));
-  el.textContent = mmss(left); el.classList.toggle('low', left <= 30);
-  if (left <= 0) { stopTimer(); toast('COMANDO', 'Tempo esgotado: o plano atual é executado.', 'hot'); ACT.execute({}); }
+  if (!UI.timerId) return;
+  const left = timeLeft(), el = document.getElementById('clock'); G.tleft = left;
+  if (el) { el.textContent = mmss(left); el.classList.toggle('low', left <= 30); }
+  if (left <= 0) { stopTimer(); toast('COMANDO', 'Tempo esgotado: o plano atual é executado.', 'hot'); run(() => ACT.execute({})); }
 }
+/* Aba oculta ou janela de confirmação aberta: o relógio espera. O jogo é de um jogador só, e sair da aba não deve executar o plano às cegas. */
+function pauseTimer() { if (!UI.timerId) return; G.tleft = timeLeft(); stopTimer(); UI.paused = true; saveGame(); }
+function resumeTimer() { if (UI.paused && !UI.menuConfirm && G && G.phase === 'siege' && G.stage === 'panel') startTimer(); }
 
 /* ---------- Mapa ---------- */
 function mapSVG(o = {}) {
@@ -2515,8 +2642,9 @@ function skyline() {
   }
   return `<svg class="skyline" viewBox="0 0 1600 600" preserveAspectRatio="xMidYMax slice" aria-hidden="true">${out}</svg>`;
 }
+const saveLabel = s => s.phase === 'siege' ? 'rodada ' + s.round : s.phase === 'post' || s.phase === 'outcome' ? 'finalizada' : s.phase === 'recruit' ? 'recrutamento' : s.phase === 'perimeter' ? 'perímetro' : 'briefing';
 function renderMenu() {
-  const save = loadSave();
+  const save = loadSave(), lost = SAVE_LOST; SAVE_LOST = false;
   const dcards = Object.entries(DIFF).map(([k, d]) => `
     <button class="diffcard" role="radio" data-act="diff" data-v="${k}" aria-checked="${UI.diffSel === k}" tabindex="${UI.diffSel === k ? 0 : -1}">
       <span class="dot" aria-hidden="true"></span>
@@ -2531,8 +2659,9 @@ function renderMenu() {
       <div class="grid">
         <div><div class="eyebrow" id="difflbl">Dificuldade</div><div class="diffs" role="radiogroup" aria-labelledby="difflbl" style="margin-top:8px">${dcards}</div></div>
         <div class="row"><button class="btn primary lg" data-act="start">Iniciar simulação</button>
-          ${save ? `<button class="btn lg" data-act="continue">Continuar partida <span class="faint" style="font-weight:400">(${DIFF[save.diff].nome}, ${save.phase === 'siege' ? 'rodada ' + save.round : save.phase === 'post' || save.phase === 'outcome' ? 'finalizada' : save.phase === 'recruit' ? 'recrutamento' : save.phase === 'perimeter' ? 'perímetro' : 'briefing'})</span></button>` : ''}
+          ${save ? `<button class="btn lg" data-act="continue">Continuar partida <span class="faint" style="font-weight:400">(${DIFF[save.diff].nome}, ${saveLabel(save)})</span></button>` : ''}
         </div>
+        ${lost ? `<div class="insight warn" role="status">${icon('alert', '', 1.8)}<span>A partida salva neste navegador estava corrompida ou era de outra versão e foi descartada. Uma nova simulação começa do zero.</span></div>` : ''}
         <label class="check"><input type="checkbox" id="nolimit" data-chg="nolimit" ${UI.noLimit ? 'checked' : ''}><span>Cronômetro sem limite (acessibilidade): o relógio aparece, mas não encerra a rodada</span></label>
       </div>
       <div class="card">
@@ -2542,9 +2671,23 @@ function renderMenu() {
         <p class="faint" style="font-size:12px;margin-top:14px">Todos os nomes, lugares e instituições são fictícios. A perspectiva é sempre a de quem protege; as ações táticas são abstratas e não há imagens explícitas.</p>
       </div>
     </div>
-    ${UI.tutor ? tutorModal() : ''}
+    ${UI.tutor ? tutorModal() : ''}${UI.newConfirm && save ? newConfirmModal(save) : ''}
   </div>`;
 }
+function newConfirmModal(save) {
+  return `<div class="modalback"><div class="tutor" role="dialog" aria-modal="true" aria-labelledby="nct">
+    <h2 class="h3" id="nct">Iniciar uma nova partida?</h2>
+    <p class="muted">Há uma partida salva neste navegador (${DIFF[save.diff].nome}, ${saveLabel(save)}). Começar uma nova apaga essa partida e não dá para desfazer.</p>
+    <div class="row"><button class="btn primary" data-act="newyes">Apagar e iniciar</button><button class="btn" data-act="newno">Manter a partida salva</button><span class="faint" style="font-size:12px">Esc também cancela</span></div></div></div>`;
+}
+/* Voltar ao menu no meio da partida: a partida fica salva e o relógio da rodada fica parado (a janela não mostra confirm do navegador). */
+function menuConfirmModal() {
+  return `<div class="modalback"><div class="tutor" role="dialog" aria-modal="true" aria-labelledby="mct">
+    <h2 class="h3" id="mct">Voltar ao menu?</h2>
+    <p class="muted">A partida fica salva neste navegador e pode ser retomada em “Continuar partida”.${G && G.phase === 'siege' && G.stage === 'panel' && !G.noLimit ? ' O relógio desta rodada fica parado até você voltar.' : ''}</p>
+    <div class="row"><button class="btn primary" data-act="menuyes">Voltar ao menu</button><button class="btn" data-act="menuno">Continuar jogando</button><span class="faint" style="font-size:12px">Esc também cancela</span></div></div></div>`;
+}
+const menuBtn = () => '<button class="btn sm ghost hudmenu" type="button" data-act="menu" title="Voltar ao menu (a partida fica salva)">Menu</button>';
 function tutorModal() {
   return `<div class="modalback"><div class="tutor" role="dialog" aria-modal="true" aria-labelledby="tutt">
     <h2 class="h3" id="tutt">Como funciona o PERÍMETRO</h2>
@@ -2573,7 +2716,7 @@ function renderBriefing() {
   return `<div class="screen brief" data-act="skipbrief">
     ${tickerHTML(['URGENTE · Alarme dispara na Agência Central do Banco Meridiano, no centro de Porto Alto', 'Testemunhas falam em homens armados e clientes presos no interior', 'Polícia isola a Rua Marechal Deodoro; trânsito desviado', 'TV Porto Alto acompanha ao vivo'], 'URGENTE')}
     <h1 class="sr">Briefing: assalto com reféns na Agência Central</h1>
-    <div class="row" style="justify-content:space-between;align-items:flex-end"><div><div class="day">Sexta-feira</div><div class="time">14h07</div></div><button class="btn sm ghost skipb" type="button" data-act="skipbrief">Pular animação</button></div>
+    <div class="row" style="justify-content:space-between;align-items:flex-end"><div><div class="day">Sexta-feira</div><div class="time">14h07</div></div><div class="row">${menuBtn()}<button class="btn sm ghost skipb" type="button" data-act="skipbrief">Pular animação</button></div></div>
     <div class="narr">
       <p>O alarme silencioso da Agência Central do Banco Meridiano acaba de disparar. As primeiras viaturas confirmam: há pelo menos dois homens armados no interior da agência.</p>
       <p>Dezessete pessoas, entre clientes e funcionários, estão impedidas de sair. Uma aposentada que veio pagar contas. Um caixa de 24 anos no segundo mês de emprego. Uma cliente grávida de sete meses.</p>
@@ -2621,7 +2764,7 @@ function renderRecruit() {
     <label class="field">−1 em<select data-chg="camminus" id="camminus">${Object.keys(ATTR).map(k => `<option value="${k}" ${G.camAdj.minus === k ? 'selected' : ''}>${ATTR[k]}</option>`).join('')}</select></label></div></div>` : '';
   setBar(recruitBar());
   return `<div class="screen">
-    <div class="hud"><div class="hudrow"><span class="brand">PERÍMETRO</span><span class="pill">Fase 0 · Recrutamento</span><span class="spacer"></span><div class="stat"><small>Créditos</small><b style="color:var(--amber)" data-k="cred" data-n="${Math.round(G.credits)}">${fmt(G.credits)}</b></div></div></div>
+    <div class="hud"><div class="hudrow"><span class="brand">PERÍMETRO</span>${menuBtn()}<span class="pill">Fase 0 · Recrutamento</span><span class="spacer"></span><div class="stat"><small>Créditos</small><b style="color:var(--amber)" data-k="cred" data-n="${Math.round(G.credits)}">${fmt(G.credits)}</b></div></div></div>
     <div class="recr">
       <div class="grid" style="gap:18px">
         <div><div class="row" style="justify-content:space-between"><div class="eyebrow">Pool de profissionais</div><a class="jump" href="#equip">Catálogo de equipamentos ↓</a></div><h1 class="ptitle">Quem entra na sua força-tarefa?</h1><p class="serif muted" style="font-size:15.5px;margin-bottom:12px;max-width:820px">14h12. A Secretaria liberou mil créditos e doze profissionais de plantão. Quem você chamar chega em quinze minutos. O que sobrar é tudo o que você terá para investigar, pedir apoio e pagar horas extras até o fim da noite.</p><div class="agents">${agents}</div></div>
@@ -2682,7 +2825,7 @@ function renderPerimeter() {
   setBar(`<div class="absum"><span class="abk">Perímetro</span><span><b class="mono" style="color:var(--${adq >= 4 ? 'green' : adq >= 3 ? 'amber' : 'red'})">${adq} de 7</b> zonas adequadas · ${reserveA.length} ${plural(reserveA.length, 'agente', 'agentes')} na reserva · plantão <b class="mono">−${plantaoCost()}</b>/rod.</span></div>
     <span class="spacer"></span><button class="btn" data-act="autoplace">Distribuição automática</button><button class="btn primary lg" data-act="tosiege">Confirmar e iniciar o cerco →</button>`);
   return `<div class="screen">
-    <div class="hud"><div class="hudrow"><span class="brand">PERÍMETRO</span><span class="pill">Fase 1 · Posicionamento</span><span class="spacer"></span>
+    <div class="hud"><div class="hudrow"><span class="brand">PERÍMETRO</span>${menuBtn()}<span class="pill">Fase 1 · Posicionamento</span><span class="spacer"></span>
       <div class="stat"><small>Zonas adequadas</small><b style="color:var(--${adq >= 4 ? 'green' : adq >= 3 ? 'amber' : 'red'})">${adq} / 7</b></div>
       <div class="stat"><small>Plantão previsto</small><b>−${plantaoCost()}/rod.</b></div>
       <div class="stat"><small>Créditos</small><b style="color:var(--amber)" data-k="cred" data-n="${Math.round(G.credits)}">${fmt(G.credits)}</b></div></div></div>
@@ -2738,7 +2881,7 @@ function bscValues() {
 function hudHTML() {
   const b = bscValues();
   return `<div class="hud"><div class="hudrow">
-    <span class="brand">PERÍMETRO</span>
+    <span class="brand">PERÍMETRO</span>${menuBtn()}
     <div class="stat"><small>Rodada</small><b>${G.round}/${MAX_ROUNDS}</b></div>
     <div class="stat"><small>Hora</small><b>${fmtTime(G.round)}</b></div>
     ${G.stage === 'panel' ? `<div class="timer" id="clock" role="timer" aria-label="Tempo restante da rodada">${G.noLimit ? '∞' : mmss(Math.max(0, Math.ceil((UI.deadline - Date.now()) / 1000)) || D_().timer)}</div>` : ''}
@@ -3490,40 +3633,67 @@ function renderPost() {
    =================================================================== */
 const ACT = {}, CHG = {};
 const warn = m => toast('COMANDO', m, 'warn');
+/* L2.2: cada ação só vale no estado em que o seu botão existe. Um clique atrasado, um duplo clique ou uma chamada fora de hora
+   não pula etapa nem mexe no jogo. */
+const at = (phase, stage) => !!G && G.phase === phase && (stage === undefined || G.stage === stage);
+const when = (cond, fn) => (...a) => cond() ? fn(...a) : undefined;
+const inMenu = () => !G, panel = () => at('siege', 'panel');
+/* Uma exceção numa ação ou no desenho nunca deixa a tela morta: cai na tela de falha, com saída. */
+const run = f => { try { return f(); } catch (err) { renderFatal(err); } };
 /* Depois de uma ação que some com o botão focado, o foco vai para o próximo lugar útil. */
 const focusFirst = (...sels) => { for (const q of sels) { const el = $app.querySelector(q); if (el) { el.focus({ preventScroll: true }); return; } } };
 function setPhase(p) { G.phase = p; saveGame(); render(); }
 
-ACT.diff = d => { UI.diffSel = d.v; render(); };
-ACT.start = () => { newGame(UI.diffSel, { noLimit: UI.noLimit }); UI.sel = null; UI.tab = 'tatica'; UI.lvl = 1; UI.post = 'score'; UI.emptyConfirm = false; setPhase('briefing'); };
-ACT.continue = () => { const s = loadSave(); if (!s) { render(); return; } G = s; UI.timerRound = -1; if (G.stage === 'resolving') G.stage = 'result'; render(); };
-ACT.howto = () => { UI.tutor = true; render(); };
-ACT.closehowto = () => { UI.tutor = false; render(); const b = $app.querySelector('[data-act=howto]'); if (b) b.focus({ preventScroll: true }); };
-ACT.tobrief = () => setPhase('recruit');
-ACT.skipbrief = (d, el) => { $app.classList.add('noanim'); if (el && el.tagName === 'BUTTON') { const b = $app.querySelector('[data-act=tobrief]'); if (b) b.focus({ preventScroll: true }); } };
+ACT.diff = when(inMenu, d => { UI.diffSel = d.v; render(); });
+function startNew() { SAVE_LOST = false; resetUI(); newGame(UI.diffSel, { noLimit: UI.noLimit }); setPhase('briefing'); }
+/* Iniciar por cima de uma partida em andamento pergunta antes: o botão primário fica ao lado do "Continuar" e um clique errado apagaria o jogo. */
+ACT.start = when(inMenu, () => {
+  const sv = loadSave();
+  if (sv && sv.phase !== 'post' && !UI.newConfirm) { UI.newConfirm = true; render(); return; }
+  startNew();
+});
+ACT.newyes = when(() => inMenu() && UI.newConfirm, () => { UI.newConfirm = false; clearSave(); startNew(); });
+ACT.newno = when(() => inMenu() && UI.newConfirm, () => { UI.newConfirm = false; render(); focusFirst('[data-act=start]'); });
+/* Continuar valida pelo uso: se a tela do save não monta, o save está ruim e é descartado em vez de travar a página. */
+ACT.continue = when(inMenu, () => {
+  const s = loadSave(); if (!s) { render(); return; }
+  resetUI(); G = s; if (G.stage === 'resolving') G.stage = 'result';
+  try { buildScreen(); } catch (err) { G = null; clearSave(); SAVE_LOST = true; }
+  render();
+});
+ACT.howto = when(inMenu, () => { UI.tutor = true; render(); });
+ACT.closehowto = when(() => inMenu() && UI.tutor, () => { UI.tutor = false; render(); const b = $app.querySelector('[data-act=howto]'); if (b) b.focus({ preventScroll: true }); });
+ACT.tobrief = when(() => at('briefing'), () => setPhase('recruit'));
+ACT.skipbrief = when(() => at('briefing'), (d, el) => { $app.classList.add('noanim'); if (el && el.tagName === 'BUTTON') { const b = $app.querySelector('[data-act=tobrief]'); if (b) b.focus({ preventScroll: true }); } });
 /* Manchetes: pausa sem re-renderizar (o letreiro continua de onde estava). */
 ACT.tkpause = () => {
   UI.tkPause = !UI.tkPause;
   document.querySelectorAll('.ticker').forEach(t => t.classList.toggle('paused', UI.tkPause));
   document.querySelectorAll('.tkp').forEach(b => { const l = (UI.tkPause ? 'Retomar' : 'Pausar') + ' as manchetes'; b.setAttribute('aria-pressed', UI.tkPause); b.setAttribute('aria-label', l); b.title = l; b.textContent = UI.tkPause ? '▶' : '❚❚'; });
 };
-ACT.lvl = d => { UI.lvl = +d.t; UI.tabAnim = true; render(); };
-ACT.cutgo = () => { const c = UI.cut; UI.cut = null; render(); if (c && c.after) c.after(); };
-ACT.hire = d => {
+ACT.lvl = when(panel, d => { UI.lvl = +d.t; UI.tabAnim = true; render(); });
+ACT.cutgo = when(() => !!UI.cut, () => { const c = UI.cut; UI.cut = null; render(); if (c && c.after) c.after(); });
+/* Voltar ao menu no meio da partida: a janela de confirmação para o relógio; a partida fica salva. */
+ACT.menu = when(() => !!G && G.phase !== 'post' && !UI.menuConfirm, () => { pauseTimer(); UI.menuConfirm = true; render(); focusFirst('[data-act=menuno]'); });
+ACT.menuno = when(() => !!G && UI.menuConfirm, () => { UI.menuConfirm = false; resumeTimer(); render(); });
+ACT.menuyes = when(() => !!G && UI.menuConfirm, () => { if (UI.timerId) G.tleft = timeLeft(); saveGame(); resetUI(); G = null; render(); });
+ACT.hire = when(() => at('recruit'), d => {
   const a = agentById(d.id);
+  if (!a) return;
   if (G.team.includes(d.id)) { G.team = G.team.filter(x => x !== d.id); G.credits += a.custo; G.spent.rec -= a.custo; delete G.az[d.id]; }
   else if (G.credits >= a.custo) { G.team.push(d.id); G.credits -= a.custo; G.spent.rec += a.custo; G.az[d.id] = 'reserva'; }
   else { warn('Créditos insuficientes para ' + a.nome + '.'); return; }
   UI.emptyConfirm = false; saveGame(); render();
-};
-ACT.buygear = d => {
+});
+ACT.buygear = when(() => at('recruit'), d => {
   const e = EQ[d.id];
+  if (!e) return;
   if (G.gear.includes(d.id)) { G.gear = G.gear.filter(x => x !== d.id); G.credits += e.custo; G.spent.equip -= e.custo; delete G.gz[d.id]; }
   else if (G.credits >= e.custo) { G.gear.push(d.id); G.credits -= e.custo; G.spent.equip += e.custo; G.gz[d.id] = 'reserva'; }
   else { warn('Créditos insuficientes para ' + e.nome + '.'); return; }
   saveGame(); render();
-};
-ACT.torecruit = () => {
+});
+ACT.torecruit = when(() => at('recruit'), () => {
   if (!G.team.length) {
     if (!UI.emptyConfirm) { UI.emptyConfirm = true; render(); return; }
     G.team = ['g1', 'g2']; G.stats.noRecruit = true; G.team.forEach(id => G.az[id] = 'reserva');
@@ -3535,19 +3705,19 @@ ACT.torecruit = () => {
     { t: `[RÁDIO] ${agentById(lead).nome} para o comando: “Equipe no local. Aguardo a distribuição pelas zonas. O banco tem mais saídas do que parece.” Câmbio.`, radio: true },
     { t: 'Quatro das sete zonas ao redor da agência podem ser rotas de fuga. Você não sabe quais.' }] };
   setPhase('perimeter');
-};
-CHG.camplus = (v, d, el) => { G.camAdj.plus = v; if (G.camAdj.minus === v) G.camAdj.minus = Object.keys(ATTR).find(k => k !== v); saveGame(); render(); };
-CHG.camminus = (v) => { G.camAdj.minus = v; if (G.camAdj.plus === v) G.camAdj.plus = Object.keys(ATTR).find(k => k !== v); saveGame(); render(); };
+});
+CHG.camplus = when(() => at('recruit'), v => { if (!has(ATTR, v)) return; G.camAdj.plus = v; if (G.camAdj.minus === v) G.camAdj.minus = Object.keys(ATTR).find(k => k !== v); saveGame(); render(); });
+CHG.camminus = when(() => at('recruit'), v => { if (!has(ATTR, v)) return; G.camAdj.minus = v; if (G.camAdj.plus === v) G.camAdj.plus = Object.keys(ATTR).find(k => k !== v); saveGame(); render(); });
 CHG.nolimit = (v, d, el) => { UI.noLimit = !!el.checked; };
-ACT.selchip = d => { UI.sel = (UI.sel && UI.sel.t === d.t && UI.sel.id === d.id) ? null : { t: d.t, id: d.id }; render(); };
-ACT.place = d => {
+ACT.selchip = when(() => at('perimeter'), d => { UI.sel = (UI.sel && UI.sel.t === d.t && UI.sel.id === d.id) ? null : { t: d.t, id: d.id }; render(); });
+ACT.place = when(() => at('perimeter'), d => {
   if (UI.sel) { if (UI.sel.t === 'a') G.az[UI.sel.id] = d.z; else G.gz[UI.sel.id] = d.z; UI.sel = null; saveGame(); }
   else UI.pickZone = UI.pickZone === d.z ? null : d.z;
   render();
-};
-ACT.autoplace = () => { autoPlace(); UI.sel = null; saveGame(); render(); };
-ACT.p1intel = d => { const r = phase1Intel(d.id); if (!r) { warn('Créditos insuficientes.'); return; } saveGame(); render(); };
-ACT.tosiege = () => {
+});
+ACT.autoplace = when(() => at('perimeter'), () => { autoPlace(); UI.sel = null; saveGame(); render(); });
+ACT.p1intel = when(() => at('perimeter'), d => { const r = phase1Intel(d.id); if (!r) { warn('Créditos insuficientes.'); return; } saveGame(); render(); });
+ACT.tosiege = when(() => at('perimeter'), () => {
   confirmPerimeter(); G.phase = 'siege'; UI.pickZone = null; startRound();
   const adq = adequateCount();
   UI.cut = { time: '14h37', title: 'Perímetro fechado', btn: 'Começar o cerco', lines: [
@@ -3555,47 +3725,51 @@ ACT.tosiege = () => {
     { t: 'Dentro da agência, o telefone começa a tocar. É a linha que você mandou ligar.' },
     { t: '[RÁDIO] Comando, todas as equipes em posição. A partir de agora o relógio é seu. Câmbio.', radio: true }] };
   render();
-};
+});
 
-ACT.takepanel = () => { G.stage = 'panel'; UI.tab = 'tatica'; UI.lvl = 1; UI.ivConfirm = false; UI.pickZone = null; saveGame(); render(); };
+ACT.takepanel = when(() => at('siege', 'update'), () => { G.stage = 'panel'; UI.tab = 'tatica'; UI.lvl = 1; UI.ivConfirm = false; UI.pickZone = null; saveGame(); render(); });
 /* Abas de decisão. Vindo de um alerta ou do gargalo, o foco e a rolagem acompanham a aba aberta. */
-ACT.tab = (d, el) => {
+ACT.tab = when(panel, (d, el) => {
   UI.tab = d.t; UI.tabAnim = true; render();
   if (el && !el.classList.contains('tab')) { const t = document.getElementById('tab-' + d.t); if (t) { t.focus({ preventScroll: true }); t.scrollIntoView({ block: 'nearest', behavior: reduceMotion() ? 'auto' : 'smooth' }); } }
-};
-const addD = (d) => { const r = addDecision(d); if (!r.ok) warn(r.msg); else { saveGame(); } render(); };
-ACT.addrepos = () => {
+});
+const addD = (d) => { if (!panel()) return; const r = addDecision(d); if (!r.ok) warn(r.msg); else { saveGame(); } render(); };
+ACT.addrepos = when(panel, () => {
   if (!UI.repoAgent || !UI.repoZone) { warn('Escolha o agente e o destino.'); return; }
+  if (!G.team.includes(UI.repoAgent)) { UI.repoAgent = ''; warn('Escolha o agente e o destino.'); render(); return; }
   if (G.az[UI.repoAgent] === UI.repoZone) { warn('O agente já está nessa zona.'); return; }
   addD({ front: 'tatica', kind: 'repos', p: { agent: UI.repoAgent, zone: UI.repoZone }, label: `${shortName(agentById(UI.repoAgent).nome)} → ${ZNAME(UI.repoZone)}`, slots: 1 });
-};
-CHG.repoagent = v => { UI.repoAgent = v; render(); }; CHG.repozone = v => { UI.repoZone = v; render(); }; CHG.apoiozone = v => { UI.apoioZone = v; };
-CHG.negotiator = v => { G.nego.negotiator = v; saveGame(); render(); };
-ACT.addapoio = () => { if (!UI.apoioZone) { warn('Escolha a zona do apoio externo.'); return; } addD({ front: 'tatica', kind: 'apoio', p: { zone: UI.apoioZone }, label: `Apoio externo em ${ZNAME(UI.apoioZone)}`, slots: 1, cost: apoioCost() }); };
+});
+CHG.repoagent = when(panel, v => { UI.repoAgent = v; render(); }); CHG.repozone = when(panel, v => { UI.repoZone = v; render(); }); CHG.apoiozone = when(panel, v => { UI.apoioZone = v; });
+CHG.negotiator = when(panel, v => { G.nego.negotiator = G.team.includes(v) ? v : null; saveGame(); render(); });
+ACT.addapoio = when(panel, () => { if (!UI.apoioZone) { warn('Escolha a zona do apoio externo.'); return; } addD({ front: 'tatica', kind: 'apoio', p: { zone: UI.apoioZone }, label: `Apoio externo em ${ZNAME(UI.apoioZone)}`, slots: 1, cost: apoioCost() }); });
 ACT.addpausa = () => addD({ front: 'tatica', kind: 'pausa', p: {}, label: 'Pausa de Comando', slots: 1 });
 ACT.addhoras = () => addD({ front: 'tatica', kind: 'horas', p: {}, label: 'Horas extras', slots: 1, cost: horasCost() });
-ACT.iv = () => { UI.ivConfirm = true; render(); focusFirst('[data-act=ivno]'); };
-ACT.ivno = () => { UI.ivConfirm = false; render(); focusFirst('[data-act=iv]'); };
-ACT.ivyes = () => { UI.ivConfirm = false; addD({ front: 'tatica', kind: 'interv', p: {}, label: 'INTERVENÇÃO', slots: D_().slots }); focusFirst('[data-act=iv]'); };
-ACT.addnego = d => { const t = d.t === 'press' ? 'press' : +d.t; addD({ front: 'nego', kind: 'nego', p: { tech: t }, label: t === 'press' ? 'Pressionar o líder' : `Negociar: ${POSTURES[t - 1].nome}`, slots: 1 }); };
-ACT.addintel = d => addD({ front: 'intel', kind: 'intel', p: { id: d.id }, label: INTEL.find(i => i.id === d.id).nome, slots: 1, cost: intelCost(d.id) });
-ACT.addcom = d => { const c = COMMS.find(x => x.id === d.id); addD({ front: 'com', kind: 'com', p: { cid: d.id }, label: c.nome, slots: 1, cost: c.custo }); };
-ACT.rmq = (d, el) => { removeDecision(+d.id); saveGame(); render(); if (el) focusFirst('.actbar .qx', '.actbar [data-act=execute]'); };
-ACT.zonepick = d => { UI.pickZone = d.z; UI.tab = 'tatica'; UI.repoZone = d.z; UI.apoioZone = d.z; render(); };
-ACT.execute = () => {
-  if (!G || G.phase !== 'siege' || G.stage !== 'panel') return;
-  stopTimer(); UI.ivConfirm = false; resolveDecisions(); render();
-};
-ACT.evchoice = d => { if (G.stage !== 'event') return; if (!chooseEvent(+d.i)) { warn('Créditos insuficientes para essa escolha.'); return; } render(); };
-ACT.cont = () => {
+ACT.iv = when(panel, () => { UI.ivConfirm = true; render(); focusFirst('[data-act=ivno]'); });
+ACT.ivno = when(panel, () => { UI.ivConfirm = false; render(); focusFirst('[data-act=iv]'); });
+ACT.ivyes = when(panel, () => { UI.ivConfirm = false; addD({ front: 'tatica', kind: 'interv', p: {}, label: 'INTERVENÇÃO', slots: D_().slots }); focusFirst('[data-act=iv]'); });
+ACT.addnego = d => { if (!panel()) return; const t = d.t === 'press' ? 'press' : +d.t; if (t !== 'press' && !(t >= 1 && t <= 5)) return; addD({ front: 'nego', kind: 'nego', p: { tech: t }, label: t === 'press' ? 'Pressionar o líder' : `Negociar: ${POSTURES[t - 1].nome}`, slots: 1 }); };
+ACT.addintel = d => { const it = INTEL.find(i => i.id === d.id); if (panel() && it) addD({ front: 'intel', kind: 'intel', p: { id: d.id }, label: it.nome, slots: 1, cost: intelCost(d.id) }); };
+ACT.addcom = d => { const c = COMMS.find(x => x.id === d.id); if (panel() && c) addD({ front: 'com', kind: 'com', p: { cid: d.id }, label: c.nome, slots: 1, cost: c.custo }); };
+ACT.rmq = when(panel, (d, el) => { removeDecision(+d.id); saveGame(); render(); if (el) focusFirst('.actbar .qx', '.actbar [data-act=execute]'); });
+ACT.zonepick = when(panel, d => { if (!isZoneId(d.z)) return; UI.pickZone = d.z; UI.tab = 'tatica'; UI.repoZone = d.z; UI.apoioZone = d.z; render(); });
+ACT.execute = when(panel, () => {
+  stopTimer(); G.tleft = null; UI.ivConfirm = false; resolveDecisions(); render();
+});
+ACT.evchoice = when(() => at('siege', 'event'), d => { if (!chooseEvent(+d.i)) { warn('Créditos insuficientes para essa escolha.'); return; } render(); });
+ACT.cont = when(() => at('siege', 'result'), () => {
   if (G.end) { const tb = document.getElementById('toasts'); if (tb) tb.innerHTML = ''; G.phase = 'outcome'; saveGame(); render(); return; }
   startRound(); render();
-};
-ACT.toscore = () => { G.phase = 'post'; UI.post = 'score'; saveGame(); render(); };
-ACT.ptab = d => { UI.post = d.t; render(); };
-ACT.rnode = d => { UI.replayR = +d.r; render(); };
-ACT.again = () => { stopTimer(); clearSave(); G = null; UI.timerRound = -1; render(); };
-ACT.tomenu = () => { stopTimer(); G = null; UI.timerRound = -1; render(); };
+});
+ACT.toscore = when(() => at('outcome'), () => { G.phase = 'post'; UI.post = 'score'; saveGame(); render(); });
+ACT.ptab = when(() => at('post'), d => { UI.post = d.t; render(); });
+ACT.rnode = when(() => at('post'), d => { UI.replayR = +d.r; render(); });
+ACT.again = when(() => at('post'), () => { clearSave(); resetUI(); G = null; render(); });
+ACT.tomenu = when(() => at('post'), () => { resetUI(); G = null; render(); });
+/* Tela de falha: as três saídas funcionam em qualquer estado. */
+ACT.fatalresume = () => { const s = loadSave(); resetUI(); G = s; render(); };
+ACT.fatalmenu = () => { resetUI(); G = null; render(); };
+ACT.fataldrop = () => { clearSave(); resetUI(); G = null; render(); };
 
 /* ===================================================================
    RENDER / BOOT
@@ -3642,19 +3816,36 @@ function tweenChanged(prev) {
     }
   });
 }
-function render() {
-  const sig = focusSig(document.activeElement);
-  const prev = {}; $app.querySelectorAll('[data-k]').forEach(el => { prev[el.dataset.k] = el.dataset.val != null ? el.dataset.val : el.dataset.n; });
+/* Monta o HTML da tela atual sem tocar na página: o desenho de verdade e a prova de que um save monta (ACT.continue) usam a mesma função. */
+function buildScreen() {
   BAR = '';
   let html;
   if (!G) html = renderMenu();
   else if (G.phase === 'briefing') html = renderBriefing();
   else if (G.phase === 'recruit') html = renderRecruit();
   else if (G.phase === 'perimeter') html = renderPerimeter();
-  else if (G.phase === 'siege') html = G.stage === 'update' ? renderUpdate() : G.stage === 'panel' ? renderPanel() : G.stage === 'event' ? renderEventStage() : renderResult();
+  else if (G.phase === 'siege') html = G.stage === 'update' ? renderUpdate() : G.stage === 'panel' ? renderPanel() : G.stage === 'event' ? renderEventStage() : G.stage === 'result' || G.stage === 'resolving' ? renderResult() : (() => { throw new Error('estágio inválido: ' + G.stage); })();
   else if (G.phase === 'outcome') html = renderOutcome();
-  else html = renderPost();
-  $app.innerHTML = html + (BAR ? `<div class="actbar" role="region" aria-label="Próximo passo"><div class="actin">${BAR}</div></div>` : '') + cutHTML();
+  else if (G.phase === 'post') html = renderPost();
+  else throw new Error('fase inválida: ' + G.phase);
+  return html + (BAR ? `<div class="actbar" role="region" aria-label="Próximo passo"><div class="actin">${BAR}</div></div>` : '') + cutHTML() + (G && UI.menuConfirm ? menuConfirmModal() : '');
+}
+/* Tela de falha: o estado não bateu com o esperado. As três saídas funcionam em qualquer estado, e o último ponto salvo continua guardado. */
+function renderFatal(err) {
+  stopTimer();
+  try { console.error('PERÍMETRO: falha ao montar a tela', err); } catch (_) {}
+  UI.cut = null; UI.menuConfirm = false; UI.newConfirm = false;
+  $app.innerHTML = `<div class="screen"><div class="card fatal" role="alert"><h1 class="h3" style="font-size:20px">Esta tela não pôde ser montada</h1>
+    <p class="muted">Algo no estado da partida não bateu com o esperado. O último ponto salvo continua guardado neste navegador.</p>
+    <div class="row"><button class="btn primary" data-act="fatalresume">Voltar ao último ponto salvo</button><button class="btn" data-act="fatalmenu">Ir para o menu</button><button class="btn" data-act="fataldrop">Descartar a partida salva</button></div></div></div>`;
+  document.body.classList.remove('withbar');
+  const b = $app.querySelector('button'); if (b) b.focus({ preventScroll: true });
+}
+function render() { try { draw(); } catch (err) { renderFatal(err); } }
+function draw() {
+  const sig = focusSig(document.activeElement);
+  const prev = {}; $app.querySelectorAll('[data-k]').forEach(el => { prev[el.dataset.k] = el.dataset.val != null ? el.dataset.val : el.dataset.n; });
+  $app.innerHTML = buildScreen();
   document.body.classList.toggle('withbar', !!BAR);
   UI.tabAnim = false;
   const key = G ? G.phase + ':' + (G.stage || '') + ':' + G.round + ':' + UI.post : 'menu', changed = key !== lastKey;
@@ -3676,12 +3867,13 @@ function render() {
 $app.addEventListener('click', e => {
   const el = e.target.closest('[data-act]');
   if (!el || el.disabled) return;
+  if (e.detail > 1) return;   // duplo clique: o segundo clique cairia no botão que aparece no mesmo lugar e pularia uma etapa
   if (el.getAttribute('aria-disabled') === 'true') { if (el.dataset.why) warn(el.dataset.why); return; }
-  const fn = ACT[el.dataset.act]; if (fn) fn(el.dataset, el);
+  const fn = has(ACT, el.dataset.act) ? ACT[el.dataset.act] : null; if (fn) run(() => fn(el.dataset, el));
 });
 $app.addEventListener('change', e => {
   const el = e.target.closest('[data-chg]'); if (!el) return;
-  const fn = CHG[el.dataset.chg]; if (fn) fn(el.value, el.dataset, el);
+  const fn = has(CHG, el.dataset.chg) ? CHG[el.dataset.chg] : null; if (fn) run(() => fn(el.value, el.dataset, el));
 });
 $app.addEventListener('keydown', e => {
   if ((e.key === 'Enter' || e.key === ' ') && e.target.matches && e.target.matches('g[data-act]')) { e.preventDefault(); e.target.dispatchEvent(new MouseEvent('click', { bubbles: true })); }
@@ -3698,7 +3890,9 @@ document.addEventListener('keydown', e => {
     return;
   }
   if (e.key === 'Escape') {
-    if (UI.tutor) { e.preventDefault(); ACT.closehowto(); }
+    if (UI.newConfirm) { e.preventDefault(); ACT.newno(); }
+    else if (UI.menuConfirm) { e.preventDefault(); ACT.menuno(); }
+    else if (UI.tutor) { e.preventDefault(); ACT.closehowto(); }
     else if (G && G.phase === 'siege' && UI.ivConfirm) { e.preventDefault(); ACT.ivno(); }
     else if (G && G.phase === 'perimeter' && UI.sel) { e.preventDefault(); UI.sel = null; render(); }
     return;
@@ -3714,6 +3908,10 @@ document.addEventListener('keydown', e => {
     e.preventDefault(); items[i].focus(); items[i].click();
   }
 });
+onSaveFail = () => toast('COMANDO', 'Não foi possível salvar a partida neste navegador (armazenamento bloqueado ou cheio). Você pode seguir jogando, mas ela não será retomada se a página for recarregada.', 'warn');
+/* O relógio da rodada espera com a aba oculta, e o que sobrava dele é salvo ao sair da página (recarregar continua de onde parou). */
+document.addEventListener('visibilitychange', () => { if (document.hidden) pauseTimer(); else resumeTimer(); });
+window.addEventListener('pagehide', () => { if (G && UI.timerId) G.tleft = timeLeft(); saveGame(); });
 window.PERIMETRO = { get G() { return G; }, newGame, startRound, resolveDecisions, chooseEvent, finishRound, addDecision, computeScore, zoneCoverage, intervProb, negoParts, autoPlace, confirmPerimeter, render, ACT, UI };
 render();
 </script>

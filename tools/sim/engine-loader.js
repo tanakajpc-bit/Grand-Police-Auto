@@ -7,13 +7,13 @@ function mulberry32(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; le
    (usada pelo comparar.js) simplesmente fica de fora, em vez de derrubar o carregamento. */
 const NAMES = `newGame startRound resolveDecisions chooseEvent finishRound addDecision removeDecision computeScore zoneCoverage intervProb intervPower negoParts negoSkill autoPlace confirmPerimeter phase1Intel
   stat agentEff ff fp deployed avail agentsIn plantaoCost apoioCost horasCost intelCost infoFrac knownCount etaVault vaultEtaN tocConstraint confidence calcPressure gradeOf
-  saveGame loadSave validSave migrateSave clearSave adequateCount avgRouteCov getNegotiator hasGear isAway budgetForecast capacityPreview planPreview siegeAlerts milestones blindParts
+  saveGame loadSave validSave migrateSave clearSave SAVE_KEY adequateCount avgRouteCov getNegotiator hasGear isAway budgetForecast capacityPreview planPreview siegeAlerts milestones blindParts
   council stakeCall roundIntro headlines radioLines genReports sacadaView drawEvent doIntervention doSurrender doEscape doUltimatum ultimatumProb
   DIFF PROFILES AGENTS GENERICS EQUIP INTEL COMMS POSTURES STEPS STK STK_KEYS ZONES ZONE EVENT_DEFS EVENT_FX EVDEF BADGES HOSTAGE_LIST HOST TOCS
   ADEQ HOSTAGES MAX_ROUNDS APOIO_PRECOS agentById clamp fmtTime syncHL
   pressureFactor agentPressure equipFactor negoCalm resolveNego applyComm commMult stakePassives stakeWeights eficienciaCusto addAgit addMedia addHurt addDead stake
   moveAgent placeGear tocScores intelProb resolveIntel ivBand revealHint hostagesLeft PLANTAO_BASE PLANTAO_AGENTE CREDITOS_INICIAIS ROUND_MIN START_TIME
-  vidasScore leakChance perceivedAgit perceivedVault badgeEarned hostagesFramed scoreParts ultimatumView reposPreview spendBreakdown vaultEtaN runway burnToEnd`.split(/\s+/).filter(Boolean);
+  vidasScore leakChance perceivedAgit perceivedVault badgeEarned hostagesFramed scoreParts ultimatumView reposPreview spendBreakdown vaultEtaN runway burnToEnd snap trackKnown`.split(/\s+/).filter(Boolean);
 const EXPOSE = `globalThis.__api = { get G() { return G; }, set G(v) { G = v; } };
 ${JSON.stringify(NAMES)}.forEach(n => { try { globalThis.__api[n] = eval(n); } catch (e) {} });`;
 function load(seed, srcDir, extra) {

@@ -47,24 +47,31 @@ function newGame(diffKey, opts = {}) {
     mayorPromise: false, vehicleGiven: false, defector: false, attended: {}, commMedia: 0, usedEvents: [],
     frame: pick(['ganho', 'perda']),
     stats: { pausas: 0, skips: 0, intel: 0, comms: 0, leaks: 0, intervs: 0, repos: 0, horas: 0, apoio: 0, events: 0, minFF: 1, maxFail: 0, initCov: {}, routeKnownAtStart: false, noRecruit: false, material: 0, peakPressure: 0, pressSum: 0, pressN: 0 },
-    queue: [], update: null, R: null, pendingEvent: null, end: null, score: null
+    queue: [], update: null, R: null, pendingEvent: null, end: null, score: null, tleft: null
   };
   G.pressure = calcPressure();
   return G;
 }
 
 /* ---------------- Persistência ---------------- */
+/* Sem armazenamento (bloqueado ou cheio) o jogo segue sem salvar; a interface é avisada uma vez para dizer isso ao jogador (onSaveFail). */
+let SAVE_OK = true, onSaveFail = null;
 function saveGame() {
   if (!G || G.phase === 'menu') return;
-  try { localStorage.setItem(SAVE_KEY, JSON.stringify(G)); } catch (e) { /* sem save: segue o jogo */ }
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify(G)); SAVE_OK = true; }
+  catch (e) { if (SAVE_OK && onSaveFail) onSaveFail(); SAVE_OK = false; }
 }
+/* Um save existia mas não pôde ser usado (corrompido ou de outra versão): o menu avisa uma vez. */
+let SAVE_LOST = false;
 function loadSave() {
+  let raw = null;
+  try { raw = localStorage.getItem(SAVE_KEY); } catch (e) { return null; }
+  if (raw == null || raw === '') return null;
   try {
-    const raw = localStorage.getItem(SAVE_KEY); if (!raw) return null;
     const s = JSON.parse(raw);
-    if (!validSave(s)) { localStorage.removeItem(SAVE_KEY); return null; }
-    return migrateSave(s);
-  } catch (e) { try { localStorage.removeItem(SAVE_KEY); } catch (_) {} return null; }
+    if (isObj(s) && s.ver === 2 && isObj(s.K) && isObj(s.hostages)) { migrateSave(s); if (validSave(s)) return s; }
+  } catch (e) { /* ilegível ou inconsistente: cai no descarte */ }
+  clearSave(); SAVE_LOST = true; return null;
 }
 /* Saves da versão anterior (sem a camada narrativa) ganham os campos novos sem perder a partida. */
 function migrateSave(s) {
@@ -73,16 +80,122 @@ function migrateSave(s) {
   s.spent = Object.assign({ rec: 0, equip: 0, intel: 0, ops: 0, plantao: 0 }, s.spent || {});
   s.deficit = s.deficit || 0; s.tocLog = s.tocLog || []; s.spendLog = s.spendLog || []; s.creditsHist = s.creditsHist || [];
   Object.keys(s.transit || {}).forEach(id => { const t = s.transit[id]; s.transit[id] = t === true ? 2 : t === false || t == null ? 0 : +t || 0; });
-  if (!Array.isArray(s.hl) || s.hl.length !== HOSTAGE_LIST.length) { s.hl = HOSTAGE_LIST.map(h => ({ id: h.id, in: true, st: 'ok' })); const g = G; G = s; syncHL(null); G = g; }
+  if (s.tleft === undefined) s.tleft = null;   // L2.2: tempo que sobrava no cronômetro da rodada
+  /* campos que só entraram depois: o que faltar ganha o valor neutro (a validação depois exige o tipo certo) */
+  SAVE_NUMS.forEach(k => { if (s[k] === undefined) s[k] = 0; }); SAVE_BOOLS.forEach(k => { if (s[k] === undefined) s[k] = false; });
+  if (s.frame === undefined) s.frame = 'ganho';
+  ['fat', 'away', 'support', 'attended', 'ev', 'p1intel', 'hPref', 'camAdj'].forEach(k => { if (s[k] === undefined) s[k] = k === 'camAdj' ? { plus: 'tat', minus: 'com' } : {}; });
+  ['hints', 'radio', 'pendingIntel', 'usedEvents'].forEach(k => { if (s[k] === undefined) s[k] = []; });
+  if (!Array.isArray(s.hl) || s.hl.length !== HOSTAGE_LIST.length) { s.hl = HOSTAGE_LIST.map(h => ({ id: h.id, in: true, st: 'ok' })); const g = G; G = s; try { syncHL(null); } finally { G = g; } }
   return s;
 }
 function clearSave() { try { localStorage.removeItem(SAVE_KEY); } catch (e) {} }
+
+/* L2.2: um save só entra no jogo se tudo o que a interface e o motor leem existe e está na faixa: tipos, faixas, referências
+   (agentes, zonas, equipamentos, eventos) e a coerência entre fase, estágio e dados da rodada. Na dúvida, descarta: é melhor perder
+   uma partida corrompida do que travar a tela no meio de uma crise. */
+const has = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
+const isObj = v => !!v && typeof v === 'object' && !Array.isArray(v);
+const isNum = (v, a = -Infinity, b = Infinity) => typeof v === 'number' && isFinite(v) && v >= a && v <= b;
+const isInt = (v, a, b) => Number.isInteger(v) && v >= a && v <= b;
+const isZoneId = z => typeof z === 'string' && has(ZONE, z);
+const isPlace = z => z === 'reserva' || isZoneId(z);
+const isAgentId = id => typeof id === 'string' && !!agentById(id);
+const SAVE_NUMS = ['exposed', 'powerCut', 'calm', 'stress', 'deadlineLeft', 'supportUsed', 'commMedia', 'lastVaultDelta', 'deficit', 'quietRound'];
+const SAVE_BOOLS = ['fatCrit', 'deadlineFired', 'mayorPromise', 'vehicleGiven', 'defector'];
+const SAVE_PHASES = ['briefing', 'recruit', 'perimeter', 'siege', 'outcome', 'post'];
+const SAVE_STAGES = ['update', 'panel', 'event', 'result', 'resolving'];
+const FRONTS = ['tatica', 'nego', 'intel', 'com'];
+const END_TYPES = ['intervencao', 'rendicao', 'fuga', 'prazo'];
+const GRADES = ['S', 'A', 'B', 'C', 'D', 'F'];
+function validQueueItem(q) {
+  if (!isObj(q) || !isObj(q.p) || !isNum(q.slots, 0, 9) || typeof q.label !== 'string' || !FRONTS.includes(q.front) || (q.cost != null && !isNum(q.cost, 0, 1e5))) return false;
+  switch (q.kind) {
+    case 'repos': return isAgentId(q.p.agent) && isPlace(q.p.zone);
+    case 'apoio': return isZoneId(q.p.zone);
+    case 'pausa': case 'horas': case 'interv': return true;
+    case 'nego': return q.p.tech === 'press' || isInt(q.p.tech, 1, 5);
+    case 'intel': return INTEL.some(i => i.id === q.p.id);
+    case 'com': return COMMS.some(c => c.id === q.p.cid);
+    default: return false;
+  }
+}
+const validDossier = r => isObj(r) && typeof r.nome === 'string' && typeof r.text === 'string';
+function validUpdate(u, round) {
+  return isObj(u) && u.r === round && typeof u.time === 'string' && has(TOCS, u.toc) && (u.tocPrev == null || has(TOCS, u.tocPrev)) &&
+    Array.isArray(u.radio) && u.radio.every(l => isObj(l) && typeof l.t === 'string') &&
+    Array.isArray(u.intel) && u.intel.every(validDossier) &&
+    Array.isArray(u.reports) && u.reports.every(r => isObj(r) && isZoneId(r.z) && typeof r.ag === 'string' && typeof r.txt === 'string') &&
+    (u.call == null || (isObj(u.call) && typeof u.call.t === 'string'));
+}
+const validSnap = x => isObj(x) && [x.agit, x.media, x.vault, x.credits, x.p].every(v => isNum(v)) && isObj(x.stk) && STK_KEYS.every(k => isNum(x.stk[k]));
+function validRoundRec(R) {
+  return isObj(R) && Array.isArray(R.lines) && R.lines.every(l => isObj(l) && typeof l.text === 'string') && Array.isArray(R.decs) && R.decs.every(d => isObj(d) && FRONTS.includes(d.front) && typeof d.label === 'string') &&
+    validSnap(R.s0) && (R.s1 == null || validSnap(R.s1)) && (R.hchg == null || (Array.isArray(R.hchg) && R.hchg.every(c => isObj(c) && has(HOST, c.id)))) && (R.ev == null || (isObj(R.ev) && has(EVDEF, R.ev.id)));
+}
+function validEnd(E) {
+  return isObj(E) && END_TYPES.includes(E.type) && (E.zone == null || isZoneId(E.zone)) && (E.agentsHurt == null || (Array.isArray(E.agentsHurt) && E.agentsHurt.every(isAgentId)));
+}
+function validScore(S) {
+  return isObj(S) && GRADES.includes(S.grade) && isNum(S.total, 0, 100) && ['vidas', 'captura', 'valores', 'eficiencia', 'confianca'].every(k => isNum(S[k], 0, 1));
+}
 function validSave(s) {
-  return s && s.ver === 2 && DIFF[s.diff] && PROFILES[s.profile] && Array.isArray(s.team) && Array.isArray(s.gear) &&
-    s.hostages && s.nego && s.stk && s.K && Array.isArray(s.log) && Array.isArray(s.queue) &&
-    ['briefing', 'recruit', 'perimeter', 'siege', 'outcome', 'post'].includes(s.phase) &&
-    typeof s.credits === 'number' && s.round >= 0 && s.round <= MAX_ROUNDS && Array.isArray(s.routes) && s.routes.length === 4 &&
-    s.team.every(id => agentById(id)) && STK_KEYS.every(k => s.stk[k] && typeof s.stk[k].sat === 'number');
+  if (!isObj(s) || s.ver !== 2 || !has(DIFF, s.diff) || !has(PROFILES, s.profile) || !SAVE_PHASES.includes(s.phase)) return false;
+  const late = s.phase === 'siege' || s.phase === 'outcome' || s.phase === 'post';
+  if (!isInt(s.round, late ? 1 : 0, late ? MAX_ROUNDS : 0)) return false;
+  if (!isNum(s.credits, -1e5, 1e6) || ![s.agit, s.media, s.vault, s.pressure].every(v => isNum(v, 0, 100))) return false;
+  if (![s.team, s.gear, s.routes, s.queue, s.log, s.hist, s.tocLog, s.spendLog, s.hl, s.pendingIntel, s.hints, s.radio, s.usedEvents].every(Array.isArray)) return false;
+  if (![s.hostages, s.nego, s.stk, s.K, s.az, s.gz, s.fat, s.transit, s.away, s.support, s.spent, s.stats, s.ev, s.p1intel, s.camAdj].every(isObj)) return false;
+  // números e marcas que as fórmulas leem (um texto aqui viraria NaN na tela)
+  if (!isInt(s.assail, 1, 9) || typeof s.accomplice !== 'boolean' || !SAVE_NUMS.every(k => isNum(s[k], -1e5, 1e5)) || !SAVE_BOOLS.every(k => typeof s[k] === 'boolean') || (s.frame !== 'ganho' && s.frame !== 'perda')) return false;
+  if (!Object.entries(s.stats).every(([k, v]) => k === 'initCov' ? isObj(v) && Object.entries(v).every(([z, c]) => isZoneId(z) && isNum(c, 0, 100)) : typeof v === 'boolean' || isNum(v))) return false;
+  if (!isObj(s.attended) || !isObj(s.hPref) || (s.pendingDeath != null && !(isObj(s.pendingDeath) && isNum(s.pendingDeath.left, 0, 99) && isNum(s.pendingDeath.p, 0, 1))) || (s.perimLog != null && !(Array.isArray(s.perimLog) && s.perimLog.every(t => typeof t === 'string')))) return false;
+  // equipe, equipamentos, zonas, fadiga
+  if (s.team.length > ALL_AGENTS.length || new Set(s.team).size !== s.team.length || !s.team.every(isAgentId)) return false;
+  if (new Set(s.gear).size !== s.gear.length || !s.gear.every(id => typeof id === 'string' && has(EQ, id))) return false;
+  if (!s.team.every(id => has(s.az, id)) || !s.gear.every(id => has(s.gz, id))) return false;
+  if (!Object.keys(s.az).every(id => s.team.includes(id) && isPlace(s.az[id])) || !Object.keys(s.gz).every(id => s.gear.includes(id) && isPlace(s.gz[id]))) return false;
+  if (![s.fat, s.transit, s.away].every(o => Object.values(o).every(v => isNum(v, 0, 99)))) return false;
+  if (!Object.entries(s.support).every(([z, x]) => isZoneId(z) && isObj(x) && isNum(x.v, 0, 100) && isNum(x.left, 0, 9))) return false;
+  if (!has(ATTR, s.camAdj.plus) || !has(ATTR, s.camAdj.minus)) return false;
+  if (s.routes.length !== 4 || new Set(s.routes).size !== 4 || !s.routes.every(isZoneId) || !isZoneId(s.route) || !isZoneId(s.routeNow)) return false;
+  // reféns: 17 no total, dentro + fora, e a lista nominal
+  const H = s.hostages;
+  if (!['inside', 'freed', 'hurt', 'dead'].every(k => isInt(H[k], 0, HOSTAGES)) || H.inside + H.freed !== HOSTAGES || H.hurt + H.dead > HOSTAGES) return false;
+  if (s.hl.length !== HOSTAGE_LIST.length || !s.hl.every(h => isObj(h) && has(HOST, h.id) && typeof h.in === 'boolean' && ['ok', 'hurt', 'dead'].includes(h.st))) return false;
+  // negociação, stakeholders, conhecimento
+  const n = s.nego;
+  if (!isInt(n.step, 1, 5) || !isInt(n.maxStep, 1, 5) || !['skips', 'tries', 'concessions', 'failStreak'].every(k => isNum(n[k], 0, 99)) || (n.negotiator != null && typeof n.negotiator !== 'string')) return false;
+  if (!STK_KEYS.every(k => isObj(s.stk[k]) && isNum(s.stk[k].sat, 0, 100) && isNum(s.stk[k].sem, 0, 99) && typeof s.stk[k].lost === 'boolean')) return false;
+  const K = s.K;
+  if (!isObj(K.zrev) || !Object.keys(K.zrev).every(isZoneId) || !Array.isArray(K.cleared) || !K.cleared.every(isZoneId) || (K.route != null && !isZoneId(K.route)) || !isObj(K.at)) return false;
+  if ((K.profileHint != null && !(Array.isArray(K.profileHint) && K.profileHint.every(p => has(PROFILES, p)))) || (K.countHint != null && !(Array.isArray(K.countHint) && K.countHint.every(v => isNum(v, 0, 99))))) return false;
+  if (!Object.keys(s.ev).every(z => isZoneId(z) && isNum(s.ev[z]))) return false;
+  if (!s.pendingIntel.every(o => isObj(o) && INTEL.some(i => i.id === o.id) && isNum(o.due, 0, 99))) return false;
+  if (!Object.keys(s.p1intel).every(k => INTEL.some(i => i.id === k) && (s.p1intel[k] === true || s.p1intel[k] === false || validDossier(s.p1intel[k])))) return false;
+  if (!s.tocLog.every(k => k == null || has(TOCS, k)) || !s.spendLog.every(x => isObj(x) && isNum(x.cost, 0, 1e5))) return false;
+  // histórico
+  if (s.log.length > MAX_ROUNDS || s.hist.length > MAX_ROUNDS) return false;
+  if (!s.log.every(l => isObj(l) && typeof l.time === 'string' && Array.isArray(l.lines) && Array.isArray(l.decs) && validSnap(l.s0) && validSnap(l.s1) && (l.ev == null || (isObj(l.ev) && has(EVDEF, l.ev.id))))) return false;
+  if (!s.hist.every(h => isObj(h) && ['agit', 'media', 'vault', 'p'].every(k => isNum(h[k])))) return false;
+  // fila de decisões e cronômetro
+  if (s.queue.length > 4 || !s.queue.every(validQueueItem) || (s.tleft != null && !isNum(s.tleft, 0, 3600))) return false;
+  // coerência entre fase e dados da rodada
+  if (s.pendingEvent != null && !(has(EVENT_FX, s.pendingEvent) && has(EVDEF, s.pendingEvent))) return false;
+  if (s.update != null && !validUpdate(s.update, s.round)) return false;
+  if (s.R != null && !validRoundRec(s.R)) return false;
+  if (s.phase === 'siege') {
+    if (!SAVE_STAGES.includes(s.stage)) return false;
+    if (!validUpdate(s.update, s.round)) return false;
+    if (s.stage === 'event' && (s.pendingEvent == null || !validRoundRec(s.R))) return false;
+    if ((s.stage === 'result' || s.stage === 'resolving') && !validRoundRec(s.R)) return false;
+    if ((s.stage === 'update' || s.stage === 'panel' || s.stage === 'event') && s.end != null) return false;
+    if (s.end != null && !(validEnd(s.end) && validScore(s.score))) return false;
+  }
+  if (s.phase === 'outcome' || s.phase === 'post') {
+    if (!validEnd(s.end) || !validScore(s.score) || s.log.length < 1) return false;
+  }
+  return true;
 }
 
 /* ---------------- Atributos, pressão, fadiga ---------------- */
@@ -573,7 +686,7 @@ function startRound() {
   up.radio = radioLines();
   up.intro = roundIntro(); up.council = council(); up.call = stakeCall(); up.quiet = G.quietRound === G.round;
   G.radio = up.radio.concat(G.radio).slice(0, 12);
-  G.update = up; G.stage = 'update'; G.queue = [];
+  G.update = up; G.stage = 'update'; G.queue = []; G.tleft = null;
   G.attended = {}; G.commMedia = 0;
   saveGame();
 }
@@ -805,6 +918,7 @@ function resolveDecisions() {
   const evId = drawEvent();
   if (evId) {
     R.eventId = evId; G.pendingEvent = evId; G.stage = 'event'; G.stats.events++;
+    saveGame();   // L2.2: a carta de evento é salva; recarregar a página não refaz a rodada
     return { event: evId };
   }
   G.stage = 'resolving';

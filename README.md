@@ -2,7 +2,7 @@
 
 Simulação de gestão de crise (reféns em uma agência bancária) em um único arquivo HTML, em português do Brasil. O jogador recruta a equipe, fecha o perímetro, conduz até 8 rodadas de cerco (negociação, comunicação com os stakeholders, investigação, tática) e recebe nota, jornal, selos e debrief. A perspectiva é a de quem protege: a violência não rende nota.
 
-Artefato publicado: https://claude.ai/artifact/7yQmLNrrYJrJQpEDKrXH5P (versão 10, fim da L1.5). O que se publica é `perimetro.html`.
+Artefato publicado: https://claude.ai/artifact/7yQmLNrrYJrJQpEDKrXH5P (versão 12, fim da L2.2). O que se publica é `perimetro.html`, só o conteúdo da página (a publicação o embrulha com doctype, charset e viewport). Para abrir o jogo direto do disco use `perimetro-standalone.html`: o mesmo conteúdo dentro desse esqueleto, que é também o arquivo que os testes de navegador carregam.
 
 ## Estrutura
 
@@ -16,7 +16,7 @@ Artefato publicado: https://claude.ai/artifact/7yQmLNrrYJrJQpEDKrXH5P (versão 1
 | `src/ui2.js` | Cerco: HUD, painel do comandante (quatro abas), resultado da rodada e eventos |
 | `src/ui3.js` | Desfecho, pós-jogo (nota, gazeta, conquistas, replay, debrief) e o `render()` principal |
 | `src/style.css`, `src/head.html` | Estilo e cabeçalho |
-| `build.sh` | Junta tudo em `perimetro.html`, que fica versionado: rode antes de cada commit |
+| `build.sh` | Junta tudo em `perimetro.html` e `perimetro-standalone.html`, que ficam versionados: rode antes de cada commit |
 | `tools/` | Simulação sem navegador e testes de navegador; veja `tools/README.md` |
 
 O motor e o `dash.js` não dependem da interface: tudo o que decide, prevê ou alerta roda sem navegador (`tools/sim/`), e a interface só desenha.
@@ -26,7 +26,7 @@ O motor e o `dash.js` não dependem da interface: tudo o que decide, prevê ou a
 1. Edite `src/` e rode `./build.sh`.
 2. Se a mudança não deveria alterar o jogo (texto, interface), prove com `node tools/sim/comparar.js <commit-anterior> 200`: o esperado é zero divergência.
 3. Se mexeu em regra ou equilíbrio, rode `node tools/sim/matriz.js 300` e compare com as notas de referência de `tools/README.md`.
-4. Antes de publicar, rode `NODE_PATH=$(npm root -g) node tools/ui/uifuzz.js 200` e `node tools/ui/e2e.js <plano> <dificuldade> noshots` (planos e opções em `tools/README.md`).
+4. Antes de publicar, rode a bateria de navegador inteira, uma prova de cada vez (em paralelo o navegador perde cliques): `NODE_PATH=$(npm root -g) tools/ui/bateria.sh /tmp/saida` (estados, uifuzz e os planos do e2e; detalhes em `tools/README.md`).
 
 ## Histórico e documentos
 

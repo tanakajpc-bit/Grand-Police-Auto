@@ -3,7 +3,7 @@
 const { chromium } = require('playwright');
 const fs = require('fs'), path = require('path');
 const os = require('os');
-const FILE = process.env.PERI_HTML || path.join(__dirname, '..', '..', 'perimetro.html');
+const FILE = process.env.PERI_HTML || path.join(__dirname, '..', '..', 'perimetro-standalone.html');
 const OUT = process.env.PERI_SHOTS || path.join(os.tmpdir(), 'perimetro-e2e'); fs.mkdirSync(OUT, { recursive: true });
 
 const PLANS = {

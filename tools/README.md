@@ -17,19 +17,22 @@ Carrega `data.js`, `story.js`, `engine.js` e `dash.js` num contexto `vm` isolado
 | `node tools/sim/equipe.js [N] [paz\|agr]` | Valor do tamanho da equipe: o especialista joga com 2 a 6 agentes e mostra se o agente a mais se paga (a nota já desconta a eficiência de custo). |
 | `node tools/sim/audit.js [N]` | Auditoria das fórmulas do motor contra a especificação (L2.1): cobertura, pressão (Yerkes-Dodson), fadiga, probabilidade de avanço da negociação, agitação, mídia, vazamento de comunicado, cofre e pontuação (pesos, faixas de nota, Vidas, penalidade por agente ferido), mais os 5 cenários extremos com o rastro de uma partida de cada. Sai com erro se alguma verificação falhar. |
 | `node tools/sim/alertas.js [N]` | Roda `siegeAlerts()`, `milestones()`, as prévias e as previsões de `dash.js` em cada rodada de `N` partidas: acusa exceção, texto quebrado, gravidade ou aba inválida, ordem errada e qualquer função de leitura que altere o estado do jogo. |
+| `node tools/sim/fluxo.js [N]` | Fluxo e estados do motor (L2.2): a ordem de prioridade dos desfechos no fim da rodada com aleatório de roteiro (intervenção ordenada > ação desesperada > rendição > cofre > ordem política > ultimato, e os limites exatos de cada um); salvar e restaurar em todo ponto de `N` partidas (18 políticas × 3 dificuldades), seguindo o jogo e exigindo o mesmo resultado; novo jogo que não herda nada e tabelas de dados que ninguém altera; rodadas sempre de 1 a 8. |
 | `node tools/sim/comparar.js [ref-git] [N]` | Teste diferencial: mesmas sementes com o motor de uma versão anterior (`git show`) e com o atual; conta as partidas que divergem. Zero divergência prova que uma mudança de interface ou de texto não mexeu no jogo. |
 
-`PERI_SRC=/outra/pasta/src` simula uma variante do código sem mexer no repositório. Os robôs ficam em `bots.js` (políticas e corredor de partidas; `policyComunicador` joga só negociação e comunicação com a equipe que se escolher), `experts.js` e `tiers.js`.
+`PERI_SRC=/outra/pasta/src` simula uma variante do código sem mexer no repositório; `OUT=/outra/pasta/x.html ./build.sh` gera uma cópia do artefato para os testes de navegador (`PERI_HTML`). Os robôs ficam em `bots.js` (políticas e corredor de partidas; `policyComunicador` joga só negociação e comunicação com a equipe que se escolher), `experts.js` e `tiers.js`.
 
 Tudo o que o painel calcula (alertas, marcos, prévias, percepção com névoa, selos) mora em `dash.js` e roda aqui; a interface só desenha.
 
 ## Navegador (`tools/ui/`, Playwright)
 
-Precisam do Playwright (`NODE_PATH=$(npm root -g)` se ele estiver instalado globalmente) e abrem `perimetro.html`.
+Precisam do Playwright (`NODE_PATH=$(npm root -g)` se ele estiver instalado globalmente) e abrem `perimetro-standalone.html`, o conteúdo do jogo dentro do mesmo esqueleto (doctype, charset, viewport) que a publicação usa. Abrir direto do disco o `perimetro.html`, que não tem esse esqueleto, faz o navegador adivinhar a codificação e entrar em modo de compatibilidade: sob carga a página falhou ao carregar em cerca de 2% das recargas.
 
 | Script | O que faz |
 | --- | --- |
 | `node tools/ui/e2e.js <plano> <dificuldade> [noshots]` | Fluxo completo (menu, briefing, recrutamento, perímetro, 8 rodadas, desfecho, as abas do pós-jogo, Continuar partida e Jogar novamente). Planos: `negociadora`, `agressiva`, `equilibrada`, `semEquipe`, `lento`, `gastaTudo`. Acusa erro de console, texto quebrado e tela sem saída. Capturas em `$PERI_SHOTS` (padrão: pasta temporária). |
+| `node tools/ui/estados.js [grupo]` | Fluxo de estados no navegador (L2.2). Grupos: `grafo` (todo estado alcançável, nenhum beco sem saída, só transições previstas), `retomada` (recarrega a página a cada passo de três partidas e compara o estado restaurado com o salvo), `corrompido` (42 saves quebrados à mão e 150 mutações aleatórias de um save real: a página não pode travar nem quebrar), `armazenamento` (localStorage bloqueado, cheio ou devolvendo lixo), `reinicio` (Jogar novamente limpa tudo), `timers` (um só cronômetro, expiração, aba oculta, recarga, ouvintes e memória em 6 partidas), `cliques` (duplo clique e ações fora de hora) e `menu` (Menu no meio da partida, confirmação ao iniciar sobre um save, aviso de save descartado). `PERI_HTML=/outro.html` testa uma cópia; `FUZZ_SAVES=N` muda o número de mutações. |
+| `tools/ui/bateria.sh [pasta]` | Roda em sequência tudo o que há de navegador: os oito grupos de `estados.js`, `uifuzz.js 200` e sete planos do `e2e.js`. Uma prova por vez, porque em paralelo o navegador perde cliques por falta de CPU. Escreve um arquivo por prova na pasta e imprime o resumo. |
 | `node tools/ui/uifuzz.js [N]` | Joga `N` partidas pelo motor real dentro da página e renderiza todas as telas em cada estado, procurando `undefined`, `NaN`, `[object Object]`, exceções e telas vazias. |
 
 ## Números de referência (Loop 2, depois da L2.1, N = 300 por célula)
