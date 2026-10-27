@@ -755,6 +755,7 @@ const APOIO_PRECOS = [90, 110, 135];
 const HORAS_BASE = 20, HORAS_AGENTE = 8;
 const CREDITOS_INICIAIS = 1000;
 const BATNA_PESO = .10;           // quanto a cobertura das rotas (o BATNA da força-tarefa) ajuda a negociação: de 0 a +10 pontos de chance
+const JAMMER_CANAL = .06;         // isolar o líder faz do negociador o único canal dele com o mundo: +6 pontos na chance de avanço (L2.3: sem isso, comprar o item custava 3 pontos de nota em qualquer dificuldade)
 const APOSTA_P = .5;               // entrada voluntária com chance de sucesso abaixo disto é aposta: o sucesso não passa da nota A
 const DEFICIT_STRESS_ROUNDS = 3;   // só as três primeiras rodadas no vermelho aumentam a pressão da equipe (+3 cada); depois o custo é só de confiança do banco
 
@@ -852,7 +853,7 @@ const EQUIP = [
   { id:'negofone',nome:'Negofone seguro',       custo:60, ic:'phone',  desc:'+10% de chance de avanço na negociação.' },
   { id:'sniper',  nome:'Sniper de precisão',    custo:90, ic:'scope',  desc:'+20 de eficiência na zona posicionada (precisa de ao menos 1 agente lá). Reforça a prontidão de intervenção.' },
   { id:'kit',     nome:'Kit médico avançado',   custo:40, ic:'med',    desc:'Estabiliza reféns feridos: ninguém piora por falta de atendimento. Reduz à metade o mal-estar do cativeiro longo e os ferimentos em eventos, e atenua as baixas numa intervenção.' },
-  { id:'jammer',  nome:'Jammer de comunicação', custo:75, ic:'jammer', desc:'Bloqueia celulares dos assaltantes: sem cúmplice coordenado e sem lives. Isolamento eleva a agitação em +1/rodada.' },
+  { id:'jammer',  nome:'Jammer de comunicação', custo:75, ic:'jammer', desc:'Bloqueia celulares dos assaltantes: sem cúmplice coordenado e sem lives, e o negociador vira o único canal do líder (+6% de avanço). O isolamento eleva a agitação em +1/rodada.' },
   { id:'viatura', nome:'Viatura descaracterizada', custo:55, ic:'car', desc:'Mobilidade rápida: reposicionar agentes não gera perda de eficiência na rodada.' }
 ];
 const EQ = Object.fromEntries(EQUIP.map(e => [e.id, e]));
@@ -881,9 +882,9 @@ const PROFILES = {
 const DIFF = {
   protocolar: { nome:'Protocolar', slots:3, porta:60, ops:.7, timer:150, lev:.30, dist:.24, ivp:-.03, agit:-1, evChance:.35, media:.85, vault:.85, stk:65, desp:.8, pbase:25, intel:.00, fat:.9,  lethal:.7, ret:55, hostile:0, assail:[2,3],
     blurb:'Para aprender a mecânica: bastante tempo, líder receptivo, eventos raros e plantão mais barato.' },
-  complexo:   { nome:'Complexo',   slots:3, porta:60, ops:1,  timer:100, lev:.32, dist:.305, ivp:-.10, agit:0,  evChance:.55, media:1.0,  vault:1.0,  stk:58, desp:1.0, pbase:30, intel:.00, fat:1.0, lethal:1.0, ret:45, hostile:0, assail:[2,4],
+  complexo:   { nome:'Complexo',   slots:3, porta:60, ops:1,  timer:100, lev:.30, dist:.29, ivp:-.10, agit:0,  evChance:.55, media:1.0,  vault:1.0,  stk:58, desp:1.0, pbase:30, intel:.00, fat:1.0, lethal:1.0, ret:45, hostile:0, assail:[2,4],
     blurb:'O equilíbrio do documento: tempo apertado, líder reservado e eventos frequentes.' },
-  caotico:    { nome:'Caótico',    slots:2, porta:50, ops:1.3,timer:65,  lev:.275, dist:.36, ivp:-.17, agit:2,  evChance:.80, media:1.2,  vault:1.2,  stk:58, desp:1.25,pbase:38, intel:-.10,fat:1.25,lethal:1.3, ret:46, hostile:1, assail:[3,4],
+  caotico:    { nome:'Caótico',    slots:2, porta:50, ops:1.3,timer:65,  lev:.275, dist:.36, ivp:-.17, agit:2,  evChance:.80, media:1.2,  vault:1.2,  stk:58, desp:1.25,pbase:38, intel:-.10,fat:1.25,lethal:1.3, ret:45, hostile:1, assail:[3,4],
     ncalm:1.3, negoFloor:.7, adaptAt:50, adaptMin:.4, violent:.75,
     blurb:'Só duas decisões por rodada, pouco tempo, líder hostil, investigações menos confiáveis, plantão mais caro e eventos quase toda rodada.' }
 };
@@ -1477,6 +1478,7 @@ function negoParts(tech) {
     perfil: (P.mult[kind] - 1) * .15,
     info: G.K.profile ? .06 : 0,
     batna: BATNA_PESO * avgRouteCov() / 100,
+    canal: hasGear('jammer') ? JAMMER_CANAL : 0,
     agitacao: -Math.max(0, G.agit - 50) * .006,
     lider: -D.dist               // desconfiança de base do líder
   };
@@ -1801,7 +1803,7 @@ function intelImpact(id, before) {
   if (id === 'rota') { const c = zoneCoverage(K.route); return `Cobertura atual em ${ZONE[K.route].nome}: ${c}% (${c >= ADEQ ? 'adequada' : c >= 30 ? 'parcial' : 'descoberta'}). ${c >= ADEQ ? 'A sua aposta no perímetro estava certa.' : 'Reforçar essa zona agora é a aposta mais barata que você tem.'}`; }
   if (id === 'efetivo' || id === 'refens') return `Chance estimada de uma intervenção: ${pctRange(before.ip, before.band)} antes, ${pctRange(intervProb(), ivBand())} agora. Saber estreita a faixa e tira a intervenção do escuro.`;
   if (id === 'cofre') return `O tempo do cofre deixa de ser palpite: ${etaVault() === 'agora' ? 'ele está prestes a ceder' : 'previsão de abertura em ' + etaVault()}. Agentes na Entrada desaceleram o trabalho, mas irritam o líder.`;
-  if (id === 'cumplice') return G.accomplice ? 'Na fuga, cada ponto de cobertura na rota vale cerca de 20% menos. Um jammer de comunicação neutraliza boa parte disso.' : 'Uma ameaça a menos: a rota de fuga não tem reforço externo.';
+  if (id === 'cumplice') return G.accomplice ? 'Na fuga, cada ponto de cobertura na rota vale cerca de 10% menos (22% menos se o comando não soubesse do cúmplice). Um jammer de comunicação reduz isso a 8%.' : 'Uma ameaça a menos: a rota de fuga não tem reforço externo.';
   return '';
 }
 function etaVault() {
@@ -2159,7 +2161,7 @@ const EVENT_FX = {
     if (pool.length) L(R, 'bad', 'alert', `Segundo incidente na cidade: ${pool.map(id => agentById(id).nome).join(' e ')} ${pool.length > 1 ? 'são reconvocados' : 'é reconvocado'} por ${D.hostile ? 4 : 3} rodadas. As zonas deles ficam descobertas.`);
     else { G.stress += 4; L(R, 'warn', 'alert', 'Segundo incidente na cidade: sem agentes em campo para retirar, mas a pressão sobre o comando sobe.'); } } }] },
   cumplice:  { elig: g => !hasGear('jammer'), choices: [{ label: 'Entendido', hint: 'Reavaliar as rotas', run: R => {
-    G.accomplice = true; G.assail++; addAgit(-3);
+    G.accomplice = true; G.K.accomplice = true; G.assail++; addAgit(-3);   // a carta revela o cúmplice: o painel passa a mostrá-lo e o comando adapta o cerco (×0,9, não ×0,78)
     L(R, 'bad', 'call', 'Há um quarto elemento do lado de fora. A rota de fuga está reforçada: capturar quem tentar sair por ela ficou mais difícil. O líder, ao saber disso, ficou mais confiante (agitação −3).'); } }] },
   prefeito:  { elig: g => g.round >= 3 && g.round <= 6, choices: [
     { label: 'Garantir que resolverá antes das 20h', hint: 'Agrada hoje, cobra amanhã (escalada de comprometimento).', run: R => {
@@ -2215,12 +2217,13 @@ const EVENT_FX = {
     { label: 'Bloquear o canal', hint: 'Preserva o controle da comunicação.', run: R => {
       stake('familias', -10); L(R, 'warn', 'family', 'Você derruba a ligação. A operação segue sob controle, mas a família jamais vai esquecer (−10).'); } }] },
   diretor:   { elig: g => g.round >= 2, choices: [
-    { label: 'Priorizar a proteção do cofre', hint: 'Agrada ao banco, desagrada famílias.', run: R => {
+    { label: 'Priorizar a proteção do cofre', hint: 'Agrada ao banco, desagrada famílias. A equipe fecha a porta: cofre mais lento, líder mais tenso.', run: R => {
       stake('banco', 14); stake('familias', -8); stake('imprensa', -4);
-      L(R, 'warn', 'bank', 'Você promete proteger o cofre. O banco sobe 14, mas famílias (−8) e imprensa (−4) percebem a inversão de prioridades.'); } },
-    { label: 'Manter a prioridade nas vidas', hint: 'Fiel ao princípio da missão.', run: R => {
-      stake('banco', -10); stake('familias', 6); stake('imprensa', 4);
-      L(R, 'info', 'bank', 'Você reafirma que vidas vêm primeiro. O banco cai 10, famílias (+6) e imprensa (+4) aprovam.'); } },
+      const slow = Math.min(G.vault, 6); G.vault -= slow; addAgit(4);
+      L(R, 'warn', 'bank', `Você promete proteger o cofre. O banco sobe 14, mas famílias (−8) e imprensa (−4) percebem a inversão de prioridades. A equipe se concentra na porta: o cofre recua ${Math.round(slow)} pontos e o líder, ao ver o movimento, se agita (+4).`); } },
+    { label: 'Manter a prioridade nas vidas', hint: 'Fiel ao princípio da missão. A equipe trabalha sem dúvida de prioridade (−3 de pressão).', run: R => {
+      stake('banco', -10); stake('familias', 6); stake('imprensa', 4); G.stress = Math.max(0, G.stress - 3);
+      L(R, 'info', 'bank', 'Você reafirma que vidas vêm primeiro. O banco cai 10, famílias (+6) e imprensa (+4) aprovam, e a equipe, sem dúvida sobre a prioridade, trabalha com menos pressão (−3).'); } },
     { label: 'Pedir tempo ao diretor', hint: 'Meio-termo.', run: R => { stake('banco', 3); L(R, 'info', 'bank', 'Você promete avaliar o risco ao cofre. O diretor concede algumas horas (+3).'); } }] },
   divisao:   { elig: g => g.nego.contact && g.nego.step >= 2, choices: [
     { label: 'Explorar a divisão', hint: '50%: ajuda a negociação. 50%: desestabiliza o grupo.', run: R => {
@@ -2441,6 +2444,22 @@ function ultimatumView() {
   return { p, pf, cede: pctRange(p, band), forca: pctRange(pf, band), tone: p >= .5 ? 'good' : p >= .25 ? 'warn' : 'bad' };
 }
 
+/* ---------- Ordem política (L2.3) ----------
+   Com o prefeito perdido (15 ou menos) ao fim de uma rodada a partir da 6, ele determina a intervenção contra a recomendação técnica. É o
+   desfecho mais comum de quem não comunica (23 a 68% das partidas do especialista que só negocia; 91 a 97% se ele também não negocia), e o
+   aviso só chegava quando o prefeito já estava perdido, uma rodada antes. Aqui a mesma conta do fim de rodada (stakePassives) vira previsão:
+   quanto ele perde por rodada e onde fecharia a rodada com e sem o relatório ao gabinete. */
+function ordemPolitica() {
+  const pf = G.stk.prefeito, r = G.round, perda = 2 + (r >= 6 ? 3 : 0) + (G.deadlineLeft > 0 ? 2 : 0), rel = Math.round(10 * commMult());
+  const sem = Math.max(0, Math.round(pf.sat - 3 * Math.min(pf.sem + 1, 3) - perda)), com = Math.max(0, Math.round(pf.sat + rel - perda));
+  if (r >= 6) {
+    if (sem > 15) return null;
+    return { sev: 3, sem, com, text: `Confiança ${Math.round(pf.sat)}. Sem ação ele fecha a rodada em ${sem}, abaixo do limite de 15, e ordena a entrada contra a sua recomendação técnica. Com o relatório ao gabinete (+${rel}) fecharia em ${com}${com <= 15 ? ': ainda no limite, só o relatório não basta' : ''}.` };
+  }
+  if (r < 4 || (pf.sat > 40 && !pf.lost)) return null;
+  return { sev: r >= 5 ? 3 : 2, sem, com, text: `Confiança ${Math.round(pf.sat)}${pf.sem >= 2 ? `, ${pf.sem} rodadas sem atenção` : ''}. A partir da rodada 6, o prefeito que fecha uma rodada com 15 ou menos ordena a intervenção por conta própria, contra a sua recomendação. Um relatório ao gabinete sobe ${rel}; a partir da 6 ele perde ${5 + (G.deadlineLeft > 0 ? 2 : 0)} por rodada.` };
+}
+
 /* ---------- Alertas priorizados: o que olhar primeiro ---------- */
 function siegeAlerts() {
   const out = [], K = G.K, r = G.round, left = MAX_ROUNDS - r, pa = perceivedAgit(), D = D_();
@@ -2452,7 +2471,9 @@ function siegeAlerts() {
   if (K.route && zoneCoverage(K.route) < ADEQ) add(3, 'road', `Rota provável descoberta`, `${ZONE[K.route].nome} está com ${zoneCoverage(K.route)}% de cobertura. Se o cofre ceder, é por ali que eles saem.`, 'tatica', 'Reforçar a zona');
   if (K.vault) { const e = vaultEtaN(); if (e <= 2) add(3, 'bank', 'Cofre perto de ceder', e <= 0 ? 'O cofre está a ponto de abrir.' : `Abre em ${e} rodada${e > 1 ? 's' : ''}. Agentes na Entrada seguram o ritmo, mas irritam o líder.`, 'tatica', 'Pressionar a Entrada'); else if (e <= 4) add(2, 'bank', `Cofre abre em ${e} rodadas`, 'Hoje ainda dá tempo de segurar o ritmo ou fechar a rota.', 'tatica', 'Ver a Entrada'); }
   else if (r >= 3 && G.lastVaultDelta >= 6) add(2, 'bank', 'Cofre avança sem medição', 'Há sinais de trabalho intenso, mas você não sabe quanto falta. A diretoria do banco entrega a planta.', 'com', 'Falar com o banco');
-  const worst = STK_KEYS.filter(k => G.stk[k].sem >= 2 || G.stk[k].sat < 40).sort((a, b) => G.stk[a].sat - G.stk[b].sat)[0];
+  const po = ordemPolitica();
+  if (po) add(po.sev, 'mayor', 'Prefeito pode ordenar a entrada', po.text, 'com', 'Falar com o prefeito');
+  const worst = STK_KEYS.filter(k => !(k === 'prefeito' && po) && (G.stk[k].sem >= 2 || G.stk[k].sat < 40)).sort((a, b) => G.stk[a].sat - G.stk[b].sat)[0];
   if (worst) add(G.stk[worst].sat < 25 ? 3 : 2, STK[worst].ic, `${STK[worst].nome} em risco`, `Confiança ${Math.round(G.stk[worst].sat)}${G.stk[worst].sem >= 2 ? `, ${G.stk[worst].sem} rodadas sem atenção` : ''}. Perder um stakeholder tem custo imediato.`, 'com', 'Comunicar');
   const tired = deployed().filter(id => ff(id) < .75);
   if (tired.length) add(2, 'tired', 'Equipe cansada', `${tired.length} em campo abaixo de 75% pela fadiga. Horas extras custam ${horasCost()}; rodízio custa cobertura.`, 'tatica', 'Horas extras ou rodízio');
@@ -2460,7 +2481,7 @@ function siegeAlerts() {
   if (away.length) add(2, 'alert', 'Agente reconvocado', `${away.map(id => shortName(agentById(id).nome)).join(', ')} fora por mais ${Math.max(...away.map(id => G.away[id]))} rodada(s). As zonas deles estão abertas.`, 'tatica', 'Cobrir as zonas');
   if (G.pressure > 75) add(2, 'bolt', 'Equipe sobrecarregada', `Pressão ${G.pressure}: acima da zona ótima (≈50) a eficiência cai. A Pausa de Comando reduz 10.`, 'tatica', 'Subir à sacada');
   if (G.deadlineLeft > 0) add(3, 'clock', 'Noticiário das 20h', `Faltam ${G.deadlineLeft} rodada${G.deadlineLeft > 1 ? 's' : ''}. Se não houver desfecho, o prefeito perde 15 pontos.`, 'com', 'Falar com o prefeito');
-  else if (r === 5) add(1, 'mayor', 'Prefeito em urgência na rodada 6', 'Perdas de confiança dele passam a ser maiores. Comunicar agora é mais barato que depois.', 'com', 'Antecipar');
+  else if (r === 5 && !po) add(1, 'mayor', 'Prefeito em urgência na rodada 6', 'Perdas de confiança dele passam a ser maiores. Comunicar agora é mais barato que depois.', 'com', 'Antecipar');
   if (r === MAX_ROUNDS) { const u = ultimatumView(); add(3, 'clock', 'Última rodada', `Depois desta vem o ultimato final. Como está, o líder cede com ${u.cede} de chance; se não ceder, a entrada é forçada (${u.forca} de sucesso). O que você mexer agora ainda conta.`, 'nego', 'Fechar a negociação'); }
   else if (r >= MAX_ROUNDS - 2) { const u = ultimatumView(); add(1, 'clock', `Ultimato em ${left} rodada${left > 1 ? 's' : ''}`, `Se a crise chegasse ao ultimato como está, o líder cederia com ${u.cede} de chance. Degraus a mais, rotas fechadas e agitação baixa aumentam essa chance.`, 'nego', 'Subir a escada'); }
   if (G.nego.step === 5) add(1, 'check', 'Degrau 5 alcançado', `A rendição ocorre se a agitação cair abaixo de ${D.ret}${G.K.profile && G.nego.contact ? ` (hoje ${Math.round(G.agit)})` : ''}. Mantenha a pressão baixa.`, 'nego', 'Seguir negociando');
@@ -2473,7 +2494,7 @@ function siegeAlerts() {
 function milestones() {
   const out = [], r = G.round, K = G.K;
   if (K.vault) { const e = vaultEtaN(); if (isFinite(e)) out.push({ r: r + e, t: 'Cofre abre', tone: e <= 2 ? 'red' : 'amber' }); }
-  if (r < 6) out.push({ r: 6, t: 'Prefeito em urgência', tone: 'amber' });
+  if (r < 6) { const po = ordemPolitica(); out.push({ r: 6, t: po ? 'Prefeito pode ordenar a entrada' : 'Prefeito em urgência', tone: po ? 'red' : 'amber' }); }
   if (G.deadlineLeft > 0) out.push({ r: r + G.deadlineLeft, t: 'Jornal das 20h', tone: 'red' });
   if (G.nego.contact && G.nego.step < 5) { const pc = negoParts(G.nego.step).p, n = Math.ceil((5 - G.nego.step) / Math.max(.05, pc)); out.push({ r: r + n, t: 'Degrau 5 (se negociar todo turno)', tone: 'blue' }); }
   const bk = burnToEnd(); if (G.credits < bk && plantaoCost() > 0) out.push({ r: r + Math.floor(runway()), t: 'A verba acaba', tone: 'red' });
@@ -3013,7 +3034,7 @@ function gearNote(e) {
     case 'escudo': return '+10 de prontidão da intervenção';
     case 'negofone': return '+10 pontos na chance de avanço';
     case 'kit': return `${G.hostages.hurt ? `${G.hostages.hurt} ${plural(G.hostages.hurt, 'ferido sob atendimento', 'feridos sob atendimento')}: ninguém piora por falta de socorro` : 'de prontidão: ferido não piora por falta de socorro'}${G.stats.kitSaves ? `; já evitou ${G.stats.kitSaves} ${plural(G.stats.kitSaves, 'morte', 'mortes')}` : ''}`;
-    case 'jammer': return 'sem cúmplice coordenado nem lives; agitação +1/rodada';
+    case 'jammer': return 'sem cúmplice coordenado nem lives; canal único: +6 pontos de avanço; agitação +1/rodada';
     case 'viatura': return 'reposicionar não perde eficiência';
   }
   return '';

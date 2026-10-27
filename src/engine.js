@@ -292,6 +292,7 @@ function negoParts(tech) {
     perfil: (P.mult[kind] - 1) * .15,
     info: G.K.profile ? .06 : 0,
     batna: BATNA_PESO * avgRouteCov() / 100,
+    canal: hasGear('jammer') ? JAMMER_CANAL : 0,
     agitacao: -Math.max(0, G.agit - 50) * .006,
     lider: -D.dist               // desconfiança de base do líder
   };
@@ -616,7 +617,7 @@ function intelImpact(id, before) {
   if (id === 'rota') { const c = zoneCoverage(K.route); return `Cobertura atual em ${ZONE[K.route].nome}: ${c}% (${c >= ADEQ ? 'adequada' : c >= 30 ? 'parcial' : 'descoberta'}). ${c >= ADEQ ? 'A sua aposta no perímetro estava certa.' : 'Reforçar essa zona agora é a aposta mais barata que você tem.'}`; }
   if (id === 'efetivo' || id === 'refens') return `Chance estimada de uma intervenção: ${pctRange(before.ip, before.band)} antes, ${pctRange(intervProb(), ivBand())} agora. Saber estreita a faixa e tira a intervenção do escuro.`;
   if (id === 'cofre') return `O tempo do cofre deixa de ser palpite: ${etaVault() === 'agora' ? 'ele está prestes a ceder' : 'previsão de abertura em ' + etaVault()}. Agentes na Entrada desaceleram o trabalho, mas irritam o líder.`;
-  if (id === 'cumplice') return G.accomplice ? 'Na fuga, cada ponto de cobertura na rota vale cerca de 20% menos. Um jammer de comunicação neutraliza boa parte disso.' : 'Uma ameaça a menos: a rota de fuga não tem reforço externo.';
+  if (id === 'cumplice') return G.accomplice ? 'Na fuga, cada ponto de cobertura na rota vale cerca de 10% menos (22% menos se o comando não soubesse do cúmplice). Um jammer de comunicação reduz isso a 8%.' : 'Uma ameaça a menos: a rota de fuga não tem reforço externo.';
   return '';
 }
 function etaVault() {
@@ -974,7 +975,7 @@ const EVENT_FX = {
     if (pool.length) L(R, 'bad', 'alert', `Segundo incidente na cidade: ${pool.map(id => agentById(id).nome).join(' e ')} ${pool.length > 1 ? 'são reconvocados' : 'é reconvocado'} por ${D.hostile ? 4 : 3} rodadas. As zonas deles ficam descobertas.`);
     else { G.stress += 4; L(R, 'warn', 'alert', 'Segundo incidente na cidade: sem agentes em campo para retirar, mas a pressão sobre o comando sobe.'); } } }] },
   cumplice:  { elig: g => !hasGear('jammer'), choices: [{ label: 'Entendido', hint: 'Reavaliar as rotas', run: R => {
-    G.accomplice = true; G.assail++; addAgit(-3);
+    G.accomplice = true; G.K.accomplice = true; G.assail++; addAgit(-3);   // a carta revela o cúmplice: o painel passa a mostrá-lo e o comando adapta o cerco (×0,9, não ×0,78)
     L(R, 'bad', 'call', 'Há um quarto elemento do lado de fora. A rota de fuga está reforçada: capturar quem tentar sair por ela ficou mais difícil. O líder, ao saber disso, ficou mais confiante (agitação −3).'); } }] },
   prefeito:  { elig: g => g.round >= 3 && g.round <= 6, choices: [
     { label: 'Garantir que resolverá antes das 20h', hint: 'Agrada hoje, cobra amanhã (escalada de comprometimento).', run: R => {
@@ -1030,12 +1031,13 @@ const EVENT_FX = {
     { label: 'Bloquear o canal', hint: 'Preserva o controle da comunicação.', run: R => {
       stake('familias', -10); L(R, 'warn', 'family', 'Você derruba a ligação. A operação segue sob controle, mas a família jamais vai esquecer (−10).'); } }] },
   diretor:   { elig: g => g.round >= 2, choices: [
-    { label: 'Priorizar a proteção do cofre', hint: 'Agrada ao banco, desagrada famílias.', run: R => {
+    { label: 'Priorizar a proteção do cofre', hint: 'Agrada ao banco, desagrada famílias. A equipe fecha a porta: cofre mais lento, líder mais tenso.', run: R => {
       stake('banco', 14); stake('familias', -8); stake('imprensa', -4);
-      L(R, 'warn', 'bank', 'Você promete proteger o cofre. O banco sobe 14, mas famílias (−8) e imprensa (−4) percebem a inversão de prioridades.'); } },
-    { label: 'Manter a prioridade nas vidas', hint: 'Fiel ao princípio da missão.', run: R => {
-      stake('banco', -10); stake('familias', 6); stake('imprensa', 4);
-      L(R, 'info', 'bank', 'Você reafirma que vidas vêm primeiro. O banco cai 10, famílias (+6) e imprensa (+4) aprovam.'); } },
+      const slow = Math.min(G.vault, 6); G.vault -= slow; addAgit(4);
+      L(R, 'warn', 'bank', `Você promete proteger o cofre. O banco sobe 14, mas famílias (−8) e imprensa (−4) percebem a inversão de prioridades. A equipe se concentra na porta: o cofre recua ${Math.round(slow)} pontos e o líder, ao ver o movimento, se agita (+4).`); } },
+    { label: 'Manter a prioridade nas vidas', hint: 'Fiel ao princípio da missão. A equipe trabalha sem dúvida de prioridade (−3 de pressão).', run: R => {
+      stake('banco', -10); stake('familias', 6); stake('imprensa', 4); G.stress = Math.max(0, G.stress - 3);
+      L(R, 'info', 'bank', 'Você reafirma que vidas vêm primeiro. O banco cai 10, famílias (+6) e imprensa (+4) aprovam, e a equipe, sem dúvida sobre a prioridade, trabalha com menos pressão (−3).'); } },
     { label: 'Pedir tempo ao diretor', hint: 'Meio-termo.', run: R => { stake('banco', 3); L(R, 'info', 'bank', 'Você promete avaliar o risco ao cofre. O diretor concede algumas horas (+3).'); } }] },
   divisao:   { elig: g => g.nego.contact && g.nego.step >= 2, choices: [
     { label: 'Explorar a divisão', hint: '50%: ajuda a negociação. 50%: desestabiliza o grupo.', run: R => {

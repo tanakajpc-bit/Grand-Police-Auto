@@ -290,4 +290,4 @@ function summarize(A, pol, diff) {
   };
 }
 
-module.exports = { load, playGame, policyNegociador, policyAgressivo, policyEquilibrado, policyComunicador, policyEdge, policyFuzz, hire, buy, mk, placeSmart };
+module.exports = { load, playGame, policyNegociador, policyAgressivo, policyEquilibrado, policyComunicador, policyEdge, policyFuzz, hire, buy, mk, placeSmart, eventChoice };

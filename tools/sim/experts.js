@@ -57,7 +57,7 @@ function expert(style, o = {}) {
       // negociação
       if (style !== 'agr' || rn >= 1) { if (style === 'agr' ? (rn >= 2 && G.nego.step < 5 && rn <= 6) : true) add(mk.nego(Math.min(5, G.nego.step))); }
       // informação
-      const plan = style === 'agr' ? ['efetivo', 'refens', 'perfil', 'rota'] : style === 'paz' ? ['perfil', 'rota'] : ['perfil', 'efetivo', 'rota', 'refens'];
+      const plan = o.plan || (style === 'agr' ? ['efetivo', 'refens', 'perfil', 'rota'] : style === 'paz' ? ['perfil', 'rota'] : ['perfil', 'efetivo', 'rota', 'refens']);
       const want = plan.find(i => !known(A, i) && !pending(A, i));
       if (want && G.credits > A.intelCost(want) + reserveNeed && rn <= 5) add(mk.intel(A, want));
       // comunicação ao negligenciado (as gratuitas primeiro)

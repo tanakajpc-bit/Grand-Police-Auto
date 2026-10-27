@@ -3,7 +3,8 @@
 //  2) salvar e restaurar em TODO ponto de uma partida e seguir jogando dá exatamente o mesmo resultado (nada vive fora de G);
 //  3) novo jogo não herda nada do jogo anterior e as tabelas de dados nunca são alteradas;
 //  4) save de versão anterior (sem os campos que entraram depois) sobe com a migração e a partida segue;
-//  5) limites das rodadas: de 1 a 8, intervenção na 1ª, ultimato na 8ª, nunca uma 9ª.
+//  5) limites das rodadas: de 1 a 8, intervenção na 1ª, ultimato na 8ª, nunca uma 9ª;
+//  6) o aviso de ordem política do painel prevê exatamente a conta do fim da rodada (L2.3).
 const B = require('./bots'); const { mulberry32 } = require('./engine-loader');
 const A = B.load(1);
 const N = +process.argv[2] || 108;
@@ -164,6 +165,28 @@ sec('5. Limites das rodadas');
   }
   ok(max <= 8, 'rodada acima de 8: ' + max); ok(naoTermina === 0, naoTermina + ' partidas sem desfecho');
   console.log('  ' + tot + ' partidas passivas: rodada máxima ' + max + ', ' + r8 + ' chegaram ao ultimato da rodada 8, nenhuma sem desfecho');
+}
+sec('6. O aviso da ordem política bate com o que o fim da rodada faz');
+{
+  // Para cada situação do prefeito (rodada, confiança, rodadas sem atenção, prazo do noticiário), a previsão do painel (ordemPolitica) é comparada com a
+  // conta real: a confiança com que ele sai da rodada sem ninguém falar com ele e, da rodada 6 em diante, se a intervenção é ordenada.
+  let n = 0, errPrev = 0, errOrdem = 0, errAviso = 0;
+  for (const diff of ['protocolar', 'complexo', 'caotico']) for (let r = 4; r <= 8; r++) for (const dl of [0, 2]) for (let sem = 0; sem <= 3; sem++) for (let sat = 0; sat <= 60; sat += 3) {
+    A.reseed(5); A.newGame(diff); const G = A.G;
+    G.team = ['renata', 'paulo', 'marcos']; G.team.forEach(id => { G.az[id] = 'reserva'; G.fat[id] = 0; G.transit[id] = 0; G.away[id] = 0; });
+    G.phase = 'siege'; G.round = r; G.stage = 'panel'; G.nego.contact = true; G.K.profile = true; G.quietRound = r; G.vault = 20; G.agit = 50; G.deadlineLeft = dl;
+    G.stk.prefeito.sat = sat; G.stk.prefeito.sem = sem; G.stk.prefeito.lost = false;
+    const f = A.ordemPolitica(); n++;
+    if (r < 6) { if (!!f !== (r >= 4 && sat <= 40)) { errAviso++; console.log(`  ✕ aviso antes da rodada 6: ${diff} r${r} sat ${sat}`); } continue; }
+    script(); A.resolveDecisions();
+    const sai = G.stk.prefeito.sat, ordem = !!(G.end && G.end.type === 'intervencao' && G.end.forced);
+    if (f && Math.round(sai) !== f.sem) { errPrev++; if (errPrev < 4) console.log(`  ✕ previsão ${f.sem}, real ${sai}: ${diff} r${r} sat ${sat} sem ${sem} prazo ${dl}`); }
+    if (ordem !== !!f) { errOrdem++; if (errOrdem < 4) console.log(`  ✕ ordem política ${ordem}, aviso ${!!f}: ${diff} r${r} sat ${sat} sem ${sem} prazo ${dl}; saiu com ${sai}; fim ${tipo(G.end)}`); }
+  }
+  ok(errPrev === 0, errPrev + ' previsões de confiança que não batem com a conta do fim da rodada');
+  ok(errOrdem === 0, errOrdem + ' casos em que o aviso e a ordem política real discordam');
+  ok(errAviso === 0, errAviso + ' avisos antes da rodada 6 fora da regra (rodada 4 em diante, confiança até 40)');
+  console.log('  ' + n + ' situações do prefeito conferidas');
 }
 console.log('\n' + (falhas ? falhas + ' FALHAS em ' + total + ' verificações' : total + ' verificações, 0 falhas'));
 process.exit(falhas ? 1 : 0);

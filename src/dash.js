@@ -119,6 +119,22 @@ function ultimatumView() {
   return { p, pf, cede: pctRange(p, band), forca: pctRange(pf, band), tone: p >= .5 ? 'good' : p >= .25 ? 'warn' : 'bad' };
 }
 
+/* ---------- Ordem política (L2.3) ----------
+   Com o prefeito perdido (15 ou menos) ao fim de uma rodada a partir da 6, ele determina a intervenção contra a recomendação técnica. É o
+   desfecho mais comum de quem não comunica (23 a 68% das partidas do especialista que só negocia; 91 a 97% se ele também não negocia), e o
+   aviso só chegava quando o prefeito já estava perdido, uma rodada antes. Aqui a mesma conta do fim de rodada (stakePassives) vira previsão:
+   quanto ele perde por rodada e onde fecharia a rodada com e sem o relatório ao gabinete. */
+function ordemPolitica() {
+  const pf = G.stk.prefeito, r = G.round, perda = 2 + (r >= 6 ? 3 : 0) + (G.deadlineLeft > 0 ? 2 : 0), rel = Math.round(10 * commMult());
+  const sem = Math.max(0, Math.round(pf.sat - 3 * Math.min(pf.sem + 1, 3) - perda)), com = Math.max(0, Math.round(pf.sat + rel - perda));
+  if (r >= 6) {
+    if (sem > 15) return null;
+    return { sev: 3, sem, com, text: `Confiança ${Math.round(pf.sat)}. Sem ação ele fecha a rodada em ${sem}, abaixo do limite de 15, e ordena a entrada contra a sua recomendação técnica. Com o relatório ao gabinete (+${rel}) fecharia em ${com}${com <= 15 ? ': ainda no limite, só o relatório não basta' : ''}.` };
+  }
+  if (r < 4 || (pf.sat > 40 && !pf.lost)) return null;
+  return { sev: r >= 5 ? 3 : 2, sem, com, text: `Confiança ${Math.round(pf.sat)}${pf.sem >= 2 ? `, ${pf.sem} rodadas sem atenção` : ''}. A partir da rodada 6, o prefeito que fecha uma rodada com 15 ou menos ordena a intervenção por conta própria, contra a sua recomendação. Um relatório ao gabinete sobe ${rel}; a partir da 6 ele perde ${5 + (G.deadlineLeft > 0 ? 2 : 0)} por rodada.` };
+}
+
 /* ---------- Alertas priorizados: o que olhar primeiro ---------- */
 function siegeAlerts() {
   const out = [], K = G.K, r = G.round, left = MAX_ROUNDS - r, pa = perceivedAgit(), D = D_();
@@ -130,7 +146,9 @@ function siegeAlerts() {
   if (K.route && zoneCoverage(K.route) < ADEQ) add(3, 'road', `Rota provável descoberta`, `${ZONE[K.route].nome} está com ${zoneCoverage(K.route)}% de cobertura. Se o cofre ceder, é por ali que eles saem.`, 'tatica', 'Reforçar a zona');
   if (K.vault) { const e = vaultEtaN(); if (e <= 2) add(3, 'bank', 'Cofre perto de ceder', e <= 0 ? 'O cofre está a ponto de abrir.' : `Abre em ${e} rodada${e > 1 ? 's' : ''}. Agentes na Entrada seguram o ritmo, mas irritam o líder.`, 'tatica', 'Pressionar a Entrada'); else if (e <= 4) add(2, 'bank', `Cofre abre em ${e} rodadas`, 'Hoje ainda dá tempo de segurar o ritmo ou fechar a rota.', 'tatica', 'Ver a Entrada'); }
   else if (r >= 3 && G.lastVaultDelta >= 6) add(2, 'bank', 'Cofre avança sem medição', 'Há sinais de trabalho intenso, mas você não sabe quanto falta. A diretoria do banco entrega a planta.', 'com', 'Falar com o banco');
-  const worst = STK_KEYS.filter(k => G.stk[k].sem >= 2 || G.stk[k].sat < 40).sort((a, b) => G.stk[a].sat - G.stk[b].sat)[0];
+  const po = ordemPolitica();
+  if (po) add(po.sev, 'mayor', 'Prefeito pode ordenar a entrada', po.text, 'com', 'Falar com o prefeito');
+  const worst = STK_KEYS.filter(k => !(k === 'prefeito' && po) && (G.stk[k].sem >= 2 || G.stk[k].sat < 40)).sort((a, b) => G.stk[a].sat - G.stk[b].sat)[0];
   if (worst) add(G.stk[worst].sat < 25 ? 3 : 2, STK[worst].ic, `${STK[worst].nome} em risco`, `Confiança ${Math.round(G.stk[worst].sat)}${G.stk[worst].sem >= 2 ? `, ${G.stk[worst].sem} rodadas sem atenção` : ''}. Perder um stakeholder tem custo imediato.`, 'com', 'Comunicar');
   const tired = deployed().filter(id => ff(id) < .75);
   if (tired.length) add(2, 'tired', 'Equipe cansada', `${tired.length} em campo abaixo de 75% pela fadiga. Horas extras custam ${horasCost()}; rodízio custa cobertura.`, 'tatica', 'Horas extras ou rodízio');
@@ -138,7 +156,7 @@ function siegeAlerts() {
   if (away.length) add(2, 'alert', 'Agente reconvocado', `${away.map(id => shortName(agentById(id).nome)).join(', ')} fora por mais ${Math.max(...away.map(id => G.away[id]))} rodada(s). As zonas deles estão abertas.`, 'tatica', 'Cobrir as zonas');
   if (G.pressure > 75) add(2, 'bolt', 'Equipe sobrecarregada', `Pressão ${G.pressure}: acima da zona ótima (≈50) a eficiência cai. A Pausa de Comando reduz 10.`, 'tatica', 'Subir à sacada');
   if (G.deadlineLeft > 0) add(3, 'clock', 'Noticiário das 20h', `Faltam ${G.deadlineLeft} rodada${G.deadlineLeft > 1 ? 's' : ''}. Se não houver desfecho, o prefeito perde 15 pontos.`, 'com', 'Falar com o prefeito');
-  else if (r === 5) add(1, 'mayor', 'Prefeito em urgência na rodada 6', 'Perdas de confiança dele passam a ser maiores. Comunicar agora é mais barato que depois.', 'com', 'Antecipar');
+  else if (r === 5 && !po) add(1, 'mayor', 'Prefeito em urgência na rodada 6', 'Perdas de confiança dele passam a ser maiores. Comunicar agora é mais barato que depois.', 'com', 'Antecipar');
   if (r === MAX_ROUNDS) { const u = ultimatumView(); add(3, 'clock', 'Última rodada', `Depois desta vem o ultimato final. Como está, o líder cede com ${u.cede} de chance; se não ceder, a entrada é forçada (${u.forca} de sucesso). O que você mexer agora ainda conta.`, 'nego', 'Fechar a negociação'); }
   else if (r >= MAX_ROUNDS - 2) { const u = ultimatumView(); add(1, 'clock', `Ultimato em ${left} rodada${left > 1 ? 's' : ''}`, `Se a crise chegasse ao ultimato como está, o líder cederia com ${u.cede} de chance. Degraus a mais, rotas fechadas e agitação baixa aumentam essa chance.`, 'nego', 'Subir a escada'); }
   if (G.nego.step === 5) add(1, 'check', 'Degrau 5 alcançado', `A rendição ocorre se a agitação cair abaixo de ${D.ret}${G.K.profile && G.nego.contact ? ` (hoje ${Math.round(G.agit)})` : ''}. Mantenha a pressão baixa.`, 'nego', 'Seguir negociando');
@@ -151,7 +169,7 @@ function siegeAlerts() {
 function milestones() {
   const out = [], r = G.round, K = G.K;
   if (K.vault) { const e = vaultEtaN(); if (isFinite(e)) out.push({ r: r + e, t: 'Cofre abre', tone: e <= 2 ? 'red' : 'amber' }); }
-  if (r < 6) out.push({ r: 6, t: 'Prefeito em urgência', tone: 'amber' });
+  if (r < 6) { const po = ordemPolitica(); out.push({ r: 6, t: po ? 'Prefeito pode ordenar a entrada' : 'Prefeito em urgência', tone: po ? 'red' : 'amber' }); }
   if (G.deadlineLeft > 0) out.push({ r: r + G.deadlineLeft, t: 'Jornal das 20h', tone: 'red' });
   if (G.nego.contact && G.nego.step < 5) { const pc = negoParts(G.nego.step).p, n = Math.ceil((5 - G.nego.step) / Math.max(.05, pc)); out.push({ r: r + n, t: 'Degrau 5 (se negociar todo turno)', tone: 'blue' }); }
   const bk = burnToEnd(); if (G.credits < bk && plantaoCost() > 0) out.push({ r: r + Math.floor(runway()), t: 'A verba acaba', tone: 'red' });

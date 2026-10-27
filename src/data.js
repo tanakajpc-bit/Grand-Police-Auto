@@ -33,6 +33,7 @@ const APOIO_PRECOS = [90, 110, 135];
 const HORAS_BASE = 20, HORAS_AGENTE = 8;
 const CREDITOS_INICIAIS = 1000;
 const BATNA_PESO = .10;           // quanto a cobertura das rotas (o BATNA da força-tarefa) ajuda a negociação: de 0 a +10 pontos de chance
+const JAMMER_CANAL = .06;         // isolar o líder faz do negociador o único canal dele com o mundo: +6 pontos na chance de avanço (L2.3: sem isso, comprar o item custava 3 pontos de nota em qualquer dificuldade)
 const APOSTA_P = .5;               // entrada voluntária com chance de sucesso abaixo disto é aposta: o sucesso não passa da nota A
 const DEFICIT_STRESS_ROUNDS = 3;   // só as três primeiras rodadas no vermelho aumentam a pressão da equipe (+3 cada); depois o custo é só de confiança do banco
 
@@ -130,7 +131,7 @@ const EQUIP = [
   { id:'negofone',nome:'Negofone seguro',       custo:60, ic:'phone',  desc:'+10% de chance de avanço na negociação.' },
   { id:'sniper',  nome:'Sniper de precisão',    custo:90, ic:'scope',  desc:'+20 de eficiência na zona posicionada (precisa de ao menos 1 agente lá). Reforça a prontidão de intervenção.' },
   { id:'kit',     nome:'Kit médico avançado',   custo:40, ic:'med',    desc:'Estabiliza reféns feridos: ninguém piora por falta de atendimento. Reduz à metade o mal-estar do cativeiro longo e os ferimentos em eventos, e atenua as baixas numa intervenção.' },
-  { id:'jammer',  nome:'Jammer de comunicação', custo:75, ic:'jammer', desc:'Bloqueia celulares dos assaltantes: sem cúmplice coordenado e sem lives. Isolamento eleva a agitação em +1/rodada.' },
+  { id:'jammer',  nome:'Jammer de comunicação', custo:75, ic:'jammer', desc:'Bloqueia celulares dos assaltantes: sem cúmplice coordenado e sem lives, e o negociador vira o único canal do líder (+6% de avanço). O isolamento eleva a agitação em +1/rodada.' },
   { id:'viatura', nome:'Viatura descaracterizada', custo:55, ic:'car', desc:'Mobilidade rápida: reposicionar agentes não gera perda de eficiência na rodada.' }
 ];
 const EQ = Object.fromEntries(EQUIP.map(e => [e.id, e]));
@@ -159,9 +160,9 @@ const PROFILES = {
 const DIFF = {
   protocolar: { nome:'Protocolar', slots:3, porta:60, ops:.7, timer:150, lev:.30, dist:.24, ivp:-.03, agit:-1, evChance:.35, media:.85, vault:.85, stk:65, desp:.8, pbase:25, intel:.00, fat:.9,  lethal:.7, ret:55, hostile:0, assail:[2,3],
     blurb:'Para aprender a mecânica: bastante tempo, líder receptivo, eventos raros e plantão mais barato.' },
-  complexo:   { nome:'Complexo',   slots:3, porta:60, ops:1,  timer:100, lev:.32, dist:.305, ivp:-.10, agit:0,  evChance:.55, media:1.0,  vault:1.0,  stk:58, desp:1.0, pbase:30, intel:.00, fat:1.0, lethal:1.0, ret:45, hostile:0, assail:[2,4],
+  complexo:   { nome:'Complexo',   slots:3, porta:60, ops:1,  timer:100, lev:.30, dist:.29, ivp:-.10, agit:0,  evChance:.55, media:1.0,  vault:1.0,  stk:58, desp:1.0, pbase:30, intel:.00, fat:1.0, lethal:1.0, ret:45, hostile:0, assail:[2,4],
     blurb:'O equilíbrio do documento: tempo apertado, líder reservado e eventos frequentes.' },
-  caotico:    { nome:'Caótico',    slots:2, porta:50, ops:1.3,timer:65,  lev:.275, dist:.36, ivp:-.17, agit:2,  evChance:.80, media:1.2,  vault:1.2,  stk:58, desp:1.25,pbase:38, intel:-.10,fat:1.25,lethal:1.3, ret:46, hostile:1, assail:[3,4],
+  caotico:    { nome:'Caótico',    slots:2, porta:50, ops:1.3,timer:65,  lev:.275, dist:.36, ivp:-.17, agit:2,  evChance:.80, media:1.2,  vault:1.2,  stk:58, desp:1.25,pbase:38, intel:-.10,fat:1.25,lethal:1.3, ret:45, hostile:1, assail:[3,4],
     ncalm:1.3, negoFloor:.7, adaptAt:50, adaptMin:.4, violent:.75,
     blurb:'Só duas decisões por rodada, pouco tempo, líder hostil, investigações menos confiáveis, plantão mais caro e eventos quase toda rodada.' }
 };
