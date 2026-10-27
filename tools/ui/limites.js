@@ -3,12 +3,13 @@
 //   cofre100  cofre cheio no começo da rodada                       verba0    créditos zerados (o que custa tem de estar indisponível)
 //   semNeg    partidas sem uma negociação e/ou sem informação: a Gazeta e o desfecho não podem contar o que não houve
 //   semEquipe nenhum recruta (as guarnições genéricas)               corrida   o tempo da rodada acaba no mesmo instante do clique em Executar
+//   promessas o que o painel diz do traço da Carla e das notas dos equipamentos bate com o motor (L2.5)
 // uso: NODE_PATH=$(npm root -g) node tools/ui/limites.js [caso ...]      (PERI_HTML=/outro-standalone.html testa uma cópia)
 const { chromium } = require('playwright');
 const fs = require('fs'), path = require('path');
 const FILE = process.env.PERI_HTML || path.join(__dirname, '..', '..', 'perimetro-standalone.html');
 const SIM = path.join(__dirname, '..', 'sim');
-const CASOS = process.argv.slice(2).length ? process.argv.slice(2) : ['feridos', 'agit100', 'cofre100', 'verba0', 'semNeg', 'semEquipe', 'corrida'];
+const CASOS = process.argv.slice(2).length ? process.argv.slice(2) : ['feridos', 'agit100', 'cofre100', 'verba0', 'semNeg', 'semEquipe', 'promessas', 'corrida'];
 
 (async () => {
   const browser = await chromium.launch();
@@ -146,6 +147,26 @@ const CASOS = process.argv.slice(2).length ? process.argv.slice(2) : ['feridos',
           if (!G.stats.intel && !A.knownCount()) { semInfo++; ok(!INFO.test(tudo), `semNeg/${diff}/${pol.name}/s${seed}: o texto fala de informação que não havia → "${(tudo.match(INFO) || [''])[0]}"`); }
         }
         notas.push(`${jogos} partidas, ${semConversa} sem nenhuma negociação e ${semInfo} sem nenhuma informação: o desfecho e a Gazeta não afirmam o que não aconteceu`);
+      },
+      promessas() {
+        const painel2 = (team, ev, mut) => { cena('complexo', 33, team, [], 3, g => { g.ev = ev; if (mut) mut(g); }); UIo.tab = 'tatica'; UIo.lvl = 2; return txtOf(safe('promessas/painel', R.renderPanel)); };
+        const comC = painel2(['renata', 'carla', 'paulo'], { beco: 1.0 });
+        ok(/convergem para Beco de Serviço \(1[.,]0 indícios ponderados\)/.test(comC) && /Mendes correlacionou/.test(comC), 'com a Carla, 1,0 indício já converge e o painel diz que ela correlacionou');
+        const semC = painel2(['renata', 'paulo', 'marcos'], { beco: 1.0 });
+        ok(!/convergem para/.test(semC) && /ainda não apontam uma rota com clareza/.test(semC), 'sem a Carla, 1,0 indício ainda não converge');
+        ok(/convergem para Beco de Serviço/.test(painel2(['renata', 'paulo', 'marcos'], { beco: 1.5 })), 'sem a Carla, 1,5 indício converge');
+        const away = painel2(['renata', 'carla', 'paulo'], { beco: 1.0 }, g => { g.away.carla = 2; });
+        ok(!/convergem para/.test(away) && !/correlacionou/.test(away), 'com a Carla reconvocada, 1,0 indício não converge e ninguém diz que ela correlacionou');
+        const comAway = painel2(['renata', 'carla', 'paulo'], { beco: 1.5 }, g => { g.away.carla = 2; });
+        ok(/convergem para Beco de Serviço/.test(comAway) && !/correlacionou/.test(comAway), 'com a Carla reconvocada, 1,5 indício converge, sem o crédito dela');
+        // notas dos equipamentos no cartão "Equipamentos em campo"
+        cena('complexo', 34, ['renata', 'paulo', 'marcos'], ['jammer', 'escudo', 'viatura', 'sniper', 'drone'], 3, g => { g.gz.sniper = 'reserva'; g.gz.drone = 'reserva'; });
+        UIo.tab = 'tatica'; UIo.lvl = 1; const cartao = txtOf(safe('promessas/equip', R.renderPanel));
+        ok(/mídia −2 por rodada/.test(cartao) && /agitação \+1/.test(cartao), 'o jammer diz que corta 2 de mídia e soma 1 de agitação por rodada');
+        ok(/metade do risco de agente ferido na entrada/.test(cartao), 'o escudo diz que divide o risco de agente ferido');
+        ok(/\+15 pontos na captura em perseguição/.test(cartao), 'a viatura diz o que dá na perseguição');
+        ok(/na reserva: sem efeito/.test(cartao), 'o sniper na reserva diz "sem efeito"');
+        notas.push('traço da Carla no painel (1,0 e 1,5 indício, com ela na equipe, sem ela e reconvocada) e as notas de jammer, escudo, viatura e sniper no cartão de equipamentos');
       },
       semEquipe() {
         for (const diff of diffs) for (let k = 0; k < 4; k++) {

@@ -205,12 +205,13 @@ svg.map{width:100%;height:auto;display:block}
 
 /* ===== CERCO ===== */
 .siege{display:grid;gap:14px;padding-top:14px;grid-template-columns:300px minmax(0,1fr) 380px;grid-template-areas:"A B C"}
-.colA{grid-area:A;display:grid;gap:14px;align-content:start;min-width:0}
-.colB{grid-area:B;display:grid;gap:14px;align-content:start;min-width:0}
-.colC{grid-area:C;display:grid;gap:14px;align-content:start;min-width:0}
+.colA{grid-area:A;display:grid;grid-template-columns:minmax(0,1fr);gap:14px;align-content:start;min-width:0}
+.colB{grid-area:B;display:grid;grid-template-columns:minmax(0,1fr);gap:14px;align-content:start;min-width:0}
+.colC{grid-area:C;display:grid;grid-template-columns:minmax(0,1fr);gap:14px;align-content:start;min-width:0}
 @media (max-width:1399px){.siege{grid-template-columns:minmax(0,1fr) 380px;grid-template-areas:"B C" "A A"}.siege .colA{display:block;columns:3 260px;column-gap:14px}.siege .colA>*{break-inside:avoid;margin-bottom:14px}}
 .siege svg.map{max-width:760px;margin-inline:auto}
-@media (max-width:820px){.siege{grid-template-columns:minmax(0,1fr);grid-template-areas:"C" "B" "A"}.recr,.perim,.menubody{grid-template-columns:1fr}.side{position:static}.objgrid{grid-template-columns:repeat(2,1fr)}.bsc{min-width:100%}}
+@media (max-width:820px){.siege{grid-template-columns:minmax(0,1fr);grid-template-areas:"C" "B" "A"}.recr,.perim,.menubody{grid-template-columns:minmax(0,1fr)}.side{position:static}.objgrid{grid-template-columns:repeat(2,1fr)}.bsc{min-width:100%}}
+@media (max-width:520px){.bsc{grid-template-columns:repeat(3,minmax(0,1fr))}}
 .lvl{display:grid;gap:10px}
 .lvl .tag{display:inline-flex;align-items:center;gap:8px;font-family:var(--cond);text-transform:uppercase;letter-spacing:.12em;font-size:11.5px;color:var(--ink2)}
 .lvl .tag b{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--blue);color:#06162a;font-size:11px}
@@ -340,6 +341,7 @@ body.withbar #toasts{bottom:calc(96px + env(safe-area-inset-bottom,0px))}
 @media (max-width:820px){.scorehead{grid-template-columns:1fr}}
 .dimrow{display:grid;grid-template-columns:150px 1fr 120px;gap:12px;align-items:center;padding:8px 0;border-bottom:1px dashed var(--line);font-size:13px}
 .dimrow small{color:var(--ink3);display:block;font-size:12px}
+@media (max-width:620px){.dimrow{grid-template-columns:minmax(0,1fr) auto;row-gap:6px}.dimrow>:nth-child(3){order:2}.dimrow>:nth-child(2){order:3;grid-column:1/-1}}
 .badges{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
 .badge{border:1px solid var(--line);border-radius:12px;padding:14px;background:var(--panel);display:grid;gap:6px;position:relative}
 .badge.on{border-color:var(--amber);background:linear-gradient(180deg,rgba(246,166,35,.13),var(--panel))}
@@ -347,7 +349,7 @@ body.withbar #toasts{bottom:calc(96px + env(safe-area-inset-bottom,0px))}
 .badge .seal{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;background:#0b1320;border:2px solid var(--line2);color:var(--ink3)}
 .badge.on .seal{border-color:var(--amber);color:var(--amber);background:var(--amber-bg)}
 .badge b{font-size:14px}.badge p{font-size:12px;color:var(--ink2)}
-.timeline{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;margin-bottom:14px}
+.timeline{display:grid;grid-template-columns:repeat(auto-fit,minmax(78px,1fr));gap:6px;margin-bottom:14px}
 .tnode{padding:10px 4px;border-radius:9px;border:1px solid var(--line2);background:var(--panel);text-align:center;cursor:pointer;font-size:12.5px;transition:background .15s,border-color .15s,transform .1s}
 .tnode:active{transform:scale(.97)}
 .tnode:hover{background:var(--panel2)}
@@ -744,7 +746,7 @@ b.chg{animation:nflash 1.2s ease}
 
 const MAX_ROUNDS = 8;
 const HOSTAGES = 17;
-const START_TIME = 14 * 60 + 7;   // 14h07
+const START_TIME = 14 * 60 + 37;  // 14h37: perímetro fechado, começa a rodada 1 (o alarme foi às 14h07, a verba saiu às 14h12 e a equipe chegou às 14h27)
 const ROUND_MIN = 45;             // minutos simulados por rodada
 const ADEQ = 60;                  // cobertura "adequada"
 /* ---------- ECONOMIA (L1.3): a verba é um fluxo, não só um estoque ----------
@@ -825,11 +827,11 @@ const ZNAME = id => id === 'reserva' ? 'Reserva' : ZONE[id].nome;
 /* ---------- AGENTES (12, exatamente como no projeto) ---------- */
 const AGENTS = [
   { id:'renata',   nome:'Cap. Renata Alves',   s:{tat:9,neg:5,int:6,res:8,com:6},  trait:'Veterana',      tdesc:'Reconhece padrões: +15% de confiabilidade nas investigações e uma intuição na rodada 3.', custo:150 },
-  { id:'marcos',   nome:'Sgt. Marcos Ribeiro', s:{tat:8,neg:3,int:5,res:9,com:4},  trait:'Disciplinado',  tdesc:'Fadiga reduzida: cansa na metade da velocidade.', custo:120 },
-  { id:'carla',    nome:'Det. Carla Mendes',   s:{tat:4,neg:8,int:9,res:5,com:7},  trait:'Analítica',     tdesc:'Bônus de investigação (+10% de confiabilidade) e correlaciona relatos no painel.', custo:140 },
+  { id:'marcos',   nome:'Sgt. Marcos Ribeiro', s:{tat:8,neg:3,int:5,res:9,com:4},  trait:'Disciplinado',  tdesc:'Fadiga reduzida: cansa na metade da velocidade e não sofre a perda da Fadiga crítica.', custo:120 },
+  { id:'carla',    nome:'Det. Carla Mendes',   s:{tat:4,neg:8,int:9,res:5,com:7},  trait:'Analítica',     tdesc:'Bônus de investigação (+10% de confiabilidade) e correlaciona os relatos: a convergência aparece no painel com 1 indício ponderado em vez de 1,5.', custo:140 },
   { id:'paulo',    nome:'Neg. Paulo Duarte',   s:{tat:3,neg:10,int:6,res:4,com:9}, trait:'Empático',      tdesc:'Como negociador: +10% de avanço e efeito calmante ampliado nos degraus 1 a 3.', custo:135 },
   { id:'lucas',    nome:'Ag. Lucas Ferreira',  s:{tat:7,neg:4,int:7,res:7,com:5},  trait:'Adaptável',     tdesc:'Sem penalidade ao ser reposicionado.', custo:110 },
-  { id:'fernanda', nome:'Ag. Fernanda Costa',  s:{tat:6,neg:6,int:8,res:5,com:8},  trait:'Comunicativa',  tdesc:'Bônus de +30% nas ações com stakeholders.', custo:125 },
+  { id:'fernanda', nome:'Ag. Fernanda Costa',  s:{tat:6,neg:6,int:8,res:5,com:8},  trait:'Comunicativa',  tdesc:'Bônus de +30% nas ações com stakeholders, e os comunicados dela vazam menos.', custo:125 },
   { id:'andre',    nome:'Sgt. André Gomes',    s:{tat:8,neg:2,int:4,res:10,com:3}, trait:'Implacável',    tdesc:'Bônus na intervenção (+8 de prontidão), mas penalidade como negociador (−12%).', custo:115 },
   { id:'sofia',    nome:'Det. Sofia Takahashi',s:{tat:5,neg:7,int:10,res:4,com:6}, trait:'Metódica',      tdesc:'Investigações custam 20% menos.', custo:145 },
   { id:'roberto',  nome:'Ag. Roberto Nunes',   s:{tat:7,neg:5,int:5,res:8,com:5},  trait:'Impulsivo',     tdesc:'Sob pressão alta (>65) pode agir sozinho e elevar a agitação.', custo:80 },
@@ -848,14 +850,14 @@ const ATTR = { tat:'Tática', neg:'Negociação', int:'Inteligência', res:'Resi
 
 /* ---------- EQUIPAMENTOS (8) ---------- */
 const EQUIP = [
-  { id:'drone',   nome:'Drone de vigilância',   custo:80, ic:'drone',  desc:'+15 de cobertura aérea na zona em que for posicionado. Revela se essa zona é rota de fuga.' },
-  { id:'escudo',  nome:'Escudo tático',         custo:50, ic:'shield', desc:'+10 de eficiência na intervenção (em qualquer posição).' },
+  { id:'drone',   nome:'Drone de vigilância',   custo:80, ic:'drone',  desc:'+15 de cobertura aérea na zona em que for posicionado. Revela se essa zona é uma das quatro rotas de fuga candidatas. Sobre a Avenida, ainda ajuda a seguir quem fugir (+8 pontos na perseguição).' },
+  { id:'escudo',  nome:'Escudo tático',         custo:50, ic:'shield', desc:'+10 de eficiência na intervenção (em qualquer posição) e metade da chance de um agente se ferir na entrada.' },
   { id:'termica', nome:'Câmera térmica',        custo:70, ic:'thermal',desc:'Revela o número de pessoas em 1 zona. Em zona vizinha ao banco, revela quantos assaltantes há.' },
   { id:'negofone',nome:'Negofone seguro',       custo:60, ic:'phone',  desc:'+10% de chance de avanço na negociação.' },
   { id:'sniper',  nome:'Sniper de precisão',    custo:90, ic:'scope',  desc:'+20 de eficiência na zona posicionada (precisa de ao menos 1 agente lá). Reforça a prontidão de intervenção.' },
   { id:'kit',     nome:'Kit médico avançado',   custo:40, ic:'med',    desc:'Estabiliza reféns feridos: ninguém piora por falta de atendimento. Reduz à metade o mal-estar do cativeiro longo e os ferimentos em eventos, e atenua as baixas numa intervenção.' },
-  { id:'jammer',  nome:'Jammer de comunicação', custo:75, ic:'jammer', desc:'Bloqueia celulares dos assaltantes: sem cúmplice coordenado e sem lives, e o negociador vira o único canal do líder (+6% de avanço). O isolamento eleva a agitação em +1/rodada.' },
-  { id:'viatura', nome:'Viatura descaracterizada', custo:55, ic:'car', desc:'Mobilidade rápida: reposicionar agentes não gera perda de eficiência na rodada.' }
+  { id:'jammer',  nome:'Jammer de comunicação', custo:75, ic:'jammer', desc:'Bloqueia celulares dos assaltantes: sem cúmplice coordenado e sem lives, e o negociador vira o único canal do líder (+6% de avanço). O isolamento eleva a agitação em +1/rodada, e a mídia sobe 2 pontos a menos por rodada.' },
+  { id:'viatura', nome:'Viatura descaracterizada', custo:55, ic:'car', desc:'Mobilidade rápida: reposicionar agentes não gera perda de eficiência na rodada, e alcançar quem fugir fica mais fácil (+15 pontos na chance de captura numa perseguição).' }
 ];
 const EQ = Object.fromEntries(EQUIP.map(e => [e.id, e]));
 
@@ -894,7 +896,7 @@ const DIFF = {
 const INTEL = [
   { id:'perfil',   nome:'Perfil psicológico do líder', custo:60, ic:'user',   fase1:true,  desc:'Identifica o perfil comportamental e como negociar com ele.' },
   { id:'rota',     nome:'Rastreamento de rota de fuga', custo:70, ic:'road',  fase1:true,  desc:'Revela qual das rotas candidatas o líder planeja usar.' },
-  { id:'efetivo',  nome:'Contagem de armados',          custo:50, ic:'eye',   fase1:true,  desc:'Revela quantos assaltantes há e como estão armados.' },
+  { id:'efetivo',  nome:'Contagem de armados',          custo:50, ic:'eye',   fase1:true,  desc:'Revela quantos assaltantes armados há no interior.' },
   { id:'cofre',    nome:'Planta e andamento do cofre',  custo:50, ic:'bank',  fase1:false, desc:'Mostra o progresso exato dos assaltantes sobre o cofre e a previsão de abertura.' },
   { id:'refens',   nome:'Estado e identificação dos reféns', custo:40, ic:'heart', fase1:false, desc:'Revela quantos reféns estão feridos e se há risco clínico.' },
   { id:'cumplice', nome:'Varredura de contato externo', custo:60, ic:'call',  fase1:false, desc:'Descobre se há cúmplice do lado de fora.' }
@@ -990,7 +992,7 @@ const TOCS = {
 /* ---------- CONQUISTAS ---------- */
 const BADGES = [
   { id:'ninguem',  nome:'Ninguém fica para trás', ic:'shieldcheck', d:'Nenhum refém ferido ou morto.' },
-  { id:'escuta',   nome:'Mestre da escuta',       ic:'ear',   d:'Rendição negociada sem aceitar concessões materiais.' },
+  { id:'escuta',   nome:'Mestre da escuta',       ic:'ear',   d:'Rendição negociada, sem aceitar concessões materiais e sem nunca pressionar o líder.' },
   { id:'sacada',   nome:'Sacada',                 ic:'light', d:'Usou a Pausa de Comando de forma estratégica (2 a 3 vezes) e terminou com nota C ou melhor.' },
   { id:'aposta',   nome:'Aposta certa',           ic:'scope', d:'A rota de fuga real estava com cobertura adequada desde o perímetro, antes de ser revelada.' },
   { id:'olhos',    nome:'Olhos abertos',          ic:'eye',   d:'Terminou com 5 das 6 variáveis ocultas reveladas.' },
@@ -1160,7 +1162,7 @@ function council() {
     const ip = intervProb(), topEv = Object.entries(G.ev).sort((a, b) => b[1] - a[1])[0];
     const weak = G.routes.filter(z => !K.cleared.includes(z)).map(z => [z, zoneCoverage(z)]).sort((a, b) => a[1] - b[1])[0];
     if (tat === 'andre' || ip >= .55) say(tat, 'intervir', `A prontidão está em ${Math.round(intervPower())}%. ${ip >= .55 ? 'Se for para entrar, é agora, antes que eles se organizem.' : 'Já esperamos demais. Cada minuto de conversa é um minuto para eles se prepararem.'}`);
-    else if (topEv && topEv[1] >= 1.5 && zoneCoverage(topEv[0]) < ADEQ) say(tat, 'reforçar', `Os relatos apontam para ${ZONE[topEv[0]].nome} e lá a cobertura é de ${zoneCoverage(topEv[0])}%. Eu mandaria gente para lá.`);
+    else if (topEv && topEv[1] >= evidenceMin() && zoneCoverage(topEv[0]) < ADEQ) say(tat, 'reforçar', `Os relatos apontam para ${ZONE[topEv[0]].nome} e lá a cobertura é de ${zoneCoverage(topEv[0])}%. Eu mandaria gente para lá.`);
     else if (weak && weak[1] < 30) say(tat, 'reforçar', `${ZONE[weak[0]].nome} está praticamente descoberta (${weak[1]}%). Se a saída for por lá, ninguém segura.`);
     else say(tat, 'reforçar', 'O perímetro aguenta por ora. Eu não mexeria em ninguém sem um motivo: reposicionar custa eficiência.');
   }
@@ -1505,7 +1507,7 @@ function intervPower() {
   });
   let p = Math.min(100, sum * 3.5);
   if (hasGear('escudo')) p += 10;
-  if (hasGear('sniper') && agentsIn(G.gz.sniper).length) p += 10;
+  if (hasGear('sniper') && G.gz.sniper && G.gz.sniper !== 'reserva' && agentsIn(G.gz.sniper).length) p += 10;   // "na reserva: sem efeito" (agentsIn('reserva') contaria quem descansa)
   if (G.team.includes('andre') && !isAway('andre')) p += 8;
   if (G.powerCut > 0) p += 15;
   return clamp(p, 0, 100);
@@ -1705,6 +1707,8 @@ const ROUTE_TXT = {
   metro: ['catraca do metrô foi liberada por dentro, sem passageiro algum', 'um bilhete múltiplo foi deixado numa escada do acesso, ainda quente'],
   avenida: ['um motociclista faz a mesma volta no quarteirão pela quarta vez', 'um carro de aplicativo espera com a corrida marcada, destino a duas quadras']
 };
+/* Indício ponderado mínimo para o painel e o conselho dizerem que os relatos convergem numa zona (rota de verdade vale 1, ruído 0,5). A Analítica correlaciona e enxerga antes. */
+const evidenceMin = () => (G.team.includes('carla') && !isAway('carla') ? 1 : 1.5);
 function genReports() {
   const out = [];
   ZONES.forEach(z => {
@@ -1842,6 +1846,7 @@ function confirmPerimeter() {
     else log.push(`Câmera térmica em ${ZONE[z].nome}: nenhuma presença suspeita na zona.`);
   }
   G.stats.initCov = Object.fromEntries(ZONES.map(z => [z.id, zoneCoverage(z.id)]));
+  G.stats.initEmpty = ZONES.filter(z => !G.team.some(id => G.az[id] === z.id)).length;   // zonas sem nenhum agente (o drone sozinho dá cobertura, mas não ouve nada)
   trackKnown();
   G.stats.routeKnownAtStart = !!G.K.route;
   G.perimLog = log;
@@ -2321,7 +2326,7 @@ function sacadaView() {
   const w = STK_KEYS.slice().sort((a, b) => G.stk[b].sem - G.stk[a].sem)[0];
   if (G.stk[w].sem >= 1) out.push(`${STK[w].nome} está há ${G.stk[w].sem} rodada${G.stk[w].sem > 1 ? 's' : ''} sem atenção do comando e sua satisfação é ${Math.round(G.stk[w].sat)}. O barulhento nem sempre é o mais saliente: revise quem pode virar problema.`);
   const topEv = Object.entries(G.ev).sort((a, b) => b[1] - a[1])[0];
-  if (topEv && topEv[1] >= 1.5) out.push(`Os relatos de campo convergem para ${ZONE[topEv[0]].nome} (${topEv[1].toFixed(1)} indícios ponderados). Cuidado: relatos de baixa confiança também contam e podem ser ruído.`);
+  if (topEv && topEv[1] >= evidenceMin()) out.push(`Os relatos de campo convergem para ${ZONE[topEv[0]].nome} (${topEv[1].toFixed(1)} indícios ponderados). Cuidado: relatos de baixa confiança também contam e podem ser ruído.`);
   else out.push('Os relatos de campo ainda não convergem para uma rota. Cada agente só vê o que está na sua zona: informação distribuída precisa ser integrada por você.');
   const hot = G.agit > 70 ? 'A agitação do líder está em zona de risco: a negociação é a única alavanca que reduz o risco aos reféns sem custo tático.' : G.pressure > 70 ? 'A pressão sobre a equipe passou da zona ótima: a eficiência cai com pressão alta demais. Um respiro ajuda.' : G.pressure < 30 ? 'A pressão está baixa demais: a equipe pode estar em modo complacente.' : 'A pressão da equipe está na zona produtiva.';
   out.push(hot);
@@ -2693,7 +2698,7 @@ function renderMenu() {
         <h2 class="h3">Sua missão</h2>
         <p class="serif" style="font-size:16.5px;line-height:1.6;color:#dfe6f1">Você é o comandante do incidente. Em 8 rodadas, equilibre cinco objetivos que competem entre si: <b>vidas</b>, <b>prisões</b>, <b>valores</b>, <b>custo</b> e <b>confiança pública</b>. Não existe estratégia dominante.</p>
         <div class="row" style="margin-top:12px"><button class="btn sm" data-act="howto">Como funciona</button><span class="faint" style="font-size:12.5px">25 a 40 min · salva automaticamente no navegador</span></div>
-        <p class="faint" style="font-size:12px;margin-top:14px">Todos os nomes, lugares e instituições são fictícios. A perspectiva é sempre a de quem protege; as ações táticas são abstratas e não há imagens explícitas.</p>
+        <p class="faint" style="font-size:12px;margin-top:14px"><b>Aviso de conteúdo:</b> a simulação trata de uma crise com reféns num assalto a banco, sempre pela perspectiva de quem protege. Nenhuma mecânica recompensa a violência, as ações táticas são abstratas e não há imagens explícitas. Quem preferir não participar pode sair a qualquer momento pelo Menu, e o facilitador deve oferecer uma atividade alternativa. Todos os nomes, lugares e instituições são fictícios.</p>
       </div>
     </div>
     ${UI.tutor ? tutorModal() : ''}${UI.newConfirm && save ? newConfirmModal(save) : ''}
@@ -2717,7 +2722,7 @@ function tutorModal() {
   return `<div class="modalback"><div class="tutor" role="dialog" aria-modal="true" aria-labelledby="tutt">
     <h2 class="h3" id="tutt">Como funciona o PERÍMETRO</h2>
     <p class="muted"><b>1. Recrute</b> uma equipe com 1.000 créditos. O que sobrar é sua reserva para investigações, apoio externo e horas extras, e também paga o <b>plantão</b>: toda rodada, cada agente em campo custa verba. Sem reserva, a operação entra no vermelho.</p>
-    <p class="muted"><b>2. Posicione</b> agentes e equipamentos em 7 zonas. Quatro delas são rotas de fuga possíveis, mas você não sabe quais. Os recursos só cobrem bem cerca de 60% das zonas: é preciso apostar, ou investir em inteligência. Mudar alguém de zona tem custo: ele rende menos por duas rodadas.</p>
+    <p class="muted"><b>2. Posicione</b> agentes e equipamentos em 7 zonas. Quatro delas são rotas de fuga possíveis, mas você não sabe quais. Os recursos só cobrem bem cerca de metade das zonas: é preciso apostar, ou investir em inteligência. Mudar alguém de zona tem custo: ele rende menos por duas rodadas.</p>
     <p class="muted"><b>3. Comande o cerco</b> por 8 rodadas. Em cada uma você recebe informações parciais (Percepção), lê indicadores (Compreensão) e vê tendências (Projeção). Então toma 2 ou 3 decisões em quatro frentes: <b>Tática, Negociação, Inteligência e Comunicação</b>.</p>
     <p class="muted"><b>4. A crise termina</b> por rendição negociada, intervenção, fuga ou prazo esgotado: ao fim da rodada 8, o líder escolhe entre ceder e forçar a mão. A nota combina vidas (40%), prisões (20%), valores (15%), eficiência de custo (10%) e confiança pública (15%). Mortes e intervenção fracassada põem um teto na nota, e entrar com menos de 50% de chance é aposta: se der certo, o máximo é A.</p>
     <p class="muted">Dica: a negociação sobe uma escada de 5 degraus, um por vez. Pular etapas reduz pela metade a chance de avançar. O painel mostra o <b>gargalo</b> da operação: ele muda de informação para pessoal e depois para tempo, e gastar fora dele rende pouco.</p>
@@ -2754,6 +2759,7 @@ function renderBriefing() {
       <div class="eyebrow" style="margin-top:20px">Cinco objetivos em tensão</div>
       <div class="objgrid">${w.map((p, i) => `<div class="obj" style="--w:${p * 2.2}%"><b>${p}%</b><span>${names[i]}</span></div>`).join('')}</div>
       <div class="row" style="margin-top:26px"><button class="btn primary lg" data-act="tobrief">Assumir o comando</button><span class="faint" style="font-size:13px">Próximo: Fase 0, recrutamento da equipe</span></div>
+      <p class="faint" style="font-size:12.5px;margin-top:16px">Todos os nomes, lugares e instituições são fictícios. O Menu, no alto da tela, deixa sair a qualquer momento.</p>
     </div></div>`;
 }
 
@@ -2967,7 +2973,7 @@ function endsleyHTML() {
   L2.push(ins('info', 'phone', `Negociação no degrau ${G.nego.step} (${st.nome}). ${K.profile ? `Líder ${P.nome}: ${P.tip}` : G.nego.signalShown ? `Sinal do canal: “${P.sign}”` : 'O perfil do líder ainda é desconhecido, e a postura certa depende dele.'}`));
   const topEv = Object.entries(G.ev).sort((a, b) => b[1] - a[1])[0];
   const adq = adequateCount();
-  L2.push(ins(adq >= 4 ? 'good' : 'warn', 'map', `${adq} de 7 zonas com cobertura adequada. ${topEv && topEv[1] >= 1.5 ? `Os relatos convergem para <b>${ZONE[topEv[0]].nome}</b> (${dec(topEv[1])} indícios ponderados).${G.team.includes('carla') ? ' A Det. Mendes correlacionou os relatos.' : ''}` : 'Os relatos ainda não apontam uma rota com clareza.'}`));
+  L2.push(ins(adq >= 4 ? 'good' : 'warn', 'map', `${adq} de 7 zonas com cobertura adequada. ${topEv && topEv[1] >= evidenceMin() ? `Os relatos convergem para <b>${ZONE[topEv[0]].nome}</b> (${dec(topEv[1])} indícios ponderados).${evidenceMin() < 1.5 ? ' A Det. Mendes correlacionou os relatos.' : ''}` : 'Os relatos ainda não apontam uma rota com clareza.'}`));
   const tired = deployed().filter(id => ff(id) < .8), away = G.team.filter(isAway);
   if (tired.length) L2.push(ins('warn', 'tired', `Fadiga: ${tired.map(id => shortName(agentById(id).nome)).join(', ')} abaixo de 80% de eficiência. Rodízio custa cobertura temporária.`));
   if (away.length) L2.push(ins('bad', 'alert', `${away.map(id => shortName(agentById(id).nome)).join(', ')} reconvocado${away.length > 1 ? 's' : ''} pela cidade por ${Math.max(...away.map(id => G.away[id]))} rodada(s).`));
@@ -3036,11 +3042,11 @@ function gearNote(e) {
     case 'drone': return placed ? `+15 de cobertura em ${ZNAME(z)}` : 'na reserva: sem efeito de cobertura';
     case 'sniper': return !placed ? 'na reserva: sem efeito' : has ? `+20 em ${ZNAME(z)} e +10 de prontidão` : `${ZNAME(z)} está sem agente: sem efeito`;
     case 'termica': return placed ? `lendo ${ZNAME(z)} (revelação feita no início)` : 'na reserva: sem leitura';
-    case 'escudo': return '+10 de prontidão da intervenção';
+    case 'escudo': return '+10 de prontidão da intervenção; metade do risco de agente ferido na entrada';
     case 'negofone': return '+10 pontos na chance de avanço';
     case 'kit': return `${G.hostages.hurt ? `${G.hostages.hurt} ${plural(G.hostages.hurt, 'ferido sob atendimento', 'feridos sob atendimento')}: ninguém piora por falta de socorro` : 'de prontidão: ferido não piora por falta de socorro'}${G.stats.kitSaves ? `; já evitou ${G.stats.kitSaves} ${plural(G.stats.kitSaves, 'morte', 'mortes')}` : ''}`;
-    case 'jammer': return 'sem cúmplice coordenado nem lives; canal único: +6 pontos de avanço; agitação +1/rodada';
-    case 'viatura': return 'reposicionar não perde eficiência';
+    case 'jammer': return 'sem cúmplice coordenado nem lives; canal único: +6 pontos de avanço; agitação +1 e mídia −2 por rodada';
+    case 'viatura': return 'reposicionar não perde eficiência; +15 pontos na captura em perseguição';
   }
   return '';
 }
@@ -3434,7 +3440,7 @@ function truthHTML() {
   ];
   const known = rows.filter(r => when(r[2])).length;
   const cost = E.type === 'intervencao' || (E.type === 'prazo' && E.variant === 'forcado') ? `A intervenção aconteceu com ${known} de 6 variáveis conhecidas. A chance real de sucesso era de ${Math.round((E.P || 0) * 100)}%${E.type === 'prazo' ? `, depois de o líder, com ${Math.round((E.p || 0) * 100)}% de chance de ceder, recusar o ultimato` : ''}.`
-    : E.type === 'fuga' ? `A saída foi por ${ZONE[E.zone].nome}, com ${E.cov}% de cobertura efetiva${when('route') ? '' : ', numa rota que você nunca confirmou'}.`
+    : E.type === 'fuga' ? `A saída foi por ${ZONE[E.zone].nome}, com ${E.cov}% de cobertura efetiva${K.route && K.route === G.routeNow ? '' : K.route ? `, numa rota que você nunca confirmou: o plano que você descobriu (${ZONE[K.route].nome}) foi trocado quando o líder percebeu o cerco` : ', numa rota que você nunca confirmou'}.`
     : E.type === 'rendicao' ? `A rendição veio ${when('profile') ? 'com o perfil do líder já identificado' : 'sem que você soubesse com quem falava'}: ${known} de 6 variáveis conhecidas.`
     : `O prazo esgotou com ${known} de 6 variáveis conhecidas. Ao fim da rodada ${MAX_ROUNDS}, a chance real de o líder ceder era de ${Math.round((E.p || 0) * 100)}%, e ele cedeu.`;
   const sig = st.sig || 0, noise = st.noise || 0;
@@ -3490,7 +3496,7 @@ function scoreHTML() {
     { k: 'Vidas', v: S.vidas, w: .40, why: `${H.dead} ${plural(H.dead, 'morto', 'mortos')} e ${H.hurt} ${plural(H.hurt, 'ferido', 'feridos')} entre ${HOSTAGES} reféns (cada morte tira 14,7 pontos da dimensão e cada ferido 2,9: o −25 e o −5 do documento, proporcionais aos 17 reféns).${G.stats.kitSaves ? ` O kit médico evitou ${G.stats.kitSaves} ${plural(G.stats.kitSaves, 'morte', 'mortes')}.` : ''}` },
     { k: 'Prisões', v: S.captura, w: .20, why: `${outName(E)}: ${Math.round(S.captura * 100)}% dos responsáveis presos.` },
     { k: 'Valores', v: S.valores, w: .15, why: `Cofre em ${Math.round(G.vault)}% no desfecho; fator de perda do desfecho ${String(E.lootF).replace('.', ',')}.` },
-    { k: 'Eficiência', v: S.eficiencia, w: .10, why: `${fmt(G.credits)} créditos sobraram e a crise durou ${G.round} rodadas. O plantão custou ${fmt(G.spent.plantao)} no total${G.deficit ? ` e ${G.deficit} ${plural(G.deficit, 'rodada', 'rodadas')} ficaram no vermelho` : ''}.` },
+    { k: 'Eficiência', v: S.eficiencia, w: .10, why: `${fmt(G.credits)} créditos sobraram e a crise durou ${G.round} ${plural(G.round, 'rodada', 'rodadas')}. O plantão custou ${fmt(G.spent.plantao)} no total${G.deficit ? ` e ${G.deficit} ${plural(G.deficit, 'rodada', 'rodadas')} ficaram no vermelho` : ''}.` },
     { k: 'Confiança', v: S.confianca, w: .15, why: `Média ponderada dos stakeholders: ${STK_KEYS.map(k => `${STK[k].nome} ${Math.round(G.stk[k].sat)}`).join(' · ')}.` }
   ];
   const hint = nextGradeHint(S, dims);
@@ -3571,15 +3577,34 @@ function chartSVG() {
     ${line('agit', '#ff5468')}${line('media', '#f6a623')}${line('vault', '#4da6ff')}${line('p', '#a78bfa', true)}</svg></div>
     <div class="legend"><span><i style="background:#ff5468"></i>Agitação do líder</span><span><i style="background:#f6a623"></i>Pressão da mídia</span><span><i style="background:#4da6ff"></i>Cofre</span><span><i style="background:#a78bfa"></i>Pressão da equipe</span></div>`;
 }
+/* Rodada 0: a preparação antes do cerco (equipe, equipamentos, investigação prévia, reconhecimento do perímetro e cobertura inicial), lida do próprio estado do jogo.
+   Partidas gravadas antes do início do cerco não têm a cobertura inicial, e então não há R0. */
+const hasPrep = () => !!G.stats && isObj(G.stats.initCov) && ZONES.every(z => typeof G.stats.initCov[z.id] === 'number');
+function prepHTML() {
+  const st = G.stats, hires = G.team.filter(id => !agentById(id).generic), p1 = Object.keys(G.p1intel).map(k => INTEL.find(i => i.id === k)).filter(Boolean);
+  const reserve = CREDITOS_INICIAIS - G.spent.rec - G.spent.equip - p1.reduce((s, i) => s + intelCost(i.id), 0);
+  const sec = (t, body) => `<div class="eyebrow">${t}</div><div class="row" style="margin:6px 0 14px">${body}</div>`;
+  const pill = (t, c) => `<span class="pill ${c}">${t}</span>`;
+  return `<div class="card"><h2 class="h3">Preparação · 14h12 a ${fmtTime(1)}</h2>
+    <p class="muted" style="margin:0 0 14px;font-size:13.5px">Antes do primeiro relógio do cerco: o que você montou com os ${fmt(CREDITOS_INICIAIS)} créditos. Esta fase também decide o resultado.</p>
+    ${sec('Equipe contratada · custo em créditos', hires.length ? hires.map(id => pill(`${shortName(agentById(id).nome)} · ${agentById(id).custo}`, 'blue')).join('') : '<span class="muted">Ninguém contratado: só a guarnição local, dois patrulheiros de nível básico.</span>')}
+    ${sec('Equipamentos', G.gear.length ? G.gear.map(e => pill(`${EQ[e].nome} · ${EQ[e].custo}`, 'blue')).join('') : '<span class="muted">Nenhum equipamento comprado.</span>')}
+    ${sec('Investigação antes do cerco', p1.length ? p1.map(i => { const r = G.p1intel[i.id], ok = !!(r && r.ok); return pill(`${i.nome} · ${intelCost(i.id)} · ${ok ? 'confirmado' : 'inconclusivo'}`, ok ? 'green' : 'amber'); }).join('') : '<span class="muted">Nenhuma investigação: o cerco começou às cegas.</span>')}
+    ${(G.perimLog || []).length ? `<div class="grid" style="gap:6px;margin-bottom:14px">${G.perimLog.map(t => `<div class="res-line good" style="animation:none">${icon('eye', '', 1.8)}<span>${t}</span></div>`).join('')}</div>` : ''}
+    <div class="eyebrow">Cobertura de cada zona ao fechar o perímetro</div>
+    <div class="delta" style="margin:6px 0 14px">${ZONES.map(z => { const c = st.initCov[z.id]; return `<div class="dcell"><div class="top"><span>${z.curto}</span><b>${c}%</b></div><div class="meter ${c >= ADEQ ? 'g' : c > 0 ? 'a' : 'r'}"><i style="width:${c}%"></i><span class="mk" style="left:${ADEQ}%"></span></div>${z.id === G.route ? '<small class="faint" style="display:block;margin-top:6px">rota de fuga real</small>' : ''}</div>`; }).join('')}</div>
+    <p style="margin:0">Reserva ao iniciar o cerco: <b class="mono">${fmt(reserve)}</b> créditos.</p></div>`;
+}
 function replayHTML() {
-  const r = clamp(UI.replayR, 1, Math.max(1, G.log.length)), rec = G.log[r - 1];
-  const nodes = Array.from({ length: MAX_ROUNDS }, (_, i) => { const l = G.log[i]; return l ? `<button class="tnode" role="tab" data-act="rnode" data-r="${i + 1}" aria-selected="${r === i + 1}" tabindex="${r === i + 1 ? 0 : -1}"><b>R${i + 1}</b>${l.time}<br><span class="faint">${l.decs.length} ${plural(l.decs.length, 'decisão', 'decisões')}${l.ev ? ' · evento' : ''}</span></button>` : `<div class="tnode na" aria-label="Rodada ${i + 1}: não jogada"><b>R${i + 1}</b>não jogada</div>`; }).join('');
-  const d = rec ? `<div class="card"><h2 class="h3">Rodada ${r} · ${rec.time}</h2>
+  const prep = hasPrep(), r = clamp(Number.isFinite(UI.replayR) ? Math.round(UI.replayR) : 1, prep ? 0 : 1, Math.max(1, G.log.length)), rec = r ? G.log[r - 1] : null;
+  const node0 = prep ? `<button class="tnode" role="tab" data-act="rnode" data-r="0" aria-selected="${r === 0}" tabindex="${r === 0 ? 0 : -1}"><b>R0</b>Preparação<br><span class="faint">antes do cerco</span></button>` : '';
+  const nodes = node0 + Array.from({ length: MAX_ROUNDS }, (_, i) => { const l = G.log[i]; return l ? `<button class="tnode" role="tab" data-act="rnode" data-r="${i + 1}" aria-selected="${r === i + 1}" tabindex="${r === i + 1 ? 0 : -1}"><b>R${i + 1}</b>${l.time}<br><span class="faint">${l.decs.length} ${plural(l.decs.length, 'decisão', 'decisões')}${l.ev ? ' · evento' : ''}</span></button>` : `<div class="tnode na" aria-label="Rodada ${i + 1}: não jogada"><b>R${i + 1}</b>não jogada</div>`; }).join('');
+  const d = !r ? prepHTML() : rec ? `<div class="card"><h2 class="h3">Rodada ${r} · ${rec.time}</h2>
     <div class="row" style="margin-bottom:10px">${rec.decs.length ? rec.decs.map(x => `<span class="pill blue">${icon(FRONT_IC[x.front], 'ico" style="width:14px;height:14px')}${x.label}</span>`).join('') : '<span class="muted">Sem decisões.</span>'}</div>
     ${rec.ev ? `<div class="insight warn" style="margin-bottom:10px">${icon(EVDEF[rec.ev.id].ic, '', 1.8)}<span><b>${EVDEF[rec.ev.id].titulo}</b>: ${rec.ev.choice}</span></div>` : ''}
     <div class="grid" style="gap:6px">${rec.lines.map(l => `<div class="res-line ${l.tone}" style="animation:none">${icon(l.ic, '', 1.8)}<span>${br(l.text)}</span></div>`).join('')}</div>
     <div class="delta" style="margin-top:12px">${[['Agitação', rec.s0.agit, rec.s1.agit], ['Mídia', rec.s0.media, rec.s1.media], ['Cofre', rec.s0.vault, rec.s1.vault], ['Pressão da equipe', rec.s0.p, rec.s1.p], ...STK_KEYS.map(k => [STK[k].nome, rec.s0.stk[k], rec.s1.stk[k]])].map(([k, a, b]) => `<div class="dcell"><div class="top"><span>${k}</span><b>${Math.round(a)} → ${Math.round(b)}</b></div></div>`).join('')}</div></div>` : '';
-  return `<h1 class="sr">Replay da operação</h1><div class="timeline" role="tablist" aria-label="Rodadas">${nodes}</div>${d}<div class="card" style="margin-top:14px"><h2 class="h3">Curvas da operação (dados reais, sem névoa)</h2>${chartSVG()}</div>`;
+  return `<h1 class="sr">Replay da operação</h1><div class="timeline" role="tablist" aria-label="Preparação e rodadas">${nodes}</div>${d}<div class="card" style="margin-top:14px"><h2 class="h3">Curvas da operação (dados reais, sem névoa)</h2>${chartSVG()}</div>`;
 }
 
 /* ---------- Debrief: dinheiro e gargalos (L1.3) ---------- */
@@ -3619,31 +3644,38 @@ function debriefHTML() {
   const S = G.score, st = G.stats, H = G.hostages, toc = tocConstraint();
   const miss = []; if (!G.K.profile) miss.push('perfil'); if (!G.K.route) miss.push('rota'); if (!G.K.count) miss.push('nº de armados'); if (!G.K.vault) miss.push('cofre'); if (!G.K.hostages) miss.push('estado dos reféns'); if (!G.K.accomplice) miss.push('cúmplice');
   const avgP = st.pressN ? Math.round(st.pressSum / st.pressN) : 0;
-  const empty = ZONES.filter(z => (st.initCov[z.id] || 0) === 0).length;
-  const dimsArr = [['vidas', S.vidas], ['captura', S.captura], ['valores', S.valores], ['eficiência', S.eficiencia], ['confiança', S.confianca]].sort((a, b) => a[1] - b[1]);
+  const empty = typeof st.initEmpty === 'number' ? st.initEmpty : ZONES.filter(z => (st.initCov[z.id] || 0) === 0).length;   // partidas antigas não gravaram as posições
+  const nIntel = Object.keys(G.p1intel).length + G.log.reduce((s, l) => s + l.decs.filter(d => d.kind === 'intel').length, 0);   // investigações pagas: as de antes do cerco e as ordenadas nas rodadas
+  const shocks = G.log.filter(l => l.ev).map(l => `${EVDEF[l.ev.id].titulo} → ${l.ev.choice}`);
+  const bestNeg = G.team.slice().sort((a, b) => stat(b, 'neg') - stat(a, 'neg'))[0], negId = G.nego.negotiator && G.team.includes(G.nego.negotiator) ? G.nego.negotiator : bestNeg;
+  const negLine = !G.nego.tries ? 'Você não abriu negociação, então a deferência ao especialista não foi posta à prova.' : negId ? `Quem negociou: ${shortName(agentById(negId).nome)} (negociação ${stat(negId, 'neg')}${stat(negId, 'neg') >= stat(bestNeg, 'neg') ? ', entre os mais fortes da equipe' : `; ${shortName(agentById(bestNeg).nome)} tinha ${stat(bestNeg, 'neg')}`}).` : '';
+  const nextLvl = { protocolar: 'Complexo', complexo: 'Caótico' }[G.diff];
+  const dimsArr = [['vidas', S.vidas], ['prisões', S.captura], ['valores', S.valores], ['eficiência', S.eficiencia], ['confiança', S.confianca]].sort((a, b) => a[1] - b[1]);
   const weakest = dimsArr[0][0];
-  const next = { vidas: 'abrir a negociação já na rodada 1 e manter a escada em ordem; o líder é o seu maior fator de risco', captura: 'cobrir mais as rotas candidatas (ou investir em rota) e conter o cofre com a pressão da Entrada', valores: 'reduzir o ritmo do cofre com agentes na Entrada ou fechar a rota antes que ele abra', 'eficiência': 'enxugar o que se contrata e compra antes do cerco (é de onde sai a maior parte da verba), cortar gastos sem retorno e encerrar a crise mais cedo', confiança: 'falar com os stakeholders mais cedo e com mais regularidade, em especial o prefeito antes da rodada 6' }[weakest];
+  const next = { vidas: 'abrir a negociação já na rodada 1 e manter a escada em ordem; o líder é o seu maior fator de risco', prisões: 'cobrir mais as rotas candidatas (ou investir em rota) e conter o cofre com a pressão da Entrada', valores: 'reduzir o ritmo do cofre com agentes na Entrada ou fechar a rota antes que ele abra', 'eficiência': 'enxugar o que se contrata e compra antes do cerco (é de onde sai a maior parte da verba), cortar gastos sem retorno e encerrar a crise mais cedo', confiança: 'falar com os stakeholders mais cedo e com mais regularidade, em especial o prefeito antes da rodada 6' }[weakest];
   const C = [
     { n: 'Teoria das Restrições', ref: 'Goldratt & Cox (1984)', you: `${tocRuns().length ? 'Gargalo por rodada: ' + runTxt(tocRuns()) + '. ' : ''}${tocAlign().n ? `${tocAlign().hit} de ${tocAlign().n} ordens de recurso miraram o gargalo do momento. ` : ''}Você terminou com ${adequateCount()} de 7 zonas adequadas, e a rota real (${ZONE[G.route].nome}) tinha ${st.initCov[G.route] || 0}% de cobertura no início.`, les: 'Melhorias fora da restrição não mudam o resultado do sistema. Os cinco passos de foco: identificar o elo mais fraco, explorá-lo, subordinar o resto a ele, elevá-lo e repetir, porque o gargalo migra. Aqui: informação (início), pessoal (meio), tempo e fadiga (fim). Reforçar uma zona que não era rota foi orçamento parado.' },
-    { n: 'Racionalidade limitada e valor da informação', ref: 'Simon (1955); Howard (1966)', you: `Você gastou ${fmt(G.spent.intel)} créditos em inteligência (${st.intel} investigações) e terminou sabendo ${knownCount()} de 6 variáveis ocultas${miss.length ? `. Ficaram ocultas: ${miss.join(', ')}.` : '.'}`, les: 'Uma informação vale a diferença entre o resultado esperado de decidir com ela e sem ela. Ninguém otimiza: todos satisfazem. A pergunta é quanto saber antes de agir.' },
+    { n: 'Racionalidade limitada e valor da informação', ref: 'Simon (1955); Howard (1966)', you: `Você gastou ${fmt(G.spent.intel)} créditos em inteligência (${nIntel} ${plural(nIntel, 'investigação', 'investigações')}) e terminou sabendo ${knownCount()} de 6 variáveis ocultas${miss.length ? `. Ficaram ocultas: ${miss.join(', ')}.` : '.'}`, les: 'Uma informação vale a diferença entre o resultado esperado de decidir com ela e sem ela. Ninguém otimiza: todos satisfazem. A pergunta é quanto saber antes de agir.' },
     { n: 'Consciência situacional e decisão naturalística', ref: 'Endsley (1995); Klein (1998)', you: `Você teve ${st.reports || 0} relatos de campo, dos quais ${st.noise || 0} eram ruído de baixa confiança. Usou a Pausa de Comando ${st.pausas} vez${st.pausas === 1 ? '' : 'es'}.`, les: 'Perceber, compreender e projetar são três coisas diferentes. Dado bruto sem interpretação engana; interpretação sem projeção chega tarde. Veteranos reconhecem padrões, mas padrão reconhecido sem checagem também erra.' },
-    { n: 'Negociação baseada em interesses e em crise', ref: 'Fisher, Ury & Patton (2011); Vecchi et al. (2005); Voss & Raz (2016)', you: `Degrau máximo: ${G.nego.maxStep}/5 em ${G.nego.tries} rodadas de negociação. Etapas puladas: ${G.nego.skips}. Pressões: ${st.press || 0}. Cobertura média das rotas (seu BATNA): ${Math.round(avgRouteCov())}%.`, les: 'A escada de cinco degraus funciona em ordem. Pular etapa reduz pela metade a chance de avançar. Fechar rotas fortalece o seu BATNA e enfraquece o do líder: o perímetro altera a negociação.' },
+    { n: 'Sensemaking e alta confiabilidade', ref: 'Weick (1993); Weick & Sutcliffe (2007)', you: `${shocks.length ? `${shocks.length} ${plural(shocks.length, 'carta de choque', 'cartas de choque')}, com a sua resposta a cada uma: ${shocks.join('; ')}.` : 'Nenhuma carta de choque apareceu nesta partida.'} ${negLine}`, les: 'Em Mann Gulch, a equipe colapsou quando um choque destruiu ao mesmo tempo os papéis e o sentido compartilhado da situação. Organizações de alta confiabilidade têm cinco hábitos: preocupação constante com falhas, relutância em simplificar interpretações, sensibilidade às operações, compromisso com a resiliência e deferência à expertise. Na crise, a decisão vai para quem sabe mais, mesmo que não seja quem comanda.' },
+    { n: 'Negociação baseada em interesses e em crise', ref: 'Fisher, Ury & Patton (2011); Vecchi et al. (2005); Voss & Raz (2016)', you: `Degrau máximo: ${G.nego.maxStep}/5 em ${G.nego.tries} ${plural(G.nego.tries, 'rodada', 'rodadas')} de negociação. Etapas puladas: ${G.nego.skips}. Pressões: ${st.press || 0}. Cobertura média das rotas (seu BATNA): ${Math.round(avgRouteCov())}%.`, les: 'A escada de cinco degraus funciona em ordem. Pular etapa reduz pela metade a chance de avançar. Fechar rotas fortalece o seu BATNA e enfraquece o do líder: o perímetro altera a negociação.' },
     { n: 'Stakeholders e comunicação de crise', ref: 'Freeman (1984); Mitchell, Agle & Wood (1997); Coombs (2007)', you: `Final: ${STK_KEYS.map(k => `${STK[k].nome} ${Math.round(G.stk[k].sat)}`).join(', ')}. ${STK_KEYS.filter(k => G.stk[k].lost).length ? 'Você perdeu: ' + STK_KEYS.filter(k => G.stk[k].lost).map(k => STK[k].nome).join(', ') + '.' : 'Nenhum stakeholder foi perdido.'}`, les: 'Saliência é poder, legitimidade e urgência, e muda ao longo do jogo: o prefeito ganha urgência, as famílias ganham legitimidade quando há feridos, o banco perde quando prioriza o cofre sobre as vidas. O mais barulhento não é necessariamente o mais saliente.' },
     { n: 'Liderança em crise: subir à sacada', ref: 'Heifetz & Linsky (2002); Marcus et al. (2019)', you: `Pausas de Comando: ${st.pausas}. Apoios externos: ${st.apoio}. Horas extras: ${st.horas}.`, les: 'Alternar entre a ação no salão e a observação do sistema é um custo (uma decisão a menos), e um investimento (visão sistêmica e menos pressão). Usar sempre ou nunca são os dois extremos ruins.' },
     { n: 'Informação distribuída', ref: 'Stasser & Titus (1985); Edmondson (1999)', you: `${empty} das 7 zonas não tinham ninguém no início. Zonas sem agentes não geram relatos: você só ouviu onde posicionou gente.`, les: 'Cada agente enxerga apenas a própria zona, e grupos tendem a discutir o que todos já sabem. Integrar fragmentos é trabalho do líder, e quem decide só pelo que ouve em voz alta perde o que o silêncio esconde.' },
     { n: 'Vieses: enquadramento e escalada de comprometimento', ref: 'Kahneman & Tversky (1979); Staw (1976)', you: `Seus relatórios de reféns foram escritos em termos de ${G.frame === 'ganho' ? 'ganhos ("N reféns ilesos")' : 'perdas ("N reféns em risco")'}. Maior insistência na mesma postura sem sucesso: ${st.maxFail} vez${st.maxFail === 1 ? '' : 'es'}.${G.mayorPromise ? ' Você prometeu um desfecho ao prefeito, e promessas ancoram decisões futuras.' : ''}`, les: 'O mesmo fato, enquadrado como ganho ou perda, muda a decisão. Insistir num plano que deixou de funcionar para justificar o que já foi investido é escalada de comprometimento. Pergunte: eu escolheria isso se começasse hoje?' },
     { n: 'Desempenho sob pressão', ref: 'Yerkes & Dodson (1908)', you: `Pressão operacional média ${avgP}, pico ${st.peakPressure}. Fadiga mínima da equipe: ${Math.round(st.minFF * 100)}% de eficiência.`, les: 'A eficiência segue um U invertido: pouca pressão gera complacência, muita gera erro. A zona ótima fica perto de 50. Rodízio e Pausa de Comando são ferramentas para ajustar a pressão, mas custam cobertura e decisões.' },
-    { n: 'Métricas concorrentes', ref: 'Kaplan & Norton (1992); Kerr (1975)', you: `Dimensão mais fraca: ${weakest}. Placar: vidas ${Math.round(S.vidas * 100)}%, prisões ${Math.round(S.captura * 100)}%, valores ${Math.round(S.valores * 100)}%, eficiência ${Math.round(S.eficiencia * 100)}%, confiança ${Math.round(S.confianca * 100)}%.`, les: 'Nenhuma métrica isolada resume uma operação, e quem a perseguia sozinha distorceu as outras. Se os pesos fossem outros, você teria agido diferente? Isso revela os incentivos que a sua organização usa.' }
+    { n: 'Métricas concorrentes', ref: 'Kaplan & Norton (1992); Kerr (1975)', you: `Dimensão mais fraca: ${weakest}. Placar: vidas ${Math.round(S.vidas * 100)}%, prisões ${Math.round(S.captura * 100)}%, valores ${Math.round(S.valores * 100)}%, eficiência ${Math.round(S.eficiencia * 100)}%, confiança ${Math.round(S.confianca * 100)}%.`, les: 'Nenhuma métrica isolada resume uma operação, e quem a perseguia sozinha distorceu as outras. Se os pesos fossem outros, você teria agido diferente? Isso revela os incentivos que a sua organização usa.' },
+    { n: 'Aprendizagem experiencial', ref: 'Kolb (1984); Csikszentmihalyi (1990)', you: `Nível ${DIFF[G.diff].nome}, nota ${S.grade}. ${nextLvl ? (['S', 'A', 'B'].includes(S.grade) ? `Com esse resultado, o nível ${nextLvl} é o próximo desafio.` : `Antes de subir para o ${nextLvl}, vale repetir este nível com o que você aprendeu.`) : 'Este é o nível mais exigente do jogo.'}`, les: 'O engajamento é máximo quando o desafio está equilibrado com a habilidade: fácil demais entedia, difícil demais paralisa. Aprender é um ciclo entre agir, refletir, conceituar e experimentar de novo, e falhar numa simulação custa pouco. Poucas pessoas chegam ao resultado ideal na primeira partida, e isso faz parte do desenho.' }
   ];
   const kolb = [
-    ['1. Experiência concreta', `Você comandou ${G.round} rodadas e terminou com ${S.grade} (${dec(S.total)}). O desfecho foi: ${outcomeStory().tag}.`],
+    ['1. Experiência concreta', `Você comandou ${G.round} ${plural(G.round, 'rodada', 'rodadas')} e terminou com ${S.grade} (${dec(S.total)}). O desfecho foi: ${outcomeStory().tag}.`],
     ['2. Observação reflexiva', 'Qual foi o momento decisivo? Onde faltou informação? Que stakeholder dominou a sua atenção sem merecer?'],
     ['3. Conceituação abstrata', 'Os conceitos ao lado explicam o que aconteceu. Qual deles você não tinha nomeado antes?'],
     ['4. Experimentação ativa', `Na próxima partida, tente ${next}.`]
   ];
-  const qs = ['Qual era a restrição da sua operação em cada fase? Você percebeu quando ela mudou?', 'Quanto você investiu em informação antes de agir? Esse investimento se pagou?', 'Em que momento a negociação avançou ou regrediu? O que você fez para isso acontecer?', 'Houve algum momento em que você insistiu num plano que já não funcionava? Por quê?', 'Se os pesos do placar fossem outros, você teria agido de outra forma?'];
+  const qs = ['Qual era a restrição da sua operação em cada fase? Você percebeu quando ela mudou?', 'Quanto você investiu em informação antes de agir? Esse investimento se pagou?', 'Em que momento a negociação avançou ou regrediu? O que você fez para isso acontecer?', 'Que informação um único agente tinha e só foi compartilhada tarde demais, ou nunca foi? Você pediu conselho a quem conhecia a zona?', 'Houve algum momento em que você insistiu num plano que já não funcionava? Por quê?', 'Qual stakeholder dominou a sua atenção? Era o mais saliente ou apenas o mais barulhento?', 'Seus relatórios de reféns vieram em termos de perdas ou de ganhos? Quem recebeu o enquadramento oposto teria decidido de forma diferente?', 'Se os pesos do placar fossem outros, você teria agido de outra forma? O que isso revela sobre os incentivos nas organizações?'];
   const bridge = [['Reféns', 'Clientes, dados de clientes ou colaboradores afetados por uma crise'], ['Assaltantes', 'Um ataque de ransomware, um concorrente agressivo ou uma crise reputacional'], ['Cofre', 'Caixa, ativos estratégicos ou propriedade intelectual'], ['Perímetro e rotas de fuga', 'Controles internos e vulnerabilidades operacionais'], ['Negociação com o líder', 'Negociação com contrapartes hostis: sindicatos, credores, atacantes'], ['Imprensa e prefeito', 'Mídia, redes sociais, conselho de administração e reguladores'], ['Agências parceiras', 'Fornecedores, parceiros e áreas fora da sua hierarquia'], ['Fadiga da equipe', 'Burnout em equipes de resposta a incidentes']];
-  return `<h1 class="sr">Debrief</h1><div class="grid" style="gap:16px">${econHTML()}<div><div class="eyebrow">Ciclo de Kolb</div><div class="kolb" style="margin-top:8px">${kolb.map(([a, b]) => `<div class="concept"><h4>${a}</h4><p class="les">${b}</p></div>`).join('')}</div></div>
+  return `<h1 class="sr">Debrief</h1><div class="grid" style="gap:16px">${econHTML()}<div><div class="eyebrow">Ciclo de Kolb (1984)</div><div class="kolb" style="margin-top:8px">${kolb.map(([a, b]) => `<div class="concept"><h4>${a}</h4><p class="les">${b}</p></div>`).join('')}</div></div>
     <div><div class="eyebrow">Suas decisões e os conceitos</div><div class="grid" style="gap:12px;margin-top:8px;grid-template-columns:repeat(auto-fit,minmax(340px,1fr))">${C.map(c => `<div class="concept"><h4>${c.n}</h4><span class="ref">${c.ref}</span><div class="you">${c.you}</div><p class="les">${c.les}</p></div>`).join('')}</div></div>
     <div class="card"><h2 class="h3">Perguntas para a reflexão</h2><ul style="margin:0;padding-left:18px;display:grid;gap:6px">${qs.map(q => `<li>${q}</li>`).join('')}</ul></div>
     <div class="card"><h2 class="h3">Da simulação para a gestão de crises corporativas</h2><div class="scroll-x"><table class="table"><thead><tr><th>Na simulação</th><th>Na empresa</th></tr></thead><tbody>${bridge.map(([a, b]) => `<tr><td><b>${a}</b></td><td>${b}</td></tr>`).join('')}</tbody></table></div></div></div>`;
@@ -3728,7 +3760,7 @@ ACT.torecruit = when(() => at('recruit'), () => {
   }
   UI.emptyConfirm = false; UI.sel = null; G.pressure = calcPressure(); autoPlace();
   const lead = G.team.slice().sort((a, b) => stat(b, 'tat') - stat(a, 'tat'))[0];
-  UI.cut = { time: '14h22', title: 'A equipe chega ao local', btn: 'Montar o perímetro', lines: [
+  UI.cut = { time: '14h27', title: 'A equipe chega ao local', btn: 'Montar o perímetro', lines: [
     { t: `${G.team.length} ${G.team.length === 1 ? 'profissional desce' : 'profissionais descem'} das viaturas na Rua Marechal Deodoro. O quarteirão já está isolado com fita, e a fita já tem uma plateia.` },
     { t: `[RÁDIO] ${agentById(lead).nome} para o comando: “Equipe no local. Aguardo a distribuição pelas zonas. O banco tem mais saídas do que parece.” Câmbio.`, radio: true },
     { t: 'Quatro das sete zonas ao redor da agência podem ser rotas de fuga. Você não sabe quais.' }] };

@@ -199,12 +199,13 @@ svg.map{width:100%;height:auto;display:block}
 
 /* ===== CERCO ===== */
 .siege{display:grid;gap:14px;padding-top:14px;grid-template-columns:300px minmax(0,1fr) 380px;grid-template-areas:"A B C"}
-.colA{grid-area:A;display:grid;gap:14px;align-content:start;min-width:0}
-.colB{grid-area:B;display:grid;gap:14px;align-content:start;min-width:0}
-.colC{grid-area:C;display:grid;gap:14px;align-content:start;min-width:0}
+.colA{grid-area:A;display:grid;grid-template-columns:minmax(0,1fr);gap:14px;align-content:start;min-width:0}
+.colB{grid-area:B;display:grid;grid-template-columns:minmax(0,1fr);gap:14px;align-content:start;min-width:0}
+.colC{grid-area:C;display:grid;grid-template-columns:minmax(0,1fr);gap:14px;align-content:start;min-width:0}
 @media (max-width:1399px){.siege{grid-template-columns:minmax(0,1fr) 380px;grid-template-areas:"B C" "A A"}.siege .colA{display:block;columns:3 260px;column-gap:14px}.siege .colA>*{break-inside:avoid;margin-bottom:14px}}
 .siege svg.map{max-width:760px;margin-inline:auto}
-@media (max-width:820px){.siege{grid-template-columns:minmax(0,1fr);grid-template-areas:"C" "B" "A"}.recr,.perim,.menubody{grid-template-columns:1fr}.side{position:static}.objgrid{grid-template-columns:repeat(2,1fr)}.bsc{min-width:100%}}
+@media (max-width:820px){.siege{grid-template-columns:minmax(0,1fr);grid-template-areas:"C" "B" "A"}.recr,.perim,.menubody{grid-template-columns:minmax(0,1fr)}.side{position:static}.objgrid{grid-template-columns:repeat(2,1fr)}.bsc{min-width:100%}}
+@media (max-width:520px){.bsc{grid-template-columns:repeat(3,minmax(0,1fr))}}
 .lvl{display:grid;gap:10px}
 .lvl .tag{display:inline-flex;align-items:center;gap:8px;font-family:var(--cond);text-transform:uppercase;letter-spacing:.12em;font-size:11.5px;color:var(--ink2)}
 .lvl .tag b{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--blue);color:#06162a;font-size:11px}
@@ -334,6 +335,7 @@ body.withbar #toasts{bottom:calc(96px + env(safe-area-inset-bottom,0px))}
 @media (max-width:820px){.scorehead{grid-template-columns:1fr}}
 .dimrow{display:grid;grid-template-columns:150px 1fr 120px;gap:12px;align-items:center;padding:8px 0;border-bottom:1px dashed var(--line);font-size:13px}
 .dimrow small{color:var(--ink3);display:block;font-size:12px}
+@media (max-width:620px){.dimrow{grid-template-columns:minmax(0,1fr) auto;row-gap:6px}.dimrow>:nth-child(3){order:2}.dimrow>:nth-child(2){order:3;grid-column:1/-1}}
 .badges{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
 .badge{border:1px solid var(--line);border-radius:12px;padding:14px;background:var(--panel);display:grid;gap:6px;position:relative}
 .badge.on{border-color:var(--amber);background:linear-gradient(180deg,rgba(246,166,35,.13),var(--panel))}
@@ -341,7 +343,7 @@ body.withbar #toasts{bottom:calc(96px + env(safe-area-inset-bottom,0px))}
 .badge .seal{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;background:#0b1320;border:2px solid var(--line2);color:var(--ink3)}
 .badge.on .seal{border-color:var(--amber);color:var(--amber);background:var(--amber-bg)}
 .badge b{font-size:14px}.badge p{font-size:12px;color:var(--ink2)}
-.timeline{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;margin-bottom:14px}
+.timeline{display:grid;grid-template-columns:repeat(auto-fit,minmax(78px,1fr));gap:6px;margin-bottom:14px}
 .tnode{padding:10px 4px;border-radius:9px;border:1px solid var(--line2);background:var(--panel);text-align:center;cursor:pointer;font-size:12.5px;transition:background .15s,border-color .15s,transform .1s}
 .tnode:active{transform:scale(.97)}
 .tnode:hover{background:var(--panel2)}

@@ -156,7 +156,7 @@ function council() {
     const ip = intervProb(), topEv = Object.entries(G.ev).sort((a, b) => b[1] - a[1])[0];
     const weak = G.routes.filter(z => !K.cleared.includes(z)).map(z => [z, zoneCoverage(z)]).sort((a, b) => a[1] - b[1])[0];
     if (tat === 'andre' || ip >= .55) say(tat, 'intervir', `A prontidão está em ${Math.round(intervPower())}%. ${ip >= .55 ? 'Se for para entrar, é agora, antes que eles se organizem.' : 'Já esperamos demais. Cada minuto de conversa é um minuto para eles se prepararem.'}`);
-    else if (topEv && topEv[1] >= 1.5 && zoneCoverage(topEv[0]) < ADEQ) say(tat, 'reforçar', `Os relatos apontam para ${ZONE[topEv[0]].nome} e lá a cobertura é de ${zoneCoverage(topEv[0])}%. Eu mandaria gente para lá.`);
+    else if (topEv && topEv[1] >= evidenceMin() && zoneCoverage(topEv[0]) < ADEQ) say(tat, 'reforçar', `Os relatos apontam para ${ZONE[topEv[0]].nome} e lá a cobertura é de ${zoneCoverage(topEv[0])}%. Eu mandaria gente para lá.`);
     else if (weak && weak[1] < 30) say(tat, 'reforçar', `${ZONE[weak[0]].nome} está praticamente descoberta (${weak[1]}%). Se a saída for por lá, ninguém segura.`);
     else say(tat, 'reforçar', 'O perímetro aguenta por ora. Eu não mexeria em ninguém sem um motivo: reposicionar custa eficiência.');
   }

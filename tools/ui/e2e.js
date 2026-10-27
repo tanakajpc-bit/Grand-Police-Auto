@@ -19,7 +19,7 @@ async function main() {
   const which = process.argv[2] || 'negociadora', diff = process.argv[3] || 'complexo', shots = process.argv[4] !== 'noshots';
   const plan = PLANS[which];
   const browser = await chromium.launch();
-  const ctx = await browser.newContext({ viewport: { width: 1366, height: 800 } });
+  const VW = +process.env.PERI_VW || 1366, ctx = await browser.newContext({ viewport: { width: VW, height: 800 } });   // PERI_VW=1024 (o mínimo de desktop) ou 390 (celular) refaz o fluxo nessa largura
   const page = await ctx.newPage();
   const problems = [], log = [];
   page.on('console', m => { if (['error', 'warning'].includes(m.type())) problems.push(`console.${m.type()}: ${m.text()}`); });
@@ -35,6 +35,9 @@ async function main() {
     // alguma ação disponível?
     const acts = await page.evaluate(() => [...document.querySelectorAll('#app [data-act]')].filter(e => !e.disabled && e.offsetParent !== null).length);
     if (!acts) problems.push(`beco sem saída em ${tag}: nenhuma ação visível`);
+    // a página nunca rola na horizontal (só tabelas e diagramas, cada um dentro do seu próprio contêiner)
+    const ov = await page.evaluate(() => { const d = document.documentElement, w = window.innerWidth; if (d.scrollWidth <= w + 1) return null; const out = []; document.querySelectorAll('#app *').forEach(e => { const r = e.getBoundingClientRect(); if (r.width && r.right > w + 1 && !e.closest('.scroll-x, svg')) out.push((e.className && e.className.baseVal === undefined ? '.' + String(e.className).split(' ')[0] : e.tagName.toLowerCase()) + ' +' + Math.round(r.right - w)); }); return { sw: d.scrollWidth, w, quem: [...new Set(out)].slice(0, 6) }; });
+    if (ov) problems.push(`rolagem horizontal em ${tag}: página com ${ov.sw}px numa janela de ${ov.w}px (${ov.quem.join(', ')})`);
     return t;
   };
 
@@ -47,7 +50,7 @@ async function main() {
   await checkText('briefing');
   await clickAct('[data-act=tobrief]');
   await page.waitForTimeout(100);
-  await checkText('recrutamento');
+  const recT = await checkText('recrutamento');
   if (shots) await shot('01-recruit');
   for (const id of plan.team) await clickAct(`[data-act=hire][data-id=${id}]`);
   for (const id of plan.gear) await clickAct(`[data-act=buygear][data-id=${id}]`);
@@ -56,14 +59,26 @@ async function main() {
   await clickAct('[data-act=torecruit]');
   if (!plan.team.length) { await page.waitForTimeout(80); await checkText('recrutamento-vazio-confirma'); await clickAct('[data-act=torecruit]'); }
   await page.waitForTimeout(100);
-  if ((await S()).cut) { await checkText('cut-1'); await clickAct('[data-act=cutgo]'); }
+  const minDe = h => { const m = String(h || '').match(/(\d{2})h(\d{2})/); return m ? +m[1] * 60 + +m[2] : null; };
+  let cut1 = null, cut2 = null;
+  if ((await S()).cut) { const t = await checkText('cut-1'); cut1 = (t.match(/\b\d{2}h\d{2}\b/) || [])[0]; await clickAct('[data-act=cutgo]'); }
   await checkText('perimetro');
   await clickAct('[data-act=autoplace]');
   if (st0.credits > 260) await clickAct('[data-act=p1intel][data-id=rota]');
   if (shots) await shot('02-perimetro');
   await clickAct('[data-act=tosiege]');
   await page.waitForTimeout(100);
-  if ((await S()).cut) { await checkText('cut-2'); await clickAct('[data-act=cutgo]'); }
+  if ((await S()).cut) { const t = await checkText('cut-2'); cut2 = (t.match(/\b\d{2}h\d{2}\b/) || [])[0]; await clickAct('[data-act=cutgo]'); }
+  // o relógio nunca volta no tempo: verba (recrutamento) → chegada da equipe (15 min depois) → perímetro fechado → rodada 1
+  await page.waitForTimeout(100);
+  const verba = (recT.match(/(\d{2}h\d{2})\. A Secretaria/) || [])[1], hud1 = await page.evaluate(() => { const e = [...document.querySelectorAll('.stat')].find(x => /hora/i.test(x.innerText)); return e ? (e.innerText.match(/\d{2}h\d{2}/) || [])[0] : null; });
+  log.push(`relógio: verba ${verba} · equipe chega ${cut1} · perímetro fechado ${cut2} · rodada 1 ${hud1}`);
+  if (minDe(verba) == null || minDe(cut1) == null || minDe(cut2) == null || minDe(hud1) == null) problems.push(`relógio ausente: ${verba}/${cut1}/${cut2}/${hud1}`);
+  else {
+    if (minDe(cut1) - minDe(verba) !== 15) problems.push(`a equipe "chega em quinze minutos" da verba (${verba}), mas a cena diz ${cut1}`);
+    if (!(minDe(cut2) > minDe(cut1))) problems.push(`o perímetro fecha (${cut2}) antes de a equipe chegar (${cut1})`);
+    if (hud1 !== cut2) problems.push(`a rodada 1 mostra ${hud1}, mas a cena do perímetro fechado diz ${cut2}: o relógio voltou no tempo`);
+  }
 
   // loop do cerco
   let guard = 0, lastKey = '';
@@ -134,7 +149,26 @@ async function main() {
       log.push(`  aba ${t}: ${txt.length} caracteres`);
       if (txt.length < 200) problems.push(`aba ${t} quase vazia (${txt.length})`);
       if (shots) await shot(`40-pos-${t}`);
-      if (t === 'replay') { const nodes = await page.locator('[data-act=rnode]').count(); log.push(`  replay: ${nodes} nós`); if (!nodes) problems.push('replay sem nós'); if (nodes > 1) { await clickAct('[data-act=rnode] >> nth=1'); await page.waitForTimeout(80); await checkText('replay-nó2'); } }
+      if (t === 'replay') {
+        const nodes = await page.locator('[data-act=rnode]').count(); log.push(`  replay: ${nodes} nós`); if (!nodes) problems.push('replay sem nós');
+        // R0: a preparação (equipe, equipamentos, investigação prévia, cobertura inicial e reserva) é o primeiro nó e mostra o que foi escolhido
+        const n0 = page.locator('[data-act=rnode][data-r="0"]');
+        if (!(await n0.count())) problems.push('replay sem a Preparação (R0)');
+        else {
+          await n0.click(); await page.waitForTimeout(80); const t0 = await checkText('replay-R0'); if (shots) await shot('41-replay-R0');
+          const esperado = await page.evaluate(() => { const G = window.PERIMETRO.G; return { zonas: Object.keys(G.stats.initCov).length }; });
+          for (const k of ['Preparação', 'Equipe contratada', 'Equipamentos', 'Investigação antes do cerco', 'Cobertura de cada zona ao fechar o perímetro', 'Reserva ao iniciar o cerco']) if (!t0.toLowerCase().includes(k.toLowerCase())) problems.push('R0 sem "' + k + '"');
+          const celulas = await page.locator('#postp .dcell').count(); if (celulas !== esperado.zonas) problems.push(`R0 mostra ${celulas} zonas em vez de ${esperado.zonas}`);
+          const sel = await page.locator('[data-act=rnode][data-r="0"]').getAttribute('aria-selected'); if (sel !== 'true') problems.push('R0 não fica selecionado ao ser clicado');
+          // teclado: seta para a direita vai à rodada 1 e a seta para a esquerda volta; o foco acompanha o nó
+          await page.locator('[data-act=rnode][data-r="0"]').focus(); await page.keyboard.press('ArrowRight'); await page.waitForTimeout(80);
+          const s1 = await page.locator('[data-act=rnode][data-r="1"]').getAttribute('aria-selected'), f1 = await page.evaluate(() => document.activeElement && document.activeElement.dataset ? document.activeElement.dataset.r : null);
+          if (s1 !== 'true' || f1 !== '1') problems.push(`seta → no replay não foi para a rodada 1 (selecionado ${s1}, foco ${f1})`);
+          await page.keyboard.press('ArrowLeft'); await page.waitForTimeout(80);
+          const s0 = await page.locator('[data-act=rnode][data-r="0"]').getAttribute('aria-selected'); if (s0 !== 'true') problems.push('seta ← no replay não voltou à Preparação');
+        }
+        if (nodes > 2) { await clickAct('[data-act=rnode] >> nth=2'); await page.waitForTimeout(80); await checkText('replay-nó2'); }
+      }
     }
     // continuar partida: recarrega a página e confere que o save existe
     await page.reload(); await page.waitForTimeout(150);

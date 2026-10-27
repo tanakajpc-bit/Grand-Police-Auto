@@ -2,7 +2,7 @@
 
 Simulação de gestão de crise (reféns em uma agência bancária) em um único arquivo HTML, em português do Brasil. O jogador recruta a equipe, fecha o perímetro, conduz até 8 rodadas de cerco (negociação, comunicação com os stakeholders, investigação, tática) e recebe nota, jornal, selos e debrief. A perspectiva é a de quem protege: a violência não rende nota.
 
-Artefato publicado: https://claude.ai/artifact/7yQmLNrrYJrJQpEDKrXH5P (versão 14, fim da L2.4). O que se publica é `perimetro.html`, só o conteúdo da página (a publicação o embrulha com doctype, charset e viewport). Para abrir o jogo direto do disco use `perimetro-standalone.html`: o mesmo conteúdo dentro desse esqueleto, que é também o arquivo que os testes de navegador carregam.
+Artefato publicado: https://claude.ai/artifact/7yQmLNrrYJrJQpEDKrXH5P (versão 15, fim da L2.5 e do Loop 2). O que se publica é `perimetro.html`, só o conteúdo da página (a publicação o embrulha com doctype, charset e viewport). Para abrir o jogo direto do disco use `perimetro-standalone.html`: o mesmo conteúdo dentro desse esqueleto, que é também o arquivo que os testes de navegador carregam.
 
 ## Estrutura
 
@@ -24,11 +24,12 @@ O motor e o `dash.js` não dependem da interface: tudo o que decide, prevê ou a
 ## Fluxo de trabalho
 
 1. Edite `src/` e rode `./build.sh`.
-2. Se a mudança não deveria alterar o jogo (texto, interface), prove com `node tools/sim/comparar.js <commit-anterior> 200`: o esperado é zero divergência.
+2. Se a mudança não deveria alterar o jogo (texto, interface), prove com `node tools/sim/comparar.js <commit-anterior> 200`: o esperado é zero divergência. Se mexeu numa descrição que promete um efeito (traço de agente, equipamento, comunicação, investigação, perfil, carta), rode `node tools/sim/promessas.js`; se mexeu nos textos do fim da partida (Gazeta, desfecho, pontuação, selos, replay, debrief), rode `node tools/sim/verdade.js 120`. Os dois saem com erro quando o texto diz o que o motor não faz.
 3. Se mexeu em regra ou equilíbrio, rode `node tools/sim/matriz.js 300` e compare com as notas de referência de `tools/README.md`.
 4. Antes de publicar, rode a bateria de navegador inteira, uma prova de cada vez (em paralelo o navegador perde cliques): `NODE_PATH=$(npm root -g) tools/ui/bateria.sh /tmp/saida` (estados, uifuzz e os planos do e2e; detalhes em `tools/README.md`).
 
 ## Histórico e documentos
 
 - Loop 1 (design e experiência): L1.1 a L1.5, um ou mais commits por iteração, com o prefixo `L1.x`. O relatório da L1.5, com os pontos que o Loop 2 deve auditar, está em https://claude.ai/artifact/TptWTsE8oRx2gaVUajghc7; o da L1.4, em https://claude.ai/artifact/6Ne5nXHoCCMCrNpxdEZScN.
-- A especificação original é o `Perimetro_Simulacao.docx`, na pasta de uploads do projeto. A pontuação do jogo difere dela em pesos e na conta de Vidas (ponto em aberto no relatório da L1.5).
+- Loop 2 (auditoria): L2.1 motor de resolução, L2.2 fluxo de estados, L2.3 balanceamento, L2.4 casos extremos e L2.5 auditoria final cruzada (documento × jogo, três partidas anotadas, o jogo conta a verdade, as promessas do texto), um ou mais commits por iteração, com o prefixo `L2.x`. O relatório completo, com o veredito da L2.5 (aprovado) e os problemas conhecidos, está em https://claude.ai/artifact/EypcMvWcUWiNbRDrs9baiq.
+- A especificação original é o `Perimetro_Simulacao.docx`, na pasta de uploads do projeto. A pontuação do jogo usa os pesos do projeto (40/20/15/10/15) em vez dos do documento (35/25/15/10/15); a nota de Vidas e a penalidade de 10 pontos por agente ferido seguem a Tabela 10, proporcionais a 17 reféns. A tabela seção por seção do documento contra o jogo está no relatório do Loop 2.

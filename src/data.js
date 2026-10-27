@@ -21,7 +21,7 @@
 
 const MAX_ROUNDS = 8;
 const HOSTAGES = 17;
-const START_TIME = 14 * 60 + 7;   // 14h07
+const START_TIME = 14 * 60 + 37;  // 14h37: perímetro fechado, começa a rodada 1 (o alarme foi às 14h07, a verba saiu às 14h12 e a equipe chegou às 14h27)
 const ROUND_MIN = 45;             // minutos simulados por rodada
 const ADEQ = 60;                  // cobertura "adequada"
 /* ---------- ECONOMIA (L1.3): a verba é um fluxo, não só um estoque ----------
@@ -102,11 +102,11 @@ const ZNAME = id => id === 'reserva' ? 'Reserva' : ZONE[id].nome;
 /* ---------- AGENTES (12, exatamente como no projeto) ---------- */
 const AGENTS = [
   { id:'renata',   nome:'Cap. Renata Alves',   s:{tat:9,neg:5,int:6,res:8,com:6},  trait:'Veterana',      tdesc:'Reconhece padrões: +15% de confiabilidade nas investigações e uma intuição na rodada 3.', custo:150 },
-  { id:'marcos',   nome:'Sgt. Marcos Ribeiro', s:{tat:8,neg:3,int:5,res:9,com:4},  trait:'Disciplinado',  tdesc:'Fadiga reduzida: cansa na metade da velocidade.', custo:120 },
-  { id:'carla',    nome:'Det. Carla Mendes',   s:{tat:4,neg:8,int:9,res:5,com:7},  trait:'Analítica',     tdesc:'Bônus de investigação (+10% de confiabilidade) e correlaciona relatos no painel.', custo:140 },
+  { id:'marcos',   nome:'Sgt. Marcos Ribeiro', s:{tat:8,neg:3,int:5,res:9,com:4},  trait:'Disciplinado',  tdesc:'Fadiga reduzida: cansa na metade da velocidade e não sofre a perda da Fadiga crítica.', custo:120 },
+  { id:'carla',    nome:'Det. Carla Mendes',   s:{tat:4,neg:8,int:9,res:5,com:7},  trait:'Analítica',     tdesc:'Bônus de investigação (+10% de confiabilidade) e correlaciona os relatos: a convergência aparece no painel com 1 indício ponderado em vez de 1,5.', custo:140 },
   { id:'paulo',    nome:'Neg. Paulo Duarte',   s:{tat:3,neg:10,int:6,res:4,com:9}, trait:'Empático',      tdesc:'Como negociador: +10% de avanço e efeito calmante ampliado nos degraus 1 a 3.', custo:135 },
   { id:'lucas',    nome:'Ag. Lucas Ferreira',  s:{tat:7,neg:4,int:7,res:7,com:5},  trait:'Adaptável',     tdesc:'Sem penalidade ao ser reposicionado.', custo:110 },
-  { id:'fernanda', nome:'Ag. Fernanda Costa',  s:{tat:6,neg:6,int:8,res:5,com:8},  trait:'Comunicativa',  tdesc:'Bônus de +30% nas ações com stakeholders.', custo:125 },
+  { id:'fernanda', nome:'Ag. Fernanda Costa',  s:{tat:6,neg:6,int:8,res:5,com:8},  trait:'Comunicativa',  tdesc:'Bônus de +30% nas ações com stakeholders, e os comunicados dela vazam menos.', custo:125 },
   { id:'andre',    nome:'Sgt. André Gomes',    s:{tat:8,neg:2,int:4,res:10,com:3}, trait:'Implacável',    tdesc:'Bônus na intervenção (+8 de prontidão), mas penalidade como negociador (−12%).', custo:115 },
   { id:'sofia',    nome:'Det. Sofia Takahashi',s:{tat:5,neg:7,int:10,res:4,com:6}, trait:'Metódica',      tdesc:'Investigações custam 20% menos.', custo:145 },
   { id:'roberto',  nome:'Ag. Roberto Nunes',   s:{tat:7,neg:5,int:5,res:8,com:5},  trait:'Impulsivo',     tdesc:'Sob pressão alta (>65) pode agir sozinho e elevar a agitação.', custo:80 },
@@ -125,14 +125,14 @@ const ATTR = { tat:'Tática', neg:'Negociação', int:'Inteligência', res:'Resi
 
 /* ---------- EQUIPAMENTOS (8) ---------- */
 const EQUIP = [
-  { id:'drone',   nome:'Drone de vigilância',   custo:80, ic:'drone',  desc:'+15 de cobertura aérea na zona em que for posicionado. Revela se essa zona é rota de fuga.' },
-  { id:'escudo',  nome:'Escudo tático',         custo:50, ic:'shield', desc:'+10 de eficiência na intervenção (em qualquer posição).' },
+  { id:'drone',   nome:'Drone de vigilância',   custo:80, ic:'drone',  desc:'+15 de cobertura aérea na zona em que for posicionado. Revela se essa zona é uma das quatro rotas de fuga candidatas. Sobre a Avenida, ainda ajuda a seguir quem fugir (+8 pontos na perseguição).' },
+  { id:'escudo',  nome:'Escudo tático',         custo:50, ic:'shield', desc:'+10 de eficiência na intervenção (em qualquer posição) e metade da chance de um agente se ferir na entrada.' },
   { id:'termica', nome:'Câmera térmica',        custo:70, ic:'thermal',desc:'Revela o número de pessoas em 1 zona. Em zona vizinha ao banco, revela quantos assaltantes há.' },
   { id:'negofone',nome:'Negofone seguro',       custo:60, ic:'phone',  desc:'+10% de chance de avanço na negociação.' },
   { id:'sniper',  nome:'Sniper de precisão',    custo:90, ic:'scope',  desc:'+20 de eficiência na zona posicionada (precisa de ao menos 1 agente lá). Reforça a prontidão de intervenção.' },
   { id:'kit',     nome:'Kit médico avançado',   custo:40, ic:'med',    desc:'Estabiliza reféns feridos: ninguém piora por falta de atendimento. Reduz à metade o mal-estar do cativeiro longo e os ferimentos em eventos, e atenua as baixas numa intervenção.' },
-  { id:'jammer',  nome:'Jammer de comunicação', custo:75, ic:'jammer', desc:'Bloqueia celulares dos assaltantes: sem cúmplice coordenado e sem lives, e o negociador vira o único canal do líder (+6% de avanço). O isolamento eleva a agitação em +1/rodada.' },
-  { id:'viatura', nome:'Viatura descaracterizada', custo:55, ic:'car', desc:'Mobilidade rápida: reposicionar agentes não gera perda de eficiência na rodada.' }
+  { id:'jammer',  nome:'Jammer de comunicação', custo:75, ic:'jammer', desc:'Bloqueia celulares dos assaltantes: sem cúmplice coordenado e sem lives, e o negociador vira o único canal do líder (+6% de avanço). O isolamento eleva a agitação em +1/rodada, e a mídia sobe 2 pontos a menos por rodada.' },
+  { id:'viatura', nome:'Viatura descaracterizada', custo:55, ic:'car', desc:'Mobilidade rápida: reposicionar agentes não gera perda de eficiência na rodada, e alcançar quem fugir fica mais fácil (+15 pontos na chance de captura numa perseguição).' }
 ];
 const EQ = Object.fromEntries(EQUIP.map(e => [e.id, e]));
 
@@ -171,7 +171,7 @@ const DIFF = {
 const INTEL = [
   { id:'perfil',   nome:'Perfil psicológico do líder', custo:60, ic:'user',   fase1:true,  desc:'Identifica o perfil comportamental e como negociar com ele.' },
   { id:'rota',     nome:'Rastreamento de rota de fuga', custo:70, ic:'road',  fase1:true,  desc:'Revela qual das rotas candidatas o líder planeja usar.' },
-  { id:'efetivo',  nome:'Contagem de armados',          custo:50, ic:'eye',   fase1:true,  desc:'Revela quantos assaltantes há e como estão armados.' },
+  { id:'efetivo',  nome:'Contagem de armados',          custo:50, ic:'eye',   fase1:true,  desc:'Revela quantos assaltantes armados há no interior.' },
   { id:'cofre',    nome:'Planta e andamento do cofre',  custo:50, ic:'bank',  fase1:false, desc:'Mostra o progresso exato dos assaltantes sobre o cofre e a previsão de abertura.' },
   { id:'refens',   nome:'Estado e identificação dos reféns', custo:40, ic:'heart', fase1:false, desc:'Revela quantos reféns estão feridos e se há risco clínico.' },
   { id:'cumplice', nome:'Varredura de contato externo', custo:60, ic:'call',  fase1:false, desc:'Descobre se há cúmplice do lado de fora.' }
@@ -267,7 +267,7 @@ const TOCS = {
 /* ---------- CONQUISTAS ---------- */
 const BADGES = [
   { id:'ninguem',  nome:'Ninguém fica para trás', ic:'shieldcheck', d:'Nenhum refém ferido ou morto.' },
-  { id:'escuta',   nome:'Mestre da escuta',       ic:'ear',   d:'Rendição negociada sem aceitar concessões materiais.' },
+  { id:'escuta',   nome:'Mestre da escuta',       ic:'ear',   d:'Rendição negociada, sem aceitar concessões materiais e sem nunca pressionar o líder.' },
   { id:'sacada',   nome:'Sacada',                 ic:'light', d:'Usou a Pausa de Comando de forma estratégica (2 a 3 vezes) e terminou com nota C ou melhor.' },
   { id:'aposta',   nome:'Aposta certa',           ic:'scope', d:'A rota de fuga real estava com cobertura adequada desde o perímetro, antes de ser revelada.' },
   { id:'olhos',    nome:'Olhos abertos',          ic:'eye',   d:'Terminou com 5 das 6 variáveis ocultas reveladas.' },

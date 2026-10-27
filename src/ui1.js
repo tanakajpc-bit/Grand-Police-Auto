@@ -165,7 +165,7 @@ function renderMenu() {
         <h2 class="h3">Sua missão</h2>
         <p class="serif" style="font-size:16.5px;line-height:1.6;color:#dfe6f1">Você é o comandante do incidente. Em 8 rodadas, equilibre cinco objetivos que competem entre si: <b>vidas</b>, <b>prisões</b>, <b>valores</b>, <b>custo</b> e <b>confiança pública</b>. Não existe estratégia dominante.</p>
         <div class="row" style="margin-top:12px"><button class="btn sm" data-act="howto">Como funciona</button><span class="faint" style="font-size:12.5px">25 a 40 min · salva automaticamente no navegador</span></div>
-        <p class="faint" style="font-size:12px;margin-top:14px">Todos os nomes, lugares e instituições são fictícios. A perspectiva é sempre a de quem protege; as ações táticas são abstratas e não há imagens explícitas.</p>
+        <p class="faint" style="font-size:12px;margin-top:14px"><b>Aviso de conteúdo:</b> a simulação trata de uma crise com reféns num assalto a banco, sempre pela perspectiva de quem protege. Nenhuma mecânica recompensa a violência, as ações táticas são abstratas e não há imagens explícitas. Quem preferir não participar pode sair a qualquer momento pelo Menu, e o facilitador deve oferecer uma atividade alternativa. Todos os nomes, lugares e instituições são fictícios.</p>
       </div>
     </div>
     ${UI.tutor ? tutorModal() : ''}${UI.newConfirm && save ? newConfirmModal(save) : ''}
@@ -189,7 +189,7 @@ function tutorModal() {
   return `<div class="modalback"><div class="tutor" role="dialog" aria-modal="true" aria-labelledby="tutt">
     <h2 class="h3" id="tutt">Como funciona o PERÍMETRO</h2>
     <p class="muted"><b>1. Recrute</b> uma equipe com 1.000 créditos. O que sobrar é sua reserva para investigações, apoio externo e horas extras, e também paga o <b>plantão</b>: toda rodada, cada agente em campo custa verba. Sem reserva, a operação entra no vermelho.</p>
-    <p class="muted"><b>2. Posicione</b> agentes e equipamentos em 7 zonas. Quatro delas são rotas de fuga possíveis, mas você não sabe quais. Os recursos só cobrem bem cerca de 60% das zonas: é preciso apostar, ou investir em inteligência. Mudar alguém de zona tem custo: ele rende menos por duas rodadas.</p>
+    <p class="muted"><b>2. Posicione</b> agentes e equipamentos em 7 zonas. Quatro delas são rotas de fuga possíveis, mas você não sabe quais. Os recursos só cobrem bem cerca de metade das zonas: é preciso apostar, ou investir em inteligência. Mudar alguém de zona tem custo: ele rende menos por duas rodadas.</p>
     <p class="muted"><b>3. Comande o cerco</b> por 8 rodadas. Em cada uma você recebe informações parciais (Percepção), lê indicadores (Compreensão) e vê tendências (Projeção). Então toma 2 ou 3 decisões em quatro frentes: <b>Tática, Negociação, Inteligência e Comunicação</b>.</p>
     <p class="muted"><b>4. A crise termina</b> por rendição negociada, intervenção, fuga ou prazo esgotado: ao fim da rodada 8, o líder escolhe entre ceder e forçar a mão. A nota combina vidas (40%), prisões (20%), valores (15%), eficiência de custo (10%) e confiança pública (15%). Mortes e intervenção fracassada põem um teto na nota, e entrar com menos de 50% de chance é aposta: se der certo, o máximo é A.</p>
     <p class="muted">Dica: a negociação sobe uma escada de 5 degraus, um por vez. Pular etapas reduz pela metade a chance de avançar. O painel mostra o <b>gargalo</b> da operação: ele muda de informação para pessoal e depois para tempo, e gastar fora dele rende pouco.</p>
@@ -226,6 +226,7 @@ function renderBriefing() {
       <div class="eyebrow" style="margin-top:20px">Cinco objetivos em tensão</div>
       <div class="objgrid">${w.map((p, i) => `<div class="obj" style="--w:${p * 2.2}%"><b>${p}%</b><span>${names[i]}</span></div>`).join('')}</div>
       <div class="row" style="margin-top:26px"><button class="btn primary lg" data-act="tobrief">Assumir o comando</button><span class="faint" style="font-size:13px">Próximo: Fase 0, recrutamento da equipe</span></div>
+      <p class="faint" style="font-size:12.5px;margin-top:16px">Todos os nomes, lugares e instituições são fictícios. O Menu, no alto da tela, deixa sair a qualquer momento.</p>
     </div></div>`;
 }
 

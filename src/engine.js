@@ -318,7 +318,7 @@ function intervPower() {
   });
   let p = Math.min(100, sum * 3.5);
   if (hasGear('escudo')) p += 10;
-  if (hasGear('sniper') && agentsIn(G.gz.sniper).length) p += 10;
+  if (hasGear('sniper') && G.gz.sniper && G.gz.sniper !== 'reserva' && agentsIn(G.gz.sniper).length) p += 10;   // "na reserva: sem efeito" (agentsIn('reserva') contaria quem descansa)
   if (G.team.includes('andre') && !isAway('andre')) p += 8;
   if (G.powerCut > 0) p += 15;
   return clamp(p, 0, 100);
@@ -518,6 +518,8 @@ const ROUTE_TXT = {
   metro: ['catraca do metrô foi liberada por dentro, sem passageiro algum', 'um bilhete múltiplo foi deixado numa escada do acesso, ainda quente'],
   avenida: ['um motociclista faz a mesma volta no quarteirão pela quarta vez', 'um carro de aplicativo espera com a corrida marcada, destino a duas quadras']
 };
+/* Indício ponderado mínimo para o painel e o conselho dizerem que os relatos convergem numa zona (rota de verdade vale 1, ruído 0,5). A Analítica correlaciona e enxerga antes. */
+const evidenceMin = () => (G.team.includes('carla') && !isAway('carla') ? 1 : 1.5);
 function genReports() {
   const out = [];
   ZONES.forEach(z => {
@@ -655,6 +657,7 @@ function confirmPerimeter() {
     else log.push(`Câmera térmica em ${ZONE[z].nome}: nenhuma presença suspeita na zona.`);
   }
   G.stats.initCov = Object.fromEntries(ZONES.map(z => [z.id, zoneCoverage(z.id)]));
+  G.stats.initEmpty = ZONES.filter(z => !G.team.some(id => G.az[id] === z.id)).length;   // zonas sem nenhum agente (o drone sozinho dá cobertura, mas não ouve nada)
   trackKnown();
   G.stats.routeKnownAtStart = !!G.K.route;
   G.perimLog = log;
@@ -1134,7 +1137,7 @@ function sacadaView() {
   const w = STK_KEYS.slice().sort((a, b) => G.stk[b].sem - G.stk[a].sem)[0];
   if (G.stk[w].sem >= 1) out.push(`${STK[w].nome} está há ${G.stk[w].sem} rodada${G.stk[w].sem > 1 ? 's' : ''} sem atenção do comando e sua satisfação é ${Math.round(G.stk[w].sat)}. O barulhento nem sempre é o mais saliente: revise quem pode virar problema.`);
   const topEv = Object.entries(G.ev).sort((a, b) => b[1] - a[1])[0];
-  if (topEv && topEv[1] >= 1.5) out.push(`Os relatos de campo convergem para ${ZONE[topEv[0]].nome} (${topEv[1].toFixed(1)} indícios ponderados). Cuidado: relatos de baixa confiança também contam e podem ser ruído.`);
+  if (topEv && topEv[1] >= evidenceMin()) out.push(`Os relatos de campo convergem para ${ZONE[topEv[0]].nome} (${topEv[1].toFixed(1)} indícios ponderados). Cuidado: relatos de baixa confiança também contam e podem ser ruído.`);
   else out.push('Os relatos de campo ainda não convergem para uma rota. Cada agente só vê o que está na sua zona: informação distribuída precisa ser integrada por você.');
   const hot = G.agit > 70 ? 'A agitação do líder está em zona de risco: a negociação é a única alavanca que reduz o risco aos reféns sem custo tático.' : G.pressure > 70 ? 'A pressão sobre a equipe passou da zona ótima: a eficiência cai com pressão alta demais. Um respiro ajuda.' : G.pressure < 30 ? 'A pressão está baixa demais: a equipe pode estar em modo complacente.' : 'A pressão da equipe está na zona produtiva.';
   out.push(hot);

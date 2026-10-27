@@ -79,7 +79,7 @@ function endsleyHTML() {
   L2.push(ins('info', 'phone', `Negociação no degrau ${G.nego.step} (${st.nome}). ${K.profile ? `Líder ${P.nome}: ${P.tip}` : G.nego.signalShown ? `Sinal do canal: “${P.sign}”` : 'O perfil do líder ainda é desconhecido, e a postura certa depende dele.'}`));
   const topEv = Object.entries(G.ev).sort((a, b) => b[1] - a[1])[0];
   const adq = adequateCount();
-  L2.push(ins(adq >= 4 ? 'good' : 'warn', 'map', `${adq} de 7 zonas com cobertura adequada. ${topEv && topEv[1] >= 1.5 ? `Os relatos convergem para <b>${ZONE[topEv[0]].nome}</b> (${dec(topEv[1])} indícios ponderados).${G.team.includes('carla') ? ' A Det. Mendes correlacionou os relatos.' : ''}` : 'Os relatos ainda não apontam uma rota com clareza.'}`));
+  L2.push(ins(adq >= 4 ? 'good' : 'warn', 'map', `${adq} de 7 zonas com cobertura adequada. ${topEv && topEv[1] >= evidenceMin() ? `Os relatos convergem para <b>${ZONE[topEv[0]].nome}</b> (${dec(topEv[1])} indícios ponderados).${evidenceMin() < 1.5 ? ' A Det. Mendes correlacionou os relatos.' : ''}` : 'Os relatos ainda não apontam uma rota com clareza.'}`));
   const tired = deployed().filter(id => ff(id) < .8), away = G.team.filter(isAway);
   if (tired.length) L2.push(ins('warn', 'tired', `Fadiga: ${tired.map(id => shortName(agentById(id).nome)).join(', ')} abaixo de 80% de eficiência. Rodízio custa cobertura temporária.`));
   if (away.length) L2.push(ins('bad', 'alert', `${away.map(id => shortName(agentById(id).nome)).join(', ')} reconvocado${away.length > 1 ? 's' : ''} pela cidade por ${Math.max(...away.map(id => G.away[id]))} rodada(s).`));
@@ -148,11 +148,11 @@ function gearNote(e) {
     case 'drone': return placed ? `+15 de cobertura em ${ZNAME(z)}` : 'na reserva: sem efeito de cobertura';
     case 'sniper': return !placed ? 'na reserva: sem efeito' : has ? `+20 em ${ZNAME(z)} e +10 de prontidão` : `${ZNAME(z)} está sem agente: sem efeito`;
     case 'termica': return placed ? `lendo ${ZNAME(z)} (revelação feita no início)` : 'na reserva: sem leitura';
-    case 'escudo': return '+10 de prontidão da intervenção';
+    case 'escudo': return '+10 de prontidão da intervenção; metade do risco de agente ferido na entrada';
     case 'negofone': return '+10 pontos na chance de avanço';
     case 'kit': return `${G.hostages.hurt ? `${G.hostages.hurt} ${plural(G.hostages.hurt, 'ferido sob atendimento', 'feridos sob atendimento')}: ninguém piora por falta de socorro` : 'de prontidão: ferido não piora por falta de socorro'}${G.stats.kitSaves ? `; já evitou ${G.stats.kitSaves} ${plural(G.stats.kitSaves, 'morte', 'mortes')}` : ''}`;
-    case 'jammer': return 'sem cúmplice coordenado nem lives; canal único: +6 pontos de avanço; agitação +1/rodada';
-    case 'viatura': return 'reposicionar não perde eficiência';
+    case 'jammer': return 'sem cúmplice coordenado nem lives; canal único: +6 pontos de avanço; agitação +1 e mídia −2 por rodada';
+    case 'viatura': return 'reposicionar não perde eficiência; +15 pontos na captura em perseguição';
   }
   return '';
 }

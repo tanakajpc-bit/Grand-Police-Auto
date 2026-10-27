@@ -12,7 +12,7 @@ const NAMES = `newGame startRound resolveDecisions chooseEvent finishRound addDe
   DIFF PROFILES AGENTS GENERICS EQUIP INTEL COMMS POSTURES STEPS STK STK_KEYS ZONES ZONE EVENT_DEFS EVENT_FX EVDEF BADGES HOSTAGE_LIST HOST TOCS
   ADEQ HOSTAGES MAX_ROUNDS APOIO_PRECOS agentById clamp fmtTime syncHL
   pressureFactor agentPressure equipFactor negoCalm resolveNego applyComm commMult stakePassives stakeWeights eficienciaCusto addAgit addMedia addHurt addDead stake
-  moveAgent placeGear tocScores intelProb resolveIntel ivBand revealHint hostagesLeft PLANTAO_BASE PLANTAO_AGENTE CREDITOS_INICIAIS ROUND_MIN START_TIME
+  moveAgent placeGear tocScores intelProb resolveIntel ivBand revealHint hostagesLeft evidenceMin agentsHurtIn PLANTAO_BASE PLANTAO_AGENTE CREDITOS_INICIAIS ROUND_MIN START_TIME
   ordemPolitica vidasScore leakChance perceivedAgit perceivedVault badgeEarned hostagesFramed scoreParts ultimatumView reposPreview spendBreakdown vaultEtaN runway burnToEnd snap trackKnown`.split(/\s+/).filter(Boolean);
 const EXPOSE = `globalThis.__api = { get G() { return G; }, set G(v) { G = v; } };
 ${JSON.stringify(NAMES)}.forEach(n => { try { globalThis.__api[n] = eval(n); } catch (e) {} });`;
