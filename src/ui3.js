@@ -397,7 +397,6 @@ CHG.camplus = when(() => at('recruit'), v => { if (!has(ATTR, v)) return; G.camA
 CHG.camminus = when(() => at('recruit'), v => { if (!has(ATTR, v)) return; G.camAdj.minus = v; if (G.camAdj.plus === v) G.camAdj.plus = Object.keys(ATTR).find(k => k !== v); saveGame(); render(); });
 CHG.nolimit = (v, d, el) => { UI.noLimit = !!el.checked; };
 CHG.turma = v => { UI.code = String(v).slice(0, 32); };   // sem redesenhar: o clique em "Iniciar" que tirou o foco do campo não pode se perder
-ACT.som = (d, el) => { SOM.toggle(); if (el && el.isConnected) { el.setAttribute('aria-pressed', SOM.on); el.title = (SOM.on ? 'Desligar' : 'Ligar') + ' a trilha sonora'; el.innerHTML = icon(SOM.on ? 'som' : 'mudo'); } };
 ACT.selchip = when(() => at('perimeter'), d => { UI.sel = (UI.sel && UI.sel.t === d.t && UI.sel.id === d.id) ? null : { t: d.t, id: d.id }; render(); });
 ACT.place = when(() => at('perimeter'), d => {
   if (UI.sel) { if (UI.sel.t === 'a') G.az[UI.sel.id] = d.z; else G.gz[UI.sel.id] = d.z; UI.sel = null; saveGame(); }
@@ -553,7 +552,6 @@ function draw() {
   else stopTimer();
   // animação dos medidores do feedback
   requestAnimationFrame(() => requestAnimationFrame(() => document.querySelectorAll('.meter>i[data-to]').forEach(i => { i.style.width = i.dataset.to + '%'; })));
-  SOM.update();
 }
 $app.addEventListener('click', e => {
   const el = e.target.closest('[data-act]');
@@ -601,7 +599,7 @@ document.addEventListener('keydown', e => {
 });
 onSaveFail = () => toast('COMANDO', 'Não foi possível salvar a partida neste navegador (armazenamento bloqueado ou cheio). Você pode seguir jogando, mas ela não será retomada se a página for recarregada.', 'warn');
 /* O relógio da rodada espera com a aba oculta, e o que sobrava dele é salvo ao sair da página (recarregar continua de onde parou). */
-document.addEventListener('visibilitychange', () => { if (document.hidden) { pauseTimer(); SOM.pausa(); } else { resumeTimer(); SOM.retoma(); } });
+document.addEventListener('visibilitychange', () => { if (document.hidden) pauseTimer(); else resumeTimer(); });
 window.addEventListener('pagehide', () => { if (G && UI.timerId) G.tleft = timeLeft(); saveGame(); });
-window.PERIMETRO = { get G() { return G; }, newGame, startRound, resolveDecisions, chooseEvent, finishRound, addDecision, computeScore, zoneCoverage, intervProb, negoParts, autoPlace, confirmPerimeter, render, ACT, UI, SOM };
+window.PERIMETRO = { get G() { return G; }, newGame, startRound, resolveDecisions, chooseEvent, finishRound, addDecision, computeScore, zoneCoverage, intervProb, negoParts, autoPlace, confirmPerimeter, render, ACT, UI };
 render();

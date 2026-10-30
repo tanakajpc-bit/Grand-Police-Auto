@@ -215,65 +215,7 @@ function menuConfirmModal() {
     <p class="muted">A partida fica salva neste navegador e pode ser retomada em “Continuar partida”.${G && G.phase === 'siege' && G.stage === 'panel' && !G.noLimit ? ' O relógio desta rodada fica parado até você voltar.' : ''}</p>
     <div class="row"><button class="btn primary" data-act="menuyes">Voltar ao menu</button><button class="btn" data-act="menuno">Continuar jogando</button><span class="faint" style="font-size:12px">Esc também cancela</span></div></div></div>`;
 }
-const menuBtn = () => '<button class="btn sm ghost hudmenu" type="button" data-act="menu" title="Voltar ao menu (a partida fica salva)">Menu</button>' + somBtn();
-const somBtn = () => `<button class="btn sm ghost hudsom" type="button" data-act="som" aria-pressed="${SOM.on}" aria-label="Trilha sonora" title="${SOM.on ? 'Desligar' : 'Ligar'} a trilha sonora">${icon(SOM.on ? 'som' : 'mudo')}</button>`;
-/* Trilha ambiente (L2.5 refeita: o documento pede uma trilha que se intensifica conforme a agitação do líder). Só Web Audio, sem arquivos:
-   um zumbido grave que abre o filtro com a tensão, um pulso que acelera e um chiado de rua que cresce. Começa desligada (o navegador só
-   deixa tocar depois de um clique, e numa sala de aula o som é escolha de quem joga) e segue a agitação que o jogador enxerga, nunca a
-   real. Cala no desfecho e na nota. A escolha fica guardada neste navegador: depois de recarregar, a trilha volta no primeiro clique.
-   Sem Web Audio, o botão simplesmente não liga. */
-const SOM = (() => {
-  const PREF = 'perimetro_som';
-  let ctx = null, n = null, on = false, alvo = -1, dorme = null;
-  try { on = localStorage.getItem(PREF) === '1'; } catch (e) {}
-  const guarda = () => { try { localStorage.setItem(PREF, on ? '1' : '0'); } catch (e) {} };
-  function montar() {
-    const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return false;
-    try {
-      ctx = new AC(); const g = () => ctx.createGain(), f = (type, hz, q) => { const b = ctx.createBiquadFilter(); b.type = type; b.frequency.value = hz; b.Q.value = q; return b; };
-      const out = g(); out.gain.value = 0; out.connect(ctx.destination);
-      const lp = f('lowpass', 180, 4), dz = g(); dz.gain.value = .3; dz.connect(lp); lp.connect(out);
-      [55, 55.6, 82.4].forEach(hz => { const o = ctx.createOscillator(); o.type = 'sawtooth'; o.frequency.value = hz; o.connect(dz); o.start(); });
-      const pg = g(); pg.gain.value = 0; pg.connect(out);
-      const po = ctx.createOscillator(); po.type = 'triangle'; po.frequency.value = 52; po.connect(pg); po.start();
-      const lfo = ctx.createOscillator(), lg = g(); lfo.frequency.value = .7; lg.gain.value = 0; lfo.connect(lg); lg.connect(pg.gain); lfo.start();
-      const len = ctx.sampleRate * 2, buf = ctx.createBuffer(1, len, ctx.sampleRate), d = buf.getChannelData(0);
-      for (let i = 0, x = 7; i < len; i++) { x = Math.imul(x, 1103515245) + 12345 | 0; d[i] = (x >>> 9) / 4194304 - 1; }   // ruído fixo: o sorteio do jogo não é tocado
-      const ns = ctx.createBufferSource(), bp = f('bandpass', 700, .8), ng = g(); ns.buffer = buf; ns.loop = true; ng.gain.value = 0; ns.connect(bp); bp.connect(ng); ng.connect(out); ns.start();
-      n = { out, lp, dz, pg, lfo, lg, bp, ng };
-      return true;
-    } catch (e) { ctx = null; n = null; return false; }
-  }
-  // intensidade de 0 a 1: no cerco, a agitação que o painel mostra; antes dele, um fundo baixo; no desfecho e na nota, silêncio
-  const nivel = () => !G || G.phase === 'outcome' || G.phase === 'post' ? null : G.phase === 'siege' ? clamp(perceivedAgit().v / 100, 0, 1) : .15;
-  function update() {
-    if (!ctx || !n) return;
-    const x = on ? nivel() : null, k = x == null ? -1 : Math.round(x * 50) / 50;
-    if (k === alvo) return; alvo = k;
-    const t = ctx.currentTime, set = (p, v, tc = 1.2) => p.setTargetAtTime(v, t, tc);
-    if (k < 0) { set(n.out.gain, 0, .25); return; }
-    set(n.out.gain, .2);
-    set(n.dz.gain, .22 + .18 * k); set(n.lp.frequency, 150 + 850 * k * k);
-    set(n.pg.gain, .45 * k); set(n.lg.gain, .45 * k); set(n.lfo.frequency, .7 + 1.3 * k);
-    set(n.ng.gain, .015 + .1 * k); set(n.bp.frequency, 600 + 1200 * k);
-  }
-  // liga o áudio de fato (só dentro de um gesto do jogador): no botão, ou no primeiro clique depois de recarregar com a trilha escolhida
-  function acorda() {
-    if (on && !ctx && !montar()) on = false;
-    if (on && ctx.state === 'suspended') ctx.resume().catch(() => {});
-    alvo = -2; update();
-  }
-  function toggle() {
-    on = !on; clearTimeout(dorme); acorda(); guarda();
-    if (!on && ctx) dorme = setTimeout(() => { if (!on && ctx) ctx.suspend().catch(() => {}); }, 900);   // depois do fade, o áudio para de gastar CPU
-    return on;
-  }
-  const gesto = e => { if (e.target && e.target.closest && e.target.closest('[data-act=som]')) return; if (on && (!ctx || ctx.state === 'suspended') && !document.hidden) acorda(); };
-  document.addEventListener('pointerdown', gesto, true); document.addEventListener('keydown', gesto, true);
-  const pausa = () => { if (ctx && ctx.state === 'running') ctx.suspend().catch(() => {}); };
-  const retoma = () => { if (ctx && on && ctx.state === 'suspended') ctx.resume().catch(() => {}); };
-  return { get on() { return on; }, get alvo() { return alvo; }, get estado() { return ctx ? ctx.state : 'sem-audio'; }, toggle, update, pausa, retoma };
-})();
+const menuBtn = () => '<button class="btn sm ghost hudmenu" type="button" data-act="menu" title="Voltar ao menu (a partida fica salva)">Menu</button>';
 function tutorModal() {
   return `<div class="modalback"><div class="tutor" role="dialog" aria-modal="true" aria-labelledby="tutt">
     <h2 class="h3" id="tutt">Como funciona</h2>
