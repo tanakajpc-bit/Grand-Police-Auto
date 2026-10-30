@@ -255,6 +255,9 @@ function pontuacao(rec, F) {
   const Ed = G.end, limpo = Ed.type === 'rendicao' || (Ed.type === 'intervencao' && ['limpa', 'baixas'].includes(Ed.variant));
   const cobrada = !!F.promessa && (!limpo || G.round >= 8);
   ck(t.includes('O prefeito cobrou a promessa') === cobrada, 'confiança: a promessa ao prefeito cobrada só quando foi quebrada', `${F.promessa} ${Ed.type}:${Ed.variant} r${G.round}`);
+  // aposta (L2.3 refeita): a entrada voluntária com menos de 50% de chance não passa de A (89); com menos de 30%, de B (79)
+  const aposta = Ed.type === 'intervencao' && !Ed.forced && Ed.P < .5;
+  ck(aposta ? S.cap <= (Ed.P < .3 ? 79 : 89) : S.capWhy !== 'aposta', 'aposta: teto A abaixo de 50% de chance e B abaixo de 30%', `${Ed.type} ${Ed.forced} ${Ed.P} ${S.cap}`);
   ck(inc(t, `a crise durou ${G.round} ${pl(G.round, 'rodada', 'rodadas')}`), 'eficiência: duração da crise, no plural certo', `${G.round}`);
 }
 
@@ -366,10 +369,10 @@ function debrief(rec, F) {
     ck(evs.length ? evs.every(e => c.you.includes(e)) && inc(c.you, `${evs.length} ${pl(evs.length, 'carta de choque', 'cartas de choque')}`) : /nenhuma carta de choque/i.test(c.you), 'choques citados = eventos que ocorreram', `${evs.join(',')} × ${c.you.slice(0, 100)}`);
   }
   c = card(/Negociação/); ck(!!c, 'cartão: Negociação', ''); if (c) {
-    const mm = c.you.match(/Degrau máximo: (\d)\/5 em (\d+) (rodada|rodadas) de negociação\. Etapas puladas: (\d+)\. Pressões: (\d+)\. Cobertura média das rotas \(seu BATNA\): (\d+)%/);
+    const mm = c.you.match(/Degrau máximo: (\d)\/5 em (\d+) (rodada|rodadas) de negociação\. Etapas puladas: (\d+)\. Pressões: (\d+)\. Cobertura da rota que o líder planejou \(o BATNA dele\): (\d+)%/);
     ck(!!mm && +mm[1] === F.maxStep && +mm[2] === F.tries && +mm[4] === F.skips && +mm[5] === F.press, 'degrau máximo, rodadas, etapas puladas e pressões', `${mm ? [mm[1], mm[2], mm[4], mm[5]] : '?'} × ${[F.maxStep, F.tries, F.skips, F.press]}`);
     ck(!!mm && mm[3] === pl(+mm[2], 'rodada', 'rodadas'), 'rodada(s) de negociação no plural certo', `${mm ? mm[2] + ' ' + mm[3] : '?'}`);
-    ck(!!mm && +mm[6] === Math.round(A.avgRouteCov()), 'cobertura média das rotas (BATNA)', `${mm ? mm[6] : '?'} × ${Math.round(A.avgRouteCov())}`);
+    ck(!!mm && +mm[6] === Math.round(A.zoneCoverage(G.routeNow)), 'cobertura da rota planejada (BATNA)', `${mm ? mm[6] : '?'} × ${Math.round(A.zoneCoverage(G.routeNow))}`);
   }
   c = card(/Stakeholders/); ck(!!c, 'cartão: Stakeholders', ''); if (c) {
     ck(A.STK_KEYS.every(k => c.you.includes(`${A.STK[k].nome} ${Math.round(G.stk[k].sat)}`)), 'satisfação final dos quatro', '');

@@ -50,37 +50,37 @@ Precisam do Playwright (`NODE_PATH=$(npm root -g)` se ele estiver instalado glob
 | `node tools/ui/uifuzz.js [N]` | Joga `N` partidas pelo motor real dentro da página e renderiza todas as telas em cada estado, procurando `undefined`, `NaN`, `[object Object]`, número quebrado dentro dos SVG (mapa, curvas, radar), exceções e telas vazias. |
 | `node tools/ui/limites.js [caso ...]` | Os casos extremos na tela (L2.4): `feridos` (17 reféns feridos), `agit100`, `cofre100`, `verba0` (o que custa fica indisponível, o que é grátis não), `semNeg` (o desfecho e a Gazeta não contam negociação ou informação que não houve), `semEquipe`, `promessas` (o painel diz do traço da Carla e das notas de jammer, escudo, viatura e sniper o que o motor entrega) e `corrida` (o relógio acaba no mesmo instante do clique em Executar: uma resolução só). Acusa também erro de console e largura de medidor fora de 0–100%. |
 
-## Números de referência (Loop 2, depois da L2.5, N = 300 por célula)
+## Números de referência (versão 18, depois da L2.3 refeita, N = 300 por célula)
 
-Nota média por nível de jogador (Protocolar / Complexo / Caótico). A L2.1 trouxe a nota de Vidas e a penalidade por agente ferido para o que o documento pede, o vazamento de comunicado e o fator de pressão sem piso (isso baixou todas as médias em 2 a 5 pontos em relação à L1.5: novato 62,2 / 58,2 / 53,9, especialista de paz 83,7 / 78,4 / 69,1). A L2.3 mexeu em cinco pontos (ver o relatório do Loop 2) e deixou as médias praticamente onde estavam: o jammer vira canal único (+6% de avanço), o Complexo ganha `lev` e `dist` intermediários, o Caótico recebe o mesmo limite de rendição do Complexo, o aviso da ordem política mostra a previsão exata e as cartas Diretor do banco e Cúmplice passam a ter consequência operacional. A L2.4 mexeu em quatro regras (Pausa, pistas, desvio de rota e carta de troca) e a L2.5 corrigiu o sniper na reserva; a única linha que se mexeu foi a do novato (58,5 / 54,0 / 50,3 para 59,6 / 54,2 / 50,2), e a tabela abaixo já é a de depois da L2.5. As demais referências desta seção foram remedidas depois da L2.5: ablação, valor dos equipamentos e momento de intervir saíram idênticos aos da L2.3 (as sementes são fixas), e as notas e os perfis só mudaram nas linhas do novato (nos perfis, também 0,1 ponto numa célula do especialista agressivo).
+Nota média por nível de jogador (Protocolar / Complexo / Caótico). A L2.1 trouxe a nota de Vidas e a penalidade por agente ferido para o que o documento pede, o vazamento de comunicado e o fator de pressão sem piso (isso baixou todas as médias em 2 a 5 pontos em relação à L1.5: novato 62,2 / 58,2 / 53,9, especialista de paz 83,7 / 78,4 / 69,1). A L2.3 mexeu em cinco pontos (ver o relatório do Loop 2) e deixou as médias praticamente onde estavam: o jammer vira canal único (+6% de avanço), o Complexo ganha `lev` e `dist` intermediários, o Caótico recebe o mesmo limite de rendição do Complexo, o aviso da ordem política mostra a previsão exata e as cartas Diretor do banco e Cúmplice passam a ter consequência operacional. A L2.4 mexeu em quatro regras (Pausa, pistas, desvio de rota e carta de troca) e a L2.5 corrigiu o sniper na reserva (o novato foi de 58,5 / 54,0 / 50,3 para 59,6 / 54,2 / 50,2). A L2.3 refeita (versão 18) ligou o BATNA à rota que o líder planejou (de −6 a +14 pontos de chance de avanço, em vez de +0 a +10 pela média das quatro candidatas) e baixou para B o teto da aposta com menos de 30% de chance: quem descobre e fecha a rota real negocia melhor (especialista de paz de 83,0 / 77,6 / 67,6 para 83,5 / 78,6 / 69,5), quem a deixa aberta negocia pior (equilibrado de 81,7 / 71,2 / 62,1 para 79,9 / 69,6 / 61,3) e a equipe enxuta que não cobre zona nenhuma deixa de passar do especialista (de 86,3 / 75,2 / 63,1 para 83,2 / 72,9 / 59,8). A tabela abaixo e todas as referências desta seção foram medidas na versão 18.
 
 | Nível | Protocolar | Complexo | Caótico |
 | --- | --- | --- | --- |
-| novato | 59,6 | 54,2 | 50,2 |
-| mid | 63,1 | 53,5 | 47,4 |
-| mid+ | 67,9 | 56,0 | 50,2 |
-| especialista, paz | 83,0 | 77,6 | 67,6 |
-| especialista, equilibrado | 81,7 | 71,2 | 62,1 |
-| especialista, agressivo | 75,4 | 67,0 | 49,5 |
+| novato | 59,0 | 53,9 | 49,9 |
+| mid | 62,5 | 53,1 | 47,4 |
+| mid+ | 66,5 | 56,4 | 50,0 |
+| especialista, paz | 83,5 | 78,6 | 69,5 |
+| especialista, equilibrado | 79,9 | 69,6 | 61,3 |
+| especialista, agressivo | 75,5 | 67,0 | 49,6 |
 
-Valor dos equipamentos (`itens.js 2000 equilibrada gratis`, o mesmo depois da L2.3 e da L2.5): nota ganha com o item de graça em Protocolar / Complexo / Caótico.
+Valor dos equipamentos (`itens.js 2000 equilibrada gratis`, versão 18): nota ganha com o item de graça em Protocolar / Complexo / Caótico.
 
 | Item (custo) | Ganho de nota |
 | --- | --- |
-| Negofone (60) | +3,6 / +4,2 / +5,6 |
-| Kit médico (40) | +1,8 / +3,5 / +4,5 |
-| Jammer (75) | +2,2 / +1,3 / +3,1 |
-| Drone (80) | +0,3 / +1,0 / +1,6 |
+| Negofone (60) | +3,9 / +4,4 / +5,0 |
+| Kit médico (40) | +1,8 / +3,7 / +4,9 |
+| Jammer (75) | +2,5 / +1,6 / +2,7 |
+| Drone (80) | +0,6 / +1,1 / +2,0 |
 | Viatura (55) | +0,1 / +0,6 / +1,1 |
-| Sniper (90), escudo (50), térmica (70) | de +0,3 a +0,7 (para a política agressiva, `itens.js 2000 agressiva gratis`, o escudo vale +2,5 / +2,8 / +4,9 e o sniper +1,7 / +1,7 / +3,6) |
+| Sniper (90), escudo (50), térmica (70) | de +0,2 a +1,1 (para a política agressiva, `itens.js 2000 agressiva gratis`, o escudo vale +2,5 / +2,8 / +5,0 e o sniper +1,7 / +1,7 / +3,6) |
 
 Outras referências (Protocolar / Complexo / Caótico):
 
-- Nota S (`notas.js 300`): uma equipe de 2 agentes que negocia e comunica faz ≥ 90 em 69 / 34 / 1% das partidas; o especialista de paz, em 0% (o S pede perder no máximo 10 pontos e a Eficiência custa 7,5 a ele no Protocolar).
-- Perfis (`perfil.js 300`): para quem negocia (especialista de paz, equilibrado, equipe enxuta, mid+) o Desesperado é o pior perfil nas três dificuldades (especialista de paz 80,5 / 66,5 / 53,2 contra 82,7–85,3 / 77,7–82,3 / 68,4–74,6 dos outros três) e o Volátil, o mais favorável à escuta. Quem não negocia (novato, agressivo) mal sente o perfil: as diferenças ficam dentro do ruído.
-- Ablação (`ablacao.js 300`, especialista de paz): sem negociar custa −28,5 / −29,3 / −17,6; sem falar com nenhum stakeholder, −7,8 / −11,1 / −11,2 (ordem política em 23 / 42 / 68% das partidas); sem investigar, −1,0 / −2,7 / −8,7; sem equipamento nenhum, −3,3 / −9,1 / −9,3.
-- Selos (`selos.js 300`): nenhum em 0% em todas as colunas. A equipe enxuta que comunica toda rodada ganha o Porta-voz em 99 / 88 / 12% e o Equilíbrio em 90 / 66 / 15%; o Sacada exige a Pausa usada 2 a 3 vezes.
-- Quando intervir (`rush.js 300 forte`): entrar sem preparo na rodada 1 dá 66,0 / 61,6 / 58,9; entrar na 4 com o plano completo, 76,1 / 71,4 / 63,4; entrar na 8, 67,7 / 58,5 / 50,0.
-- Tamanho da equipe (`equipe.js 800 paz`): de 2 a 5 agentes a nota sobe só 1,1 / 2,8 / 3,1 pontos, e o sexto agente a reduz em 0,4 / 1,2 / 3,2 pontos em relação ao quinto.
+- Nota S (`notas.js 300`): uma equipe de 2 agentes que negocia e comunica faz ≥ 90 em 57 / 28 / 0% das partidas (69 / 34 / 1% até a versão 17, quando deixar o perímetro vazio não pesava na negociação); o especialista de paz, em 0% (o S pede perder no máximo 10 pontos e a Eficiência custa 7,4 a ele no Protocolar).
+- Perfis (`perfil.js 300`): para quem negocia (especialista de paz, equilibrado, equipe enxuta, mid+) o Desesperado é o pior perfil nas três dificuldades (especialista de paz 81,3 / 68,8 / 54,9 contra 82,7–85,4 / 78,3–82,9 / 69,2–76,1 dos outros três) e o Volátil, o mais favorável à escuta. Quem não negocia (novato, agressivo) mal sente o perfil: as diferenças ficam dentro do ruído.
+- Ablação (`ablacao.js 300`, especialista de paz): sem negociar custa −29,0 / −30,3 / −19,4; sem falar com nenhum stakeholder, −6,6 / −10,4 / −12,4 (ordem política em 18 / 36 / 66% das partidas); sem investigar, −0,6 / −1,8 / −9,6; sem equipamento nenhum, −2,9 / −8,5 / −10,3. Ignorar só as famílias não custa nada a quem negocia toda rodada: o canal aberto conta como atenção a elas (decisão da L1.3), e a sala de acolhimento continua valendo pelo que revela dos reféns.
+- Selos (`selos.js 300`): nenhum em 0% em todas as colunas. A equipe enxuta que comunica toda rodada ganha o Porta-voz em 98 / 87 / 9% e o Equilíbrio em 83 / 61 / 11%; o Sacada exige a Pausa usada 2 a 3 vezes.
+- Quando intervir (`rush.js 300 forte`): entrar sem preparo na rodada 1 dá 66,0 / 61,3 / 57,3; entrar na 4 com o plano completo, 76,1 / 71,6 / 63,4; entrar na 8, 68,2 / 58,0 / 50,5.
+- Tamanho da equipe (`equipe.js 800 paz`): de 2 a 5 agentes a nota sobe 2,2 / 5,1 / 6,2 pontos (até a versão 17, só 1,1 / 2,8 / 3,1: sem gente para fechar a rota, a negociação agora rende menos), e o sexto agente a reduz em 0,7 / 3,4 / 6,0 pontos em relação ao quinto, porque o plantão consome a reserva.
 
 Se uma mudança futura mover as notas médias dos níveis de jogador mais do que o ruído (cerca de ±1,5 ponto), a ordem Protocolar > Complexo > Caótico ou a relação entre os níveis pode ter quebrado. Os ganhos de nota dos equipamentos têm ruído de cerca de ±0,5 com N = 2.000.

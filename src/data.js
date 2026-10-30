@@ -32,9 +32,12 @@ const PLANTAO_BASE = 4, PLANTAO_AGENTE = 2;
 const APOIO_PRECOS = [90, 110, 135];
 const HORAS_BASE = 20, HORAS_AGENTE = 8;
 const CREDITOS_INICIAIS = 1000;
-const BATNA_PESO = .10;           // quanto a cobertura das rotas (o BATNA da força-tarefa) ajuda a negociação: de 0 a +10 pontos de chance
+/* BATNA (L2.3 refeita): a melhor alternativa do líder a um acordo é fugir pela rota que ele planejou. Com ela aberta (cobertura abaixo de 30%)
+   ele cede menos, até −6 pontos na chance de avançar; com ela bem fechada ele perde a saída, até +14. O documento pede que o perímetro mude o
+   poder de barganha; até a v17 contava a média das quatro rotas candidatas (de 0 a +10) e quem não fechava rota nenhuma quase não sentia. */
+const BATNA_PESO = .20, BATNA_REF = 30;
 const JAMMER_CANAL = .06;         // isolar o líder faz do negociador o único canal dele com o mundo: +6 pontos na chance de avanço (L2.3: sem isso, comprar o item custava 3 pontos de nota em qualquer dificuldade)
-const APOSTA_P = .5;               // entrada voluntária com chance de sucesso abaixo disto é aposta: o sucesso não passa da nota A
+const APOSTA_P = .5, APOSTA_P2 = .3;   // entrada voluntária com chance abaixo de 50% é aposta: o sucesso não passa da nota A; abaixo de 30%, da nota B (L2.3 refeita)
 const DEFICIT_STRESS_ROUNDS = 3;   // só as três primeiras rodadas no vermelho aumentam a pressão da equipe (+3 cada); depois o custo é só de confiança do banco
 
 /* ---------- ÍCONES (SVG inline minimalistas, stroke) ---------- */

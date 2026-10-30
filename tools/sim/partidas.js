@@ -61,7 +61,7 @@ function X(G) {
     const parts = {
       base: .15 * skill * D.lev, postura: compat ? .20 : skip ? -.25 : 0, rapport: .05 * d, negofone: G.gear.includes('negofone') ? .10 : 0,
       traco: (id === 'paulo' && tech <= 3 ? .10 : 0) + (id === 'andre' ? -.12 : 0), perfil: (Pf.mult[kind] - 1) * .15, info: G.K.profile ? .06 : 0,
-      batna: .10 * covRotas() / 100, canal: G.gear.includes('jammer') ? .06 : 0, agitacao: -Math.max(0, G.agit - 50) * .006, lider: -D.dist
+      batna: .20 * (zona(G.routeNow).cov - 30) / 100, canal: G.gear.includes('jammer') ? .06 : 0, agitacao: -Math.max(0, G.agit - 50) * .006, lider: -D.dist
     };
     let raw = sum(Object.values(parts)); if (skip) raw *= .5;
     return { parts, raw, p: clamp(raw, .02, .95), skill, compat, skip, id };
@@ -82,8 +82,8 @@ function pontuacao(G) {
   const raw = Math.min(100, (vidas * .40 + captura * .20 + valores * .15 + efic * .10 + conf * .15) * 100);
   const penal = 10 * (E.agentsHurt ? E.agentsHurt.length : 0);
   const falhou = (E.type === 'intervencao' && E.variant === 'fracasso') || (E.type === 'prazo' && E.sub === 'fracasso');
-  const aposta = E.type === 'intervencao' && !E.forced && E.P < .5;
-  const tetos = []; if (H.dead >= 1) tetos.push([H.dead >= 4 ? 49 : H.dead >= 2 ? 64 : 79, 'mortes']); if (falhou) tetos.push([49, 'fracasso']); if (aposta) tetos.push([89, 'aposta']);
+  const aposta = E.type === 'intervencao' && !E.forced && E.P < .5, apostaTeto = E.P < .3 ? 79 : 89;
+  const tetos = []; if (H.dead >= 1) tetos.push([H.dead >= 4 ? 49 : H.dead >= 2 ? 64 : 79, 'mortes']); if (falhou) tetos.push([49, 'fracasso']); if (aposta) tetos.push([apostaTeto, 'aposta']);
   tetos.sort((a, b) => a[0] - b[0]); const cap = tetos.length ? tetos[0][0] : 100;
   const total = Math.round(Math.max(0, Math.min(raw, cap) - penal) * 10) / 10;
   const nota = total >= 90 ? 'S' : total >= 80 ? 'A' : total >= 65 ? 'B' : total >= 50 ? 'C' : total >= 35 ? 'D' : 'F';
@@ -170,7 +170,7 @@ function rodadaAnotada(pol, X) {
     ck(near(A.fp(a.id), a.fpv, 1e-9) && near(A.ff(a.id), a.ffv, 1e-9), `fatores de ${NM(a.id)}`);
   });
   const zonas = A.ZONES.map(z => x.zona(z.id));
-  P(''); P(`**Cobertura** (Σ eficiência × fator de equipamento × 10, mais bônus, limitada a 0–100): ${zonas.map(z => `${A.ZONE[z.z].curto} ${z.cov}%${G.routes.includes(z.z) ? '★' : ''}${z.ags.length ? ` [${z.ags.map(a => f(a.e, 2)).join('+')}]×${f(z.fe, 1)}${z.extra.length ? ' ' + z.extra.join(' ') : ''}` : ''}`).join(' · ')}. Cobertura média das quatro rotas candidatas (o BATNA): ${f(x.covRotas())}%.`);
+  P(''); P(`**Cobertura** (Σ eficiência × fator de equipamento × 10, mais bônus, limitada a 0–100): ${zonas.map(z => `${A.ZONE[z.z].curto} ${z.cov}%${G.routes.includes(z.z) ? '★' : ''}${z.ags.length ? ` [${z.ags.map(a => f(a.e, 2)).join('+')}]×${f(z.fe, 1)}${z.extra.length ? ' ' + z.extra.join(' ') : ''}` : ''}`).join(' · ')}. Cobertura da rota que o líder planejou (o BATNA dele): ${f(x.zona(G.routeNow).cov)}%; média das quatro candidatas ${f(x.covRotas())}%.`);
   zonas.forEach(z => ck(A.zoneCoverage(z.z) === z.cov, `cobertura de ${A.ZONE[z.z].curto}`, `${A.zoneCoverage(z.z)} × ${z.cov}`));
   // decisões
   pol.decide(A, r);

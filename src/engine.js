@@ -291,7 +291,7 @@ function negoParts(tech) {
     traco: (id === 'paulo' && tech <= 3 ? .10 : 0) + (id === 'andre' ? -.12 : 0),
     perfil: (P.mult[kind] - 1) * .15,
     info: G.K.profile ? .06 : 0,
-    batna: BATNA_PESO * avgRouteCov() / 100,
+    batna: BATNA_PESO * (zoneCoverage(G.routeNow) - BATNA_REF) / 100,   // a saída que o líder planejou (ele sabe qual é, mesmo quando você não sabe)
     canal: hasGear('jammer') ? JAMMER_CANAL : 0,
     agitacao: -Math.max(0, G.agit - 50) * .006,
     lider: -D.dist               // desconfiança de base do líder
@@ -460,10 +460,10 @@ function doEscape(cause) {
 /* Ferido na saída (fuga, ultimato aceito): só entre quem estava lá dentro, vivo e ileso, no momento do desfecho (`pool`, contado antes da saída). */
 function addHurtFree(n, pool) { const H = G.hostages; n = Math.max(0, Math.min(n, pool, HOSTAGES - H.dead - H.hurt)); H.hurt += n; return n; }
 /* Ultimato final: o líder decide aceitar a última proposta ou forçar a mão. Quanto mais a escada avançou, mais baixa a agitação
-   e mais fechado o perímetro (o BATNA), maior a chance de ele ceder; do contrário, a entrada é forçada com a prontidão que existir. */
+   e mais fechada a rota que ele planejou (o BATNA dele), maior a chance de ele ceder; do contrário, a entrada é forçada com a prontidão que existir. */
 function ultimatumProb() {
   const d = G.nego.step;
-  return clamp(.04 + .15 * (d - 1) - G.agit / 300 + (G.K.profile ? .05 : 0) + .10 * avgRouteCov() / 100 + (G.nego.contact ? 0 : -.04), .05, .9);
+  return clamp(.04 + .15 * (d - 1) - G.agit / 300 + (G.K.profile ? .05 : 0) + .10 * zoneCoverage(G.routeNow) / 100 + (G.nego.contact ? 0 : -.04), .05, .9);
 }
 function doUltimatum() {
   const p = ultimatumProb();
@@ -504,13 +504,13 @@ function computeScore() {
   const raw = Math.min(100, (vidas * .40 + captura * .20 + valores * .15 + eficiencia * .10 + confianca * .15) * 100);
   const penal = PENAL_AGENTE * (E.agentsHurt ? E.agentsHurt.length : 0);
   // Tetos (perspectiva de quem protege): vidas perdidas e intervenção fracassada nunca contam como boa condução,
-  // e acertar uma aposta (entrada voluntária com menos de 50% de chance) é sorte, não método: no máximo nota A.
+  // e acertar uma aposta (entrada voluntária com menos de 50% de chance) é sorte, não método: no máximo nota A, e abaixo de 30% de chance, B.
   const failed = (E.type === 'intervencao' && E.variant === 'fracasso') || (E.type === 'prazo' && E.sub === 'fracasso');
   const aposta = E.type === 'intervencao' && !E.forced && E.P < APOSTA_P;
   const tetos = [];
   if (H.dead >= 1) tetos.push({ v: H.dead >= 4 ? 49 : H.dead >= 2 ? 64 : 79, why: 'mortes' });
   if (failed) tetos.push({ v: 49, why: 'fracasso' });
-  if (aposta) tetos.push({ v: 89, why: 'aposta' });
+  if (aposta) tetos.push({ v: E.P < APOSTA_P2 ? 79 : 89, why: 'aposta' });
   const teto = tetos.sort((a, b) => a.v - b.v)[0] || { v: 100, why: null };
   const cap = teto.v;
   const total = Math.round(Math.max(0, Math.min(raw, cap) - penal) * 10) / 10;   // uma casa decimal, a mesma que a tela mostra: a nota e a faixa nunca discordam

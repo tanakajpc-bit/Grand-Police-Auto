@@ -768,9 +768,12 @@ const PLANTAO_BASE = 4, PLANTAO_AGENTE = 2;
 const APOIO_PRECOS = [90, 110, 135];
 const HORAS_BASE = 20, HORAS_AGENTE = 8;
 const CREDITOS_INICIAIS = 1000;
-const BATNA_PESO = .10;           // quanto a cobertura das rotas (o BATNA da força-tarefa) ajuda a negociação: de 0 a +10 pontos de chance
+/* BATNA (L2.3 refeita): a melhor alternativa do líder a um acordo é fugir pela rota que ele planejou. Com ela aberta (cobertura abaixo de 30%)
+   ele cede menos, até −6 pontos na chance de avançar; com ela bem fechada ele perde a saída, até +14. O documento pede que o perímetro mude o
+   poder de barganha; até a v17 contava a média das quatro rotas candidatas (de 0 a +10) e quem não fechava rota nenhuma quase não sentia. */
+const BATNA_PESO = .20, BATNA_REF = 30;
 const JAMMER_CANAL = .06;         // isolar o líder faz do negociador o único canal dele com o mundo: +6 pontos na chance de avanço (L2.3: sem isso, comprar o item custava 3 pontos de nota em qualquer dificuldade)
-const APOSTA_P = .5;               // entrada voluntária com chance de sucesso abaixo disto é aposta: o sucesso não passa da nota A
+const APOSTA_P = .5, APOSTA_P2 = .3;   // entrada voluntária com chance abaixo de 50% é aposta: o sucesso não passa da nota A; abaixo de 30%, da nota B (L2.3 refeita)
 const DEFICIT_STRESS_ROUNDS = 3;   // só as três primeiras rodadas no vermelho aumentam a pressão da equipe (+3 cada); depois o custo é só de confiança do banco
 
 /* ---------- ÍCONES (SVG inline minimalistas, stroke) ---------- */
@@ -1491,7 +1494,7 @@ function negoParts(tech) {
     traco: (id === 'paulo' && tech <= 3 ? .10 : 0) + (id === 'andre' ? -.12 : 0),
     perfil: (P.mult[kind] - 1) * .15,
     info: G.K.profile ? .06 : 0,
-    batna: BATNA_PESO * avgRouteCov() / 100,
+    batna: BATNA_PESO * (zoneCoverage(G.routeNow) - BATNA_REF) / 100,   // a saída que o líder planejou (ele sabe qual é, mesmo quando você não sabe)
     canal: hasGear('jammer') ? JAMMER_CANAL : 0,
     agitacao: -Math.max(0, G.agit - 50) * .006,
     lider: -D.dist               // desconfiança de base do líder
@@ -1660,10 +1663,10 @@ function doEscape(cause) {
 /* Ferido na saída (fuga, ultimato aceito): só entre quem estava lá dentro, vivo e ileso, no momento do desfecho (`pool`, contado antes da saída). */
 function addHurtFree(n, pool) { const H = G.hostages; n = Math.max(0, Math.min(n, pool, HOSTAGES - H.dead - H.hurt)); H.hurt += n; return n; }
 /* Ultimato final: o líder decide aceitar a última proposta ou forçar a mão. Quanto mais a escada avançou, mais baixa a agitação
-   e mais fechado o perímetro (o BATNA), maior a chance de ele ceder; do contrário, a entrada é forçada com a prontidão que existir. */
+   e mais fechada a rota que ele planejou (o BATNA dele), maior a chance de ele ceder; do contrário, a entrada é forçada com a prontidão que existir. */
 function ultimatumProb() {
   const d = G.nego.step;
-  return clamp(.04 + .15 * (d - 1) - G.agit / 300 + (G.K.profile ? .05 : 0) + .10 * avgRouteCov() / 100 + (G.nego.contact ? 0 : -.04), .05, .9);
+  return clamp(.04 + .15 * (d - 1) - G.agit / 300 + (G.K.profile ? .05 : 0) + .10 * zoneCoverage(G.routeNow) / 100 + (G.nego.contact ? 0 : -.04), .05, .9);
 }
 function doUltimatum() {
   const p = ultimatumProb();
@@ -1704,13 +1707,13 @@ function computeScore() {
   const raw = Math.min(100, (vidas * .40 + captura * .20 + valores * .15 + eficiencia * .10 + confianca * .15) * 100);
   const penal = PENAL_AGENTE * (E.agentsHurt ? E.agentsHurt.length : 0);
   // Tetos (perspectiva de quem protege): vidas perdidas e intervenção fracassada nunca contam como boa condução,
-  // e acertar uma aposta (entrada voluntária com menos de 50% de chance) é sorte, não método: no máximo nota A.
+  // e acertar uma aposta (entrada voluntária com menos de 50% de chance) é sorte, não método: no máximo nota A, e abaixo de 30% de chance, B.
   const failed = (E.type === 'intervencao' && E.variant === 'fracasso') || (E.type === 'prazo' && E.sub === 'fracasso');
   const aposta = E.type === 'intervencao' && !E.forced && E.P < APOSTA_P;
   const tetos = [];
   if (H.dead >= 1) tetos.push({ v: H.dead >= 4 ? 49 : H.dead >= 2 ? 64 : 79, why: 'mortes' });
   if (failed) tetos.push({ v: 49, why: 'fracasso' });
-  if (aposta) tetos.push({ v: 89, why: 'aposta' });
+  if (aposta) tetos.push({ v: E.P < APOSTA_P2 ? 79 : 89, why: 'aposta' });
   const teto = tetos.sort((a, b) => a.v - b.v)[0] || { v: 100, why: null };
   const cap = teto.v;
   const total = Math.round(Math.max(0, Math.min(raw, cap) - penal) * 10) / 10;   // uma casa decimal, a mesma que a tela mostra: a nota e a faixa nunca discordam
@@ -3168,7 +3171,7 @@ function tabTatica() {
   const zoneOpts = ZONES.map(z => `<option value="${z.id}" ${UI.apoioZone === z.id ? 'selected' : ''}>${z.nome} (${zoneCoverage(z.id)}%)</option>`).join('');
   const ip = intervProb(), band = .16 * (1 - infoFrac()), blind = blindParts();
   const blindTxt = blind.length ? `<br><span style="color:var(--amber)">Às cegas: ${blind.map(b => `−${Math.round(-b.v * 100)}% porque você ${b.txt}`).join('; ')}.</span>` : '';
-  const apostaTxt = ip < APOSTA_P ? `<br><span style="color:var(--amber)">Abaixo de ${Math.round(APOSTA_P * 100)}% de chance, mesmo um sucesso não passa da nota A.</span>` : '';
+  const apostaTxt = ip < APOSTA_P ? `<br><span style="color:var(--amber)">Abaixo de ${Math.round((ip < APOSTA_P2 ? APOSTA_P2 : APOSTA_P) * 100)}% de chance, mesmo um sucesso não passa da nota ${ip < APOSTA_P2 ? 'B' : 'A'}.</span>` : '';
   const apoioLeft = Math.max(0, APOIO_PRECOS.length - G.supportUsed - G.queue.filter(q => q.kind === 'apoio').length);
   const wRepos = whyNot(), wApoio = whyNot({ cost: apoioCost(), limit: apoioLeft ? null : 'Os 3 apoios externos da operação já foram usados.' });
   const pausaQ = G.queue.some(q => q.kind === 'pausa'), horasQ = G.queue.some(q => q.kind === 'horas');
@@ -3183,7 +3186,7 @@ function tabTatica() {
       ${opt('pause', 'Pausa de Comando', `${G.team.includes('diego') ? 'Duas pistas' : 'Uma pista'} e −10 de pressão por 2 rodadas`, '', 'addpausa', '', { why: whyNot({ inPlan: pausaQ }), pressed: pausaQ, tip: `“Subir à sacada”: ${G.team.includes('diego') ? 'duas pistas' : 'uma pista'} sobre variáveis ocultas, visão sistêmica e −10 de pressão na equipe, nesta rodada e na seguinte. Consome uma decisão; a crise continua andando.` })}
       ${opt('tired', 'Horas extras', 'Recupera 2 rodadas de fadiga da equipe em campo', horasCost(), 'addhoras', '', { why: whyNot({ inPlan: horasQ, cost: horasCost() }), pressed: horasQ, tip: `Recupera 2 rodadas de fadiga em campo e encerra a Fadiga crítica. O preço cresce com o efetivo em campo (${deployed().length} ${plural(deployed().length, 'agente', 'agentes')}).` })}
       ${UI.ivConfirm ? `<div class="insight bad">${icon('alert', '', 1.8)}<span><b>Ordenar a intervenção agora?</b> Chance estimada ${pLabel(ip)} (${Math.round(clamp(ip - band, 0, 1) * 100)}–${Math.round(clamp(ip + band, 0, 1) * 100)}%). Ocupa todas as decisões e encerra a crise nesta rodada.${blindTxt}${apostaTxt}</span></div><div class="row"><button class="btn danger" data-act="ivyes">Confirmar intervenção</button><button class="btn ghost" data-act="ivno">Cancelar <span class="faint" style="font-weight:400">(Esc)</span></button></div>` :
-        opt('shield', 'Intervenção', `Encerra a crise nesta rodada · chance <b>${pLabel(ip)}</b> (±${Math.round(band * 100)}%)${blind.length ? `<br><span style="color:var(--amber)">−${Math.round(-blind.reduce((s, b) => s + b.v, 0) * 100)} pontos por entrar às cegas</span>` : ''}${ip < APOSTA_P ? `<br><span style="color:var(--amber)">Abaixo de ${Math.round(APOSTA_P * 100)}%: nota máxima A</span>` : ''}`, '', 'iv', '', { danger: true, pressed: ivq, tip: `Ação direta, o BATNA da força-tarefa. Prontidão ${Math.round(intervPower())}%. A chance depende de inteligência, tática e agitação do líder.${blindTxt}${apostaTxt}` })}
+        opt('shield', 'Intervenção', `Encerra a crise nesta rodada · chance <b>${pLabel(ip)}</b> (±${Math.round(band * 100)}%)${blind.length ? `<br><span style="color:var(--amber)">−${Math.round(-blind.reduce((s, b) => s + b.v, 0) * 100)} pontos por entrar às cegas</span>` : ''}${ip < APOSTA_P ? `<br><span style="color:var(--amber)">Abaixo de ${Math.round((ip < APOSTA_P2 ? APOSTA_P2 : APOSTA_P) * 100)}%: nota máxima ${ip < APOSTA_P2 ? 'B' : 'A'}</span>` : ''}`, '', 'iv', '', { danger: true, pressed: ivq, tip: `Ação direta, o BATNA da força-tarefa. Prontidão ${Math.round(intervPower())}%. A chance depende de inteligência, tática e agitação do líder.${blindTxt}${apostaTxt}` })}
     </div>`;
 }
 function tabNego() {
@@ -3201,7 +3204,7 @@ function tabNego() {
     <p class="scene">${n.contact ? STEP_SCENE[cur] : NO_CONTACT}</p>
     ${n.last ? `<blockquote class="${n.last.tone}">“${n.last.t}”<cite>Líder do grupo · rodada ${n.last.r}${G.K.profile ? '' : ' · o jeito de falar diz quem ele é'}</cite></blockquote>` : ''}</div>`;
   return `${hot}<div class="ladder" aria-label="Escada da negociação: degrau ${cur} de 5">${ladder}</div><p class="ladcap">Degrau ${cur} de 5: <b>${(STEPS[cur - 1] || STEPS[0]).nome}</b></p>
-    <label class="field"><span>Negociador ${infoTip('regras', `Postura compatível com o degrau atual: +20%. Pular etapa: −25% e metade da chance, com 20% de regredir. Pressionar sobe a agitação. Fadiga e pressão alta reduzem a habilidade do negociador (hoje ${dec(negoSkill())}). Com o canal aberto, as famílias contam como atendidas na rodada e cada avanço de degrau dá +3 a elas.`)}</span>
+    <label class="field"><span>Negociador ${infoTip('regras', `Postura compatível com o degrau atual: +20%. Pular etapa: −25% e metade da chance, com 20% de regredir. Pressionar sobe a agitação. Fadiga e pressão alta reduzem a habilidade do negociador (hoje ${dec(negoSkill())}). Com o canal aberto, as famílias contam como atendidas na rodada e cada avanço de degrau dá +3 a elas. A rota de fuga que o líder planejou é o BATNA dele: aberta, ele cede menos (até −6%); bem coberta, cede mais (até +14%).`)}</span>
       <select id="negotiator" data-chg="negotiator">${ags.map(id => `<option value="${id}" ${negId === id ? 'selected' : ''}>${shortName(agentById(id).nome)} · Negoc. ${stat(id, 'neg')}${G.az[id] && G.az[id] !== 'reserva' ? ' (em campo)' : ' (comando)'}</option>`).join('') || '<option>Comandante (você)</option>'}</select></label>
     <div class="optlist">${posts}${opt('alert', 'Pressionar (ultimato)', `Sobe a agitação em +${PR_().press}; pode regredir a negociação`, '', 'addnego', 'data-t="press"', { danger: true, pressed: !!q && q.p.tech === 'press', why: wN })}</div>`;
 }
@@ -3480,7 +3483,7 @@ const OUTN = { intervencao: 'Intervenção tática', rendicao: 'Rendição negoc
 const OUTV = { limpa: 'limpa', baixas: 'com baixas', parcial: 'parcial', fracasso: 'fracassada', serena: 'serena', tensa: 'tensa', barrada: 'barrada', perseguicao: 'com perseguição', escapou: 'bem-sucedida', cedeu: 'com cessão', forcado: 'forçado' };
 function outName(E) { return (OUTN[E.type] || E.type) + (E.variant && OUTV[E.variant] ? ' ' + OUTV[E.variant] : ''); }
 function capReason(S, H, E) {
-  if (S.capWhy === 'aposta') return `porque a entrada foi autorizada com ${Math.round(E.P * 100)}% de chance de sucesso. Acertar uma aposta é sorte, não método: abaixo de 50% de chance, a nota máxima é A.`;
+  if (S.capWhy === 'aposta') return `porque a entrada foi autorizada com ${Math.round(E.P * 100)}% de chance de sucesso. Acertar uma aposta é sorte, não método: abaixo de 50% de chance, a nota máxima é A, e abaixo de 30%, B.`;
   if (S.capWhy === 'fracasso') return `porque a intervenção fracassou. Entrar e perder o controle da operação nunca conta como boa condução${H.dead ? ` (${H.dead} ${plural(H.dead, 'refém morto', 'reféns mortos')})` : ''}.`;
   return `porque houve ${H.dead} ${plural(H.dead, 'refém morto', 'reféns mortos')}. Nesta simulação, vidas perdidas limitam a nota máxima.`;
 }
@@ -3662,7 +3665,7 @@ function debriefHTML() {
     { n: 'Racionalidade limitada e valor da informação', ref: 'Simon (1955); Howard (1966)', you: `Você gastou ${fmt(G.spent.intel)} créditos em inteligência (${nIntel} ${plural(nIntel, 'investigação', 'investigações')}) e terminou sabendo ${knownCount()} de 6 variáveis ocultas${miss.length ? `. Ficaram ocultas: ${miss.join(', ')}.` : '.'}`, les: 'Uma informação vale a diferença entre o resultado esperado de decidir com ela e sem ela. Ninguém otimiza: todos satisfazem. A pergunta é quanto saber antes de agir.' },
     { n: 'Consciência situacional e decisão naturalística', ref: 'Endsley (1995); Klein (1998)', you: `Você teve ${st.reports || 0} relatos de campo, dos quais ${st.noise || 0} eram ruído de baixa confiança. Usou a Pausa de Comando ${st.pausas} vez${st.pausas === 1 ? '' : 'es'}.`, les: 'Perceber, compreender e projetar são três coisas diferentes. Dado bruto sem interpretação engana; interpretação sem projeção chega tarde. Veteranos reconhecem padrões, mas padrão reconhecido sem checagem também erra.' },
     { n: 'Sensemaking e alta confiabilidade', ref: 'Weick (1993); Weick & Sutcliffe (2007)', you: `${shocks.length ? `${shocks.length} ${plural(shocks.length, 'carta de choque', 'cartas de choque')}, com a sua resposta a cada uma: ${shocks.join('; ')}.` : 'Nenhuma carta de choque apareceu nesta partida.'} ${negLine}`, les: 'Em Mann Gulch, a equipe colapsou quando um choque destruiu ao mesmo tempo os papéis e o sentido compartilhado da situação. Organizações de alta confiabilidade têm cinco hábitos: preocupação constante com falhas, relutância em simplificar interpretações, sensibilidade às operações, compromisso com a resiliência e deferência à expertise. Na crise, a decisão vai para quem sabe mais, mesmo que não seja quem comanda.' },
-    { n: 'Negociação baseada em interesses e em crise', ref: 'Fisher, Ury & Patton (2011); Vecchi et al. (2005); Voss & Raz (2016)', you: `Degrau máximo: ${G.nego.maxStep}/5 em ${G.nego.tries} ${plural(G.nego.tries, 'rodada', 'rodadas')} de negociação. Etapas puladas: ${G.nego.skips}. Pressões: ${st.press || 0}. Cobertura média das rotas (seu BATNA): ${Math.round(avgRouteCov())}%.`, les: 'A escada de cinco degraus funciona em ordem. Pular etapa reduz pela metade a chance de avançar. Fechar rotas fortalece o seu BATNA e enfraquece o do líder: o perímetro altera a negociação.' },
+    { n: 'Negociação baseada em interesses e em crise', ref: 'Fisher, Ury & Patton (2011); Vecchi et al. (2005); Voss & Raz (2016)', you: `Degrau máximo: ${G.nego.maxStep}/5 em ${G.nego.tries} ${plural(G.nego.tries, 'rodada', 'rodadas')} de negociação. Etapas puladas: ${G.nego.skips}. Pressões: ${st.press || 0}. Cobertura da rota que o líder planejou (o BATNA dele): ${Math.round(zoneCoverage(G.routeNow))}%.`, les: 'A escada de cinco degraus funciona em ordem. Pular etapa reduz pela metade a chance de avançar. Fechar rotas fortalece o seu BATNA e enfraquece o do líder: o perímetro altera a negociação.' },
     { n: 'Stakeholders e comunicação de crise', ref: 'Freeman (1984); Mitchell, Agle & Wood (1997); Coombs (2007)', you: `Final: ${STK_KEYS.map(k => `${STK[k].nome} ${Math.round(G.stk[k].sat)}`).join(', ')}. ${STK_KEYS.filter(k => G.stk[k].lost).length ? 'Você perdeu: ' + STK_KEYS.filter(k => G.stk[k].lost).map(k => STK[k].nome).join(', ') + '.' : 'Nenhum stakeholder foi perdido.'}`, les: 'Saliência é poder, legitimidade e urgência, e muda ao longo do jogo: o prefeito ganha urgência, as famílias ganham legitimidade quando há feridos, o banco perde quando prioriza o cofre sobre as vidas. O mais barulhento não é necessariamente o mais saliente.' },
     { n: 'Liderança em crise: subir à sacada', ref: 'Heifetz & Linsky (2002); Marcus et al. (2019)', you: `Pausas de Comando: ${st.pausas}. Apoios externos: ${st.apoio}. Horas extras: ${st.horas}.`, les: 'Alternar entre a ação no salão e a observação do sistema é um custo (uma decisão a menos), e um investimento (visão sistêmica e menos pressão). Usar sempre ou nunca são os dois extremos ruins.' },
     { n: 'Informação distribuída', ref: 'Stasser & Titus (1985); Edmondson (1999)', you: `${empty} das 7 zonas não tinham ninguém no início. Zonas sem agentes não geram relatos: você só ouviu onde posicionou gente.`, les: 'Cada agente enxerga apenas a própria zona, e grupos tendem a discutir o que todos já sabem. Integrar fragmentos é trabalho do líder, e quem decide só pelo que ouve em voz alta perde o que o silêncio esconde.' },

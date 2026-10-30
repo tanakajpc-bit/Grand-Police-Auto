@@ -2,7 +2,7 @@
 
 Simulação de gestão de crise (reféns em uma agência bancária) em um único arquivo HTML, em português do Brasil. O jogador recruta a equipe, fecha o perímetro, conduz até 8 rodadas de cerco (negociação, comunicação com os stakeholders, investigação, tática) e recebe nota, jornal, selos e debrief. A perspectiva é a de quem protege: a violência não rende nota.
 
-Artefato publicado: https://claude.ai/artifact/7yQmLNrrYJrJQpEDKrXH5P (versão 17: interface enxuta, atributos dos agentes ao passar o mouse e a L2.1 refeita, com a conta de feridos e mortos conferida pessoa por pessoa). O que se publica é `perimetro.html`, só o conteúdo da página (a publicação o embrulha com doctype, charset e viewport). Para abrir o jogo direto do disco use `perimetro-standalone.html`: o mesmo conteúdo dentro desse esqueleto, que é também o arquivo que os testes de navegador carregam.
+Artefato publicado: https://claude.ai/artifact/7yQmLNrrYJrJQpEDKrXH5P (versão 18: interface enxuta, atributos dos agentes ao passar o mouse, a L2.1 refeita, com a conta de feridos e mortos conferida pessoa por pessoa, e a L2.3 refeita, em que fechar a rota que o líder planejou passa a pesar na negociação). O que se publica é `perimetro.html`, só o conteúdo da página (a publicação o embrulha com doctype, charset e viewport). Para abrir o jogo direto do disco use `perimetro-standalone.html`: o mesmo conteúdo dentro desse esqueleto, que é também o arquivo que os testes de navegador carregam.
 
 ## Estrutura
 
