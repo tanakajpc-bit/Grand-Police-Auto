@@ -127,7 +127,7 @@ function scoreHTML() {
   ];
   const hint = nextGradeHint(S, dims);
   return `<div class="scorehead"><div style="text-align:center">${radarSVG(dims)}</div>
-    <div class="grid" style="gap:10px"><div class="eyebrow">Nota final</div><h1 class="sr">Pontuação final: nota ${S.grade}, ${dec(S.total)} de 100</h1><div class="grade ${S.grade}" aria-hidden="true">${S.grade}</div><div class="bigscore" aria-hidden="true">${dec(S.total)} / 100</div>
+    <div class="grid" style="gap:10px"><div class="eyebrow">Nota final${G.code ? ` · turma ${G.code}` : ''}</div><h1 class="sr">Pontuação final: nota ${S.grade}, ${dec(S.total)} de 100</h1><div class="grade ${S.grade}" aria-hidden="true">${S.grade}</div><div class="bigscore" aria-hidden="true">${dec(S.total)} / 100</div>
     ${S.capped ? `<div class="insight warn">${icon('alert', '', 1.8)}<span>Teto aplicado: a pontuação bruta (${dec(S.raw)}) foi limitada a ${S.cap} ${capReason(S, H, E)}</span></div>` : ''}
     ${S.penal ? `<div class="insight bad">${icon('alert', '', 1.8)}<span>Penalidade: −${S.penal} pontos por ${E.agentsHurt.length} ${plural(E.agentsHurt.length, 'agente ferido', 'agentes feridos')} em ação (${E.agentsHurt.map(id => shortName(agentById(id).nome)).join(', ')}). Quem protege também conta os próprios.</span></div>` : ''}
     <p class="muted" style="max-width:520px">${S.grade === 'S' ? 'Operação exemplar.' : S.grade === 'A' ? 'Excelente condução, com pouco a corrigir.' : S.grade === 'B' ? 'Boa condução, com trade-offs visíveis.' : S.grade === 'C' ? 'Resultado aceitável, mas com perdas evitáveis.' : S.grade === 'D' ? 'Resultado fraco: as decisões se acumularam contra você.' : 'Operação malsucedida. A falha também ensina: veja o debrief.'}</p>
@@ -331,9 +331,10 @@ const focusFirst = (...sels) => { for (const q of sels) { const el = $app.queryS
 function setPhase(p) { G.phase = p; saveGame(); render(); }
 
 ACT.diff = when(inMenu, d => { UI.diffSel = d.v; render(); });
-function startNew() { SAVE_LOST = false; resetUI(); newGame(UI.diffSel, { noLimit: UI.noLimit }); setPhase('briefing'); }
+function startNew() { SAVE_LOST = false; resetUI(); newGame(UI.diffSel, { noLimit: UI.noLimit, code: UI.code }); setPhase('briefing'); }
 /* Iniciar por cima de uma partida em andamento pergunta antes: o botão primário fica ao lado do "Continuar" e um clique errado apagaria o jogo. */
 ACT.start = when(inMenu, () => {
+  const inp = document.getElementById('turma'); if (inp) UI.code = inp.value;   // o código digitado vale mesmo sem o campo perder o foco
   const sv = loadSave();
   if (sv && sv.phase !== 'post' && !UI.newConfirm) { UI.newConfirm = true; render(); return; }
   startNew();
@@ -395,6 +396,8 @@ ACT.torecruit = when(() => at('recruit'), () => {
 CHG.camplus = when(() => at('recruit'), v => { if (!has(ATTR, v)) return; G.camAdj.plus = v; if (G.camAdj.minus === v) G.camAdj.minus = Object.keys(ATTR).find(k => k !== v); saveGame(); render(); });
 CHG.camminus = when(() => at('recruit'), v => { if (!has(ATTR, v)) return; G.camAdj.minus = v; if (G.camAdj.plus === v) G.camAdj.plus = Object.keys(ATTR).find(k => k !== v); saveGame(); render(); });
 CHG.nolimit = (v, d, el) => { UI.noLimit = !!el.checked; };
+CHG.turma = v => { UI.code = String(v).slice(0, 32); };   // sem redesenhar: o clique em "Iniciar" que tirou o foco do campo não pode se perder
+ACT.som = (d, el) => { SOM.toggle(); if (el && el.isConnected) { el.setAttribute('aria-pressed', SOM.on); el.title = (SOM.on ? 'Desligar' : 'Ligar') + ' a trilha sonora'; el.innerHTML = icon(SOM.on ? 'som' : 'mudo'); } };
 ACT.selchip = when(() => at('perimeter'), d => { UI.sel = (UI.sel && UI.sel.t === d.t && UI.sel.id === d.id) ? null : { t: d.t, id: d.id }; render(); });
 ACT.place = when(() => at('perimeter'), d => {
   if (UI.sel) { if (UI.sel.t === 'a') G.az[UI.sel.id] = d.z; else G.gz[UI.sel.id] = d.z; UI.sel = null; saveGame(); }
@@ -550,6 +553,7 @@ function draw() {
   else stopTimer();
   // animação dos medidores do feedback
   requestAnimationFrame(() => requestAnimationFrame(() => document.querySelectorAll('.meter>i[data-to]').forEach(i => { i.style.width = i.dataset.to + '%'; })));
+  SOM.update();
 }
 $app.addEventListener('click', e => {
   const el = e.target.closest('[data-act]');
@@ -597,7 +601,7 @@ document.addEventListener('keydown', e => {
 });
 onSaveFail = () => toast('COMANDO', 'Não foi possível salvar a partida neste navegador (armazenamento bloqueado ou cheio). Você pode seguir jogando, mas ela não será retomada se a página for recarregada.', 'warn');
 /* O relógio da rodada espera com a aba oculta, e o que sobrava dele é salvo ao sair da página (recarregar continua de onde parou). */
-document.addEventListener('visibilitychange', () => { if (document.hidden) pauseTimer(); else resumeTimer(); });
+document.addEventListener('visibilitychange', () => { if (document.hidden) { pauseTimer(); SOM.pausa(); } else { resumeTimer(); SOM.retoma(); } });
 window.addEventListener('pagehide', () => { if (G && UI.timerId) G.tleft = timeLeft(); saveGame(); });
-window.PERIMETRO = { get G() { return G; }, newGame, startRound, resolveDecisions, chooseEvent, finishRound, addDecision, computeScore, zoneCoverage, intervProb, negoParts, autoPlace, confirmPerimeter, render, ACT, UI };
+window.PERIMETRO = { get G() { return G; }, newGame, startRound, resolveDecisions, chooseEvent, finishRound, addDecision, computeScore, zoneCoverage, intervProb, negoParts, autoPlace, confirmPerimeter, render, ACT, UI, SOM };
 render();

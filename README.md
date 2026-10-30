@@ -2,7 +2,7 @@
 
 Simulação de gestão de crise (reféns em uma agência bancária) em um único arquivo HTML, em português do Brasil. O jogador recruta a equipe, fecha o perímetro, conduz até 8 rodadas de cerco (negociação, comunicação com os stakeholders, investigação, tática) e recebe nota, jornal, selos e debrief. A perspectiva é a de quem protege: a violência não rende nota.
 
-Artefato publicado: https://claude.ai/artifact/7yQmLNrrYJrJQpEDKrXH5P (versão 18: interface enxuta, atributos dos agentes ao passar o mouse, a L2.1 refeita, com a conta de feridos e mortos conferida pessoa por pessoa, e a L2.3 refeita, em que fechar a rota que o líder planejou passa a pesar na negociação). O que se publica é `perimetro.html`, só o conteúdo da página (a publicação o embrulha com doctype, charset e viewport). Para abrir o jogo direto do disco use `perimetro-standalone.html`: o mesmo conteúdo dentro desse esqueleto, que é também o arquivo que os testes de navegador carregam.
+Artefato publicado: https://claude.ai/artifact/7yQmLNrrYJrJQpEDKrXH5P (versão 19: interface enxuta, atributos dos agentes ao passar o mouse e as auditorias L2.1, L2.3 e L2.5 refeitas, com o código da turma e a trilha sonora que o documento pedia). O que se publica é `perimetro.html`, só o conteúdo da página (a publicação o embrulha com doctype, charset e viewport). Para abrir o jogo direto do disco use `perimetro-standalone.html`: o mesmo conteúdo dentro desse esqueleto, que é também o arquivo que os testes de navegador carregam.
 
 ## Estrutura
 
@@ -30,6 +30,11 @@ A tela mostra o que decide; o porquê de cada número fica numa dica flutuante (
 - `class="hastip"` com um filho `<span class="tipc">…</span>`: uma dica com HTML. `infoTip(rótulo, html)` gera o “ⓘ” das regras longas.
 
 O texto da dica continua no HTML da página (o `.tipc` só fica oculto), assim como o que está dentro de `<details>`: as bancadas `verdade.js` e `limites.js`, que leem o HTML, continuam conferindo esses textos.
+
+## Código da turma e trilha sonora (L2.5 refeita)
+
+- Código da turma: campo opcional no menu. Com o mesmo código, todas as equipes jogam o mesmo cenário (perfil do líder, rotas candidatas, rota planejada, cúmplice) e recebem a mesma carta de evento em cada rodada, sempre que a carta cabe no estado da equipe; com o mesmo código e as mesmas decisões, a partida se repete inteira, também depois de recarregar. Só letras e dígitos contam (`hbs turma a` = `HBS-Turma-A`). O gerador (`mulberry`, com o estado em `G.rng`) vai no save; a carta da rodada sai de um sorteio próprio de código + rodada em `drawEvent`. Sem código, o motor usa `Math.random` exatamente como antes (o `comparar.js` contra a versão 18 dá zero divergência). Provas: `tools/sim/semente.js` e `tools/ui/turma.js`.
+- Trilha sonora: o módulo `SOM` em `ui1.js`, só Web Audio, sem arquivos. Começa desligada; o botão ao lado de Menu liga e desliga, e a escolha fica guardada no navegador (depois de recarregar, volta no primeiro clique). A intensidade segue a agitação que o painel mostra, nunca a real, e cala no desfecho e na nota.
 
 ## Fluxo de trabalho
 

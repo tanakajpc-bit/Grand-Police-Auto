@@ -651,6 +651,12 @@ small.unav{margin:0}
 .check{display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--ink2);cursor:pointer;line-height:1.4}
 .check input{width:18px;height:18px;margin:1px 0 0;accent-color:var(--amber);flex:none;cursor:pointer}
 .check:hover{color:var(--ink)}
+/* código da turma (L2.5 refeita): uma linha discreta, abaixo do cronômetro sem limite */
+.turma{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:13px;color:var(--ink2)}
+.turma input{width:11em;max-width:100%;min-width:0;background:#0d1523;border:1px solid var(--line2);border-radius:7px;padding:6px 9px;color:var(--ink);font:13px var(--mono);text-transform:uppercase;letter-spacing:.04em;transition:border-color .15s}
+.turma input::placeholder{color:var(--ink3);text-transform:none;letter-spacing:0;font-family:var(--sans)}
+.turma input:hover,.turma input:focus{border-color:var(--blue)}
+.turma .helptip{margin-left:0}
 @media (max-height:820px){.sky{height:min(36vh,400px)}}
 /* briefing */
 .skipb{animation:skipaway .3s ease 4.4s forwards}
@@ -724,4 +730,6 @@ b.chg{animation:nflash 1.2s ease}
 
 /* L2.2: botão de menu na barra superior e tela de falha */
 .hudmenu{color:var(--ink2)}
+.hudsom{color:var(--ink3);padding:5px 7px;line-height:0}.hudsom .ico{width:17px;height:17px;color:currentColor}
+.hudsom:hover{color:var(--ink)}.hudsom[aria-pressed=true]{color:var(--amber)}
 .card.fatal{max-width:640px;margin:12vh auto 0;display:grid;gap:12px}

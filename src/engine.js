@@ -5,7 +5,15 @@ let G = null;
 const SAVE_KEY = 'perimetro_save_v2';
 
 const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
-const rnd = () => Math.random();
+/* Sorteio. Sem código da turma, Math.random. Com código (L2.5 refeita: o documento pede uma semente definida pelo facilitador), um gerador
+   próprio (mulberry32) cujo estado fica na partida e vai no save: o mesmo código dá o mesmo cenário, as cartas de evento saem de um sorteio
+   à parte por rodada (drawEvent), para que a turma inteira enfrente os mesmos choques, e o mesmo código com as mesmas decisões repete a
+   partida inteira, inclusive depois de recarregar a página. */
+const hashCode = s => { let h = 2166136261; for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619); return h | 0; };
+function mulberry(st) { let t = st.s = (st.s | 0) + 0x6D2B79F5 | 0; t = Math.imul(t ^ t >>> 15, 1 | t); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }
+/* Só letras e dígitos contam: "hbs turma a", "HBS-Turma-A" e "HBSTURMAA" são o mesmo código, e "Ação" é "ACAO". */
+const normCode = c => String(c == null ? '' : c).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 16) || null;
+const rnd = () => G && G.rng ? mulberry(G.rng) : Math.random();
 const ri = (a, b) => a + Math.floor(rnd() * (b - a + 1));
 const pick = a => a[Math.floor(rnd() * a.length)];
 function wpick(items, wf) {
@@ -25,13 +33,14 @@ const PR_ = () => PROFILES[G.profile];
 
 /* ---------------- Novo jogo ---------------- */
 function newGame(diffKey, opts = {}) {
-  const D = DIFF[diffKey];
+  const D = DIFF[diffKey], code = normCode(opts.code);
+  G = { rng: code ? { s: hashCode(code) } : null };   // o cenário já sai do gerador da turma
   const prof = pick(Object.keys(PROFILES));
   const wf = id => PROFILES[prof].routeW[id];
   const routes = wsample(ZONES.map(z => z.id), wf, 4);
   const route = wpick(routes, wf);
   G = {
-    ver: 2, diff: diffKey, noLimit: !!opts.noLimit, phase: 'briefing', stage: null, round: 0,
+    ver: 2, diff: diffKey, code, rng: G.rng, noLimit: !!opts.noLimit, phase: 'briefing', stage: null, round: 0,
     credits: CREDITOS_INICIAIS, spent: { rec: 0, equip: 0, intel: 0, ops: 0, plantao: 0 }, deficit: 0, tocLog: [], spendLog: [], creditsHist: [],
     team: [], gear: [], az: {}, gz: {}, fat: {}, transit: {}, away: {}, camAdj: { plus: 'tat', minus: 'com' },
     profile: prof, agit: PROFILES[prof].start + (diffKey === 'caotico' ? 5 : diffKey === 'protocolar' ? -5 : 0),
@@ -81,6 +90,7 @@ function migrateSave(s) {
   s.deficit = s.deficit || 0; s.tocLog = s.tocLog || []; s.spendLog = s.spendLog || []; s.creditsHist = s.creditsHist || [];
   Object.keys(s.transit || {}).forEach(id => { const t = s.transit[id]; s.transit[id] = t === true ? 2 : t === false || t == null ? 0 : +t || 0; });
   if (s.tleft === undefined) s.tleft = null;   // L2.2: tempo que sobrava no cronômetro da rodada
+  if (s.code === undefined) s.code = null; if (s.rng === undefined) s.rng = null;   // L2.5 refeita: partidas de antes do código da turma
   /* campos que só entraram depois: o que faltar ganha o valor neutro (a validação depois exige o tipo certo) */
   SAVE_NUMS.forEach(k => { if (s[k] === undefined) s[k] = 0; }); SAVE_BOOLS.forEach(k => { if (s[k] === undefined) s[k] = false; });
   if (s.frame === undefined) s.frame = 'ganho';
@@ -147,6 +157,8 @@ function validSave(s) {
   if (![s.team, s.gear, s.routes, s.queue, s.log, s.hist, s.tocLog, s.spendLog, s.hl, s.pendingIntel, s.hints, s.radio, s.usedEvents].every(Array.isArray)) return false;
   if (![s.hostages, s.nego, s.stk, s.K, s.az, s.gz, s.fat, s.transit, s.away, s.support, s.spent, s.stats, s.ev, s.p1intel, s.camAdj].every(isObj)) return false;
   // números e marcas que as fórmulas leem (um texto aqui viraria NaN na tela)
+  // código da turma: sem código, os dois nulos; com código, o texto já normalizado e o estado do gerador (um inteiro de 32 bits)
+  if (s.code === null ? s.rng !== null : !(typeof s.code === 'string' && normCode(s.code) === s.code && isObj(s.rng) && isInt(s.rng.s, -2147483648, 2147483647))) return false;
   if (!isInt(s.assail, 1, 9) || typeof s.accomplice !== 'boolean' || !SAVE_NUMS.every(k => isNum(s[k], -1e5, 1e5)) || !SAVE_BOOLS.every(k => typeof s[k] === 'boolean') || (s.frame !== 'ganho' && s.frame !== 'perda')) return false;
   if (!Object.entries(s.stats).every(([k, v]) => k === 'initCov' ? isObj(v) && Object.entries(v).every(([z, c]) => isZoneId(z) && isNum(c, 0, 100)) : typeof v === 'boolean' || isNum(v))) return false;
   if (!isObj(s.attended) || !isObj(s.hPref) || (s.pendingDeath != null && !(isObj(s.pendingDeath) && isNum(s.pendingDeath.left, 0, 99) && isNum(s.pendingDeath.p, 0, 1))) || (s.perimLog != null && !(Array.isArray(s.perimLog) && s.perimLog.every(t => typeof t === 'string')))) return false;
@@ -711,8 +723,13 @@ function startRound() {
 /* ---------------- Decisões / fila ---------------- */
 const slotsLeft = () => D_().slots - G.queue.reduce((s, d) => s + d.slots, 0);
 function queueCost(d) { return d.cost || 0; }
+/* O identificador da ordem só precisa ser único dentro do plano da rodada, onde é procurado. Até a v18 era Date.now() + Math.random(): perto de
+   1,8 trilhão de milissegundos o número guarda só 1/4096 da fração, e duas ordens criadas no mesmo milissegundo (robôs e testes; à mão, não
+   dá) podiam receber o mesmo número, e trocar a negociação tirava do plano a ordem errada. A L2.5 refeita achou isso pelo código da turma.
+   Agora o número fica sempre acima do maior do plano; o Math.random continua sendo chamado uma vez, como antes, para as sementes da bancada
+   (tools/sim) jogarem exatamente as mesmas partidas da v18. */
 function addDecision(d) {
-  d.id = Date.now() + Math.random();
+  d.id = Math.max(Date.now(), G.queue.reduce((m, q) => Math.max(m, +q.id || 0), 0) + 1) + Math.random();
   if (d.kind === 'interv') { G.queue.forEach(q => G.credits += queueCost(q)); G.queue = []; d.slots = D_().slots; G.queue.push(d); return { ok: true }; }
   if (G.queue.some(q => q.kind === 'interv')) return { ok: false, msg: 'A intervenção ocupa a rodada inteira. Remova-a para tomar outras decisões.' };
   if (d.kind === 'nego') { const old = G.queue.find(q => q.kind === 'nego'); if (old) removeDecision(old.id); }
@@ -1070,19 +1087,27 @@ const EVENT_FX = {
     { label: 'Ignorar o sinal', hint: 'Sem risco, sem oportunidade.', run: R => { L(R, 'info', 'split', 'Você registra o sinal e não age. O momento passa.'); } }] }
 };
 const HEAVY = ['tiroteio', 'segundo', 'cumplice', 'live', 'infiltrado', 'passamal', 'proposta'];
+/* Com código da turma, a carta da rodada sai de um sorteio próprio da rodada (código + rodada), que não depende do que a equipe fez antes:
+   a chance de haver carta é a mesma para todas, e cada carta recebe um número fixo; entre as que podem sair, vence a de menor
+   −ln(1 − u)/peso (sorteio ponderado de Efraimidis e Spirakis, com a mesma probabilidade de wpick). Se a carta da vez não cabe no estado
+   de uma equipe (já saiu, ou não é elegível), sai a seguinte da mesma fila. */
 function drawEvent() {
-  const D = D_(); if (G.round < 2 || G.quietRound === G.round || rnd() > D.evChance) return null;
+  const D = D_(), st = G.code ? { s: hashCode(G.code + '/carta/' + G.round) } : null, er = st ? () => mulberry(st) : rnd;
+  if (G.round < 2 || G.quietRound === G.round || er() > D.evChance) return null;
   const avgFat = deployed().length ? deployed().reduce((s, id) => s + (G.fat[id] || 0), 0) / deployed().length : 0;
   const pool = EVENT_DEFS.filter(e => !G.usedEvents.includes(e.id) && EVENT_FX[e.id].elig(G));
   if (!pool.length) return null;
-  const e = wpick(pool, x => {
+  const wf = x => {
     let w = 1;
     if ((x.id === 'heli' || x.id === 'live') && G.media > 60) w *= 2;
     if (x.id === 'fadiga') w *= (avgFat >= 2 ? 3 : .5);
     if (x.id === 'deadline') w *= 4;
     if (x.id === 'prefeito' && G.round >= 4) w *= 2;
     return w;
-  });
+  };
+  let e;
+  if (st) { const u = EVENT_DEFS.map(() => er()), key = x => -Math.log(1 - u[EVENT_DEFS.indexOf(x)]) / wf(x); e = pool.reduce((a, x) => key(x) < key(a) ? x : a); }
+  else e = wpick(pool, wf);
   G.usedEvents.push(e.id);
   if (HEAVY.includes(e.id)) G.quietRound = G.round + 1;   // respiro: a rodada seguinte não tem carta de evento
   return e.id;

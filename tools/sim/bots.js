@@ -257,7 +257,7 @@ function policyFuzz(rng) {
 /* ---------- corredor ---------- */
 function playGame(A, diff, pol, seed, opt = {}) {
   A.reseed(seed);
-  A.newGame(diff);
+  A.newGame(diff, { code: opt.code });   // opt.code: código da turma (sem ele, o motor usa Math.random, que aqui é o PRNG da semente)
   const G = A.G;
   pol.setup(A);
   startSiege(A);

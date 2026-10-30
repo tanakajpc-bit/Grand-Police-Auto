@@ -656,6 +656,12 @@ small.unav{margin:0}
 .check{display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--ink2);cursor:pointer;line-height:1.4}
 .check input{width:18px;height:18px;margin:1px 0 0;accent-color:var(--amber);flex:none;cursor:pointer}
 .check:hover{color:var(--ink)}
+/* código da turma (L2.5 refeita): uma linha discreta, abaixo do cronômetro sem limite */
+.turma{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:13px;color:var(--ink2)}
+.turma input{width:11em;max-width:100%;min-width:0;background:#0d1523;border:1px solid var(--line2);border-radius:7px;padding:6px 9px;color:var(--ink);font:13px var(--mono);text-transform:uppercase;letter-spacing:.04em;transition:border-color .15s}
+.turma input::placeholder{color:var(--ink3);text-transform:none;letter-spacing:0;font-family:var(--sans)}
+.turma input:hover,.turma input:focus{border-color:var(--blue)}
+.turma .helptip{margin-left:0}
 @media (max-height:820px){.sky{height:min(36vh,400px)}}
 /* briefing */
 .skipb{animation:skipaway .3s ease 4.4s forwards}
@@ -729,6 +735,8 @@ b.chg{animation:nflash 1.2s ease}
 
 /* L2.2: botão de menu na barra superior e tela de falha */
 .hudmenu{color:var(--ink2)}
+.hudsom{color:var(--ink3);padding:5px 7px;line-height:0}.hudsom .ico{width:17px;height:17px;color:currentColor}
+.hudsom:hover{color:var(--ink)}.hudsom[aria-pressed=true]{color:var(--amber)}
 .card.fatal{max-width:640px;margin:12vh auto 0;display:grid;gap:12px}
 </style>
 <div id="edge" class="edge" aria-hidden="true"></div><div id="toasts" role="status" aria-live="polite"></div><div id="app"></div>
@@ -818,7 +826,9 @@ const IC = {
   radar:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><path d="M12 12l6-6"/>',
   stairs:'<path d="M3 20h5v-4h5v-4h5V8h3"/>',
   road:'<path d="M8 3L4 21M16 3l4 18M12 4v3M12 11v3M12 18v3"/>',
-  wait:'<path d="M6 3h12M6 21h12M7 3c0 5 5 6 5 9s-5 4-5 9M17 3c0 5-5 6-5 9s5 4 5 9"/>'
+  wait:'<path d="M6 3h12M6 21h12M7 3c0 5 5 6 5 9s-5 4-5 9M17 3c0 5-5 6-5 9s5 4 5 9"/>',
+  som:'<path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16.5 8.5a5 5 0 010 7M19 6a8.5 8.5 0 010 12"/>',
+  mudo:'<path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M17 9.5l5 5M22 9.5l-5 5"/>'
 };
 const icon = (n, cls = 'ico', sw = 1.7) =>
   `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[n] || IC.alert}</svg>`;
@@ -1207,7 +1217,15 @@ let G = null;
 const SAVE_KEY = 'perimetro_save_v2';
 
 const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
-const rnd = () => Math.random();
+/* Sorteio. Sem código da turma, Math.random. Com código (L2.5 refeita: o documento pede uma semente definida pelo facilitador), um gerador
+   próprio (mulberry32) cujo estado fica na partida e vai no save: o mesmo código dá o mesmo cenário, as cartas de evento saem de um sorteio
+   à parte por rodada (drawEvent), para que a turma inteira enfrente os mesmos choques, e o mesmo código com as mesmas decisões repete a
+   partida inteira, inclusive depois de recarregar a página. */
+const hashCode = s => { let h = 2166136261; for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619); return h | 0; };
+function mulberry(st) { let t = st.s = (st.s | 0) + 0x6D2B79F5 | 0; t = Math.imul(t ^ t >>> 15, 1 | t); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }
+/* Só letras e dígitos contam: "hbs turma a", "HBS-Turma-A" e "HBSTURMAA" são o mesmo código, e "Ação" é "ACAO". */
+const normCode = c => String(c == null ? '' : c).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 16) || null;
+const rnd = () => G && G.rng ? mulberry(G.rng) : Math.random();
 const ri = (a, b) => a + Math.floor(rnd() * (b - a + 1));
 const pick = a => a[Math.floor(rnd() * a.length)];
 function wpick(items, wf) {
@@ -1227,13 +1245,14 @@ const PR_ = () => PROFILES[G.profile];
 
 /* ---------------- Novo jogo ---------------- */
 function newGame(diffKey, opts = {}) {
-  const D = DIFF[diffKey];
+  const D = DIFF[diffKey], code = normCode(opts.code);
+  G = { rng: code ? { s: hashCode(code) } : null };   // o cenário já sai do gerador da turma
   const prof = pick(Object.keys(PROFILES));
   const wf = id => PROFILES[prof].routeW[id];
   const routes = wsample(ZONES.map(z => z.id), wf, 4);
   const route = wpick(routes, wf);
   G = {
-    ver: 2, diff: diffKey, noLimit: !!opts.noLimit, phase: 'briefing', stage: null, round: 0,
+    ver: 2, diff: diffKey, code, rng: G.rng, noLimit: !!opts.noLimit, phase: 'briefing', stage: null, round: 0,
     credits: CREDITOS_INICIAIS, spent: { rec: 0, equip: 0, intel: 0, ops: 0, plantao: 0 }, deficit: 0, tocLog: [], spendLog: [], creditsHist: [],
     team: [], gear: [], az: {}, gz: {}, fat: {}, transit: {}, away: {}, camAdj: { plus: 'tat', minus: 'com' },
     profile: prof, agit: PROFILES[prof].start + (diffKey === 'caotico' ? 5 : diffKey === 'protocolar' ? -5 : 0),
@@ -1283,6 +1302,7 @@ function migrateSave(s) {
   s.deficit = s.deficit || 0; s.tocLog = s.tocLog || []; s.spendLog = s.spendLog || []; s.creditsHist = s.creditsHist || [];
   Object.keys(s.transit || {}).forEach(id => { const t = s.transit[id]; s.transit[id] = t === true ? 2 : t === false || t == null ? 0 : +t || 0; });
   if (s.tleft === undefined) s.tleft = null;   // L2.2: tempo que sobrava no cronômetro da rodada
+  if (s.code === undefined) s.code = null; if (s.rng === undefined) s.rng = null;   // L2.5 refeita: partidas de antes do código da turma
   /* campos que só entraram depois: o que faltar ganha o valor neutro (a validação depois exige o tipo certo) */
   SAVE_NUMS.forEach(k => { if (s[k] === undefined) s[k] = 0; }); SAVE_BOOLS.forEach(k => { if (s[k] === undefined) s[k] = false; });
   if (s.frame === undefined) s.frame = 'ganho';
@@ -1349,6 +1369,8 @@ function validSave(s) {
   if (![s.team, s.gear, s.routes, s.queue, s.log, s.hist, s.tocLog, s.spendLog, s.hl, s.pendingIntel, s.hints, s.radio, s.usedEvents].every(Array.isArray)) return false;
   if (![s.hostages, s.nego, s.stk, s.K, s.az, s.gz, s.fat, s.transit, s.away, s.support, s.spent, s.stats, s.ev, s.p1intel, s.camAdj].every(isObj)) return false;
   // números e marcas que as fórmulas leem (um texto aqui viraria NaN na tela)
+  // código da turma: sem código, os dois nulos; com código, o texto já normalizado e o estado do gerador (um inteiro de 32 bits)
+  if (s.code === null ? s.rng !== null : !(typeof s.code === 'string' && normCode(s.code) === s.code && isObj(s.rng) && isInt(s.rng.s, -2147483648, 2147483647))) return false;
   if (!isInt(s.assail, 1, 9) || typeof s.accomplice !== 'boolean' || !SAVE_NUMS.every(k => isNum(s[k], -1e5, 1e5)) || !SAVE_BOOLS.every(k => typeof s[k] === 'boolean') || (s.frame !== 'ganho' && s.frame !== 'perda')) return false;
   if (!Object.entries(s.stats).every(([k, v]) => k === 'initCov' ? isObj(v) && Object.entries(v).every(([z, c]) => isZoneId(z) && isNum(c, 0, 100)) : typeof v === 'boolean' || isNum(v))) return false;
   if (!isObj(s.attended) || !isObj(s.hPref) || (s.pendingDeath != null && !(isObj(s.pendingDeath) && isNum(s.pendingDeath.left, 0, 99) && isNum(s.pendingDeath.p, 0, 1))) || (s.perimLog != null && !(Array.isArray(s.perimLog) && s.perimLog.every(t => typeof t === 'string')))) return false;
@@ -1913,8 +1935,13 @@ function startRound() {
 /* ---------------- Decisões / fila ---------------- */
 const slotsLeft = () => D_().slots - G.queue.reduce((s, d) => s + d.slots, 0);
 function queueCost(d) { return d.cost || 0; }
+/* O identificador da ordem só precisa ser único dentro do plano da rodada, onde é procurado. Até a v18 era Date.now() + Math.random(): perto de
+   1,8 trilhão de milissegundos o número guarda só 1/4096 da fração, e duas ordens criadas no mesmo milissegundo (robôs e testes; à mão, não
+   dá) podiam receber o mesmo número, e trocar a negociação tirava do plano a ordem errada. A L2.5 refeita achou isso pelo código da turma.
+   Agora o número fica sempre acima do maior do plano; o Math.random continua sendo chamado uma vez, como antes, para as sementes da bancada
+   (tools/sim) jogarem exatamente as mesmas partidas da v18. */
 function addDecision(d) {
-  d.id = Date.now() + Math.random();
+  d.id = Math.max(Date.now(), G.queue.reduce((m, q) => Math.max(m, +q.id || 0), 0) + 1) + Math.random();
   if (d.kind === 'interv') { G.queue.forEach(q => G.credits += queueCost(q)); G.queue = []; d.slots = D_().slots; G.queue.push(d); return { ok: true }; }
   if (G.queue.some(q => q.kind === 'interv')) return { ok: false, msg: 'A intervenção ocupa a rodada inteira. Remova-a para tomar outras decisões.' };
   if (d.kind === 'nego') { const old = G.queue.find(q => q.kind === 'nego'); if (old) removeDecision(old.id); }
@@ -2272,19 +2299,27 @@ const EVENT_FX = {
     { label: 'Ignorar o sinal', hint: 'Sem risco, sem oportunidade.', run: R => { L(R, 'info', 'split', 'Você registra o sinal e não age. O momento passa.'); } }] }
 };
 const HEAVY = ['tiroteio', 'segundo', 'cumplice', 'live', 'infiltrado', 'passamal', 'proposta'];
+/* Com código da turma, a carta da rodada sai de um sorteio próprio da rodada (código + rodada), que não depende do que a equipe fez antes:
+   a chance de haver carta é a mesma para todas, e cada carta recebe um número fixo; entre as que podem sair, vence a de menor
+   −ln(1 − u)/peso (sorteio ponderado de Efraimidis e Spirakis, com a mesma probabilidade de wpick). Se a carta da vez não cabe no estado
+   de uma equipe (já saiu, ou não é elegível), sai a seguinte da mesma fila. */
 function drawEvent() {
-  const D = D_(); if (G.round < 2 || G.quietRound === G.round || rnd() > D.evChance) return null;
+  const D = D_(), st = G.code ? { s: hashCode(G.code + '/carta/' + G.round) } : null, er = st ? () => mulberry(st) : rnd;
+  if (G.round < 2 || G.quietRound === G.round || er() > D.evChance) return null;
   const avgFat = deployed().length ? deployed().reduce((s, id) => s + (G.fat[id] || 0), 0) / deployed().length : 0;
   const pool = EVENT_DEFS.filter(e => !G.usedEvents.includes(e.id) && EVENT_FX[e.id].elig(G));
   if (!pool.length) return null;
-  const e = wpick(pool, x => {
+  const wf = x => {
     let w = 1;
     if ((x.id === 'heli' || x.id === 'live') && G.media > 60) w *= 2;
     if (x.id === 'fadiga') w *= (avgFat >= 2 ? 3 : .5);
     if (x.id === 'deadline') w *= 4;
     if (x.id === 'prefeito' && G.round >= 4) w *= 2;
     return w;
-  });
+  };
+  let e;
+  if (st) { const u = EVENT_DEFS.map(() => er()), key = x => -Math.log(1 - u[EVENT_DEFS.indexOf(x)]) / wf(x); e = pool.reduce((a, x) => key(x) < key(a) ? x : a); }
+  else e = wpick(pool, wf);
   G.usedEvents.push(e.id);
   if (HEAVY.includes(e.id)) G.quietRound = G.round + 1;   // respiro: a rodada seguinte não tem carta de evento
   return e.id;
@@ -2567,10 +2602,10 @@ function badgeEarned(id) {
    ===================================================================== */
 const $app = document.getElementById('app');
 /* Estado de tela que não pertence a nenhuma partida. resetUI() devolve tudo isto ao zero quando a partida muda (nova, retomada, encerrada);
-   as preferências (dificuldade escolhida, cronômetro sem limite, manchetes pausadas) ficam. */
+   as preferências (dificuldade escolhida, cronômetro sem limite, código da turma, manchetes pausadas) ficam. */
 const UI0 = { tab: 'tatica', sel: null, repoAgent: '', repoZone: '', apoioZone: '', post: 'score', replayR: 1, tutor: false, ivConfirm: false, emptyConfirm: false,
   newConfirm: false, menuConfirm: false, msg: '', pickZone: null, lvl: 1, tabAnim: false, cut: null, paused: false };
-const UI = Object.assign({ diffSel: 'complexo', noLimit: false, tkPause: false, timerId: null, deadline: 0, timerRound: -1 }, UI0);
+const UI = Object.assign({ diffSel: 'complexo', noLimit: false, code: '', tkPause: false, timerId: null, deadline: 0, timerRound: -1 }, UI0);
 function resetUI() { stopTimer(); Object.assign(UI, UI0, { timerRound: -1, deadline: 0 }); }
 
 const fmt = n => Math.round(n).toLocaleString('pt-BR');
@@ -2750,10 +2785,11 @@ function renderMenu() {
       <div class="grid">
         <div><div class="eyebrow" id="difflbl">Dificuldade</div><div class="diffs" role="radiogroup" aria-labelledby="difflbl" style="margin-top:8px">${dcards}</div></div>
         <div class="row"><button class="btn primary lg" data-act="start">Iniciar simulação</button>
-          ${save ? `<button class="btn lg" data-act="continue">Continuar partida <span class="faint" style="font-weight:400">(${DIFF[save.diff].nome}, ${saveLabel(save)})</span></button>` : ''}
+          ${save ? `<button class="btn lg" data-act="continue">Continuar partida <span class="faint" style="font-weight:400">(${DIFF[save.diff].nome}, ${saveLabel(save)}${save.code ? ', turma ' + save.code : ''})</span></button>` : ''}
         </div>
         ${lost ? `<div class="insight warn" role="status">${icon('alert', '', 1.8)}<span>A partida salva neste navegador estava corrompida ou era de outra versão e foi descartada. Uma nova simulação começa do zero.</span></div>` : ''}
         <label class="check"><input type="checkbox" id="nolimit" data-chg="nolimit" ${UI.noLimit ? 'checked' : ''}><span>Sem limite de tempo (acessibilidade)</span></label>
+        <div class="turma"><label for="turma">Código da turma</label><input type="text" id="turma" data-chg="turma" maxlength="16" value="${esc(UI.code)}" placeholder="opcional" autocomplete="off" autocapitalize="characters" spellcheck="false">${infoTip('', 'Para turmas: com o mesmo código, todas as equipes jogam o mesmo cenário e recebem as mesmas cartas de evento nas mesmas rodadas, o que torna as notas comparáveis. Com o mesmo código e as mesmas decisões, a partida se repete. Só letras e números contam. Em branco, cada partida é sorteada.')}</div>
       </div>
       <div class="card">
         <h2 class="h3">Sua missão</h2>
@@ -2778,7 +2814,65 @@ function menuConfirmModal() {
     <p class="muted">A partida fica salva neste navegador e pode ser retomada em “Continuar partida”.${G && G.phase === 'siege' && G.stage === 'panel' && !G.noLimit ? ' O relógio desta rodada fica parado até você voltar.' : ''}</p>
     <div class="row"><button class="btn primary" data-act="menuyes">Voltar ao menu</button><button class="btn" data-act="menuno">Continuar jogando</button><span class="faint" style="font-size:12px">Esc também cancela</span></div></div></div>`;
 }
-const menuBtn = () => '<button class="btn sm ghost hudmenu" type="button" data-act="menu" title="Voltar ao menu (a partida fica salva)">Menu</button>';
+const menuBtn = () => '<button class="btn sm ghost hudmenu" type="button" data-act="menu" title="Voltar ao menu (a partida fica salva)">Menu</button>' + somBtn();
+const somBtn = () => `<button class="btn sm ghost hudsom" type="button" data-act="som" aria-pressed="${SOM.on}" aria-label="Trilha sonora" title="${SOM.on ? 'Desligar' : 'Ligar'} a trilha sonora">${icon(SOM.on ? 'som' : 'mudo')}</button>`;
+/* Trilha ambiente (L2.5 refeita: o documento pede uma trilha que se intensifica conforme a agitação do líder). Só Web Audio, sem arquivos:
+   um zumbido grave que abre o filtro com a tensão, um pulso que acelera e um chiado de rua que cresce. Começa desligada (o navegador só
+   deixa tocar depois de um clique, e numa sala de aula o som é escolha de quem joga) e segue a agitação que o jogador enxerga, nunca a
+   real. Cala no desfecho e na nota. A escolha fica guardada neste navegador: depois de recarregar, a trilha volta no primeiro clique.
+   Sem Web Audio, o botão simplesmente não liga. */
+const SOM = (() => {
+  const PREF = 'perimetro_som';
+  let ctx = null, n = null, on = false, alvo = -1, dorme = null;
+  try { on = localStorage.getItem(PREF) === '1'; } catch (e) {}
+  const guarda = () => { try { localStorage.setItem(PREF, on ? '1' : '0'); } catch (e) {} };
+  function montar() {
+    const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return false;
+    try {
+      ctx = new AC(); const g = () => ctx.createGain(), f = (type, hz, q) => { const b = ctx.createBiquadFilter(); b.type = type; b.frequency.value = hz; b.Q.value = q; return b; };
+      const out = g(); out.gain.value = 0; out.connect(ctx.destination);
+      const lp = f('lowpass', 180, 4), dz = g(); dz.gain.value = .3; dz.connect(lp); lp.connect(out);
+      [55, 55.6, 82.4].forEach(hz => { const o = ctx.createOscillator(); o.type = 'sawtooth'; o.frequency.value = hz; o.connect(dz); o.start(); });
+      const pg = g(); pg.gain.value = 0; pg.connect(out);
+      const po = ctx.createOscillator(); po.type = 'triangle'; po.frequency.value = 52; po.connect(pg); po.start();
+      const lfo = ctx.createOscillator(), lg = g(); lfo.frequency.value = .7; lg.gain.value = 0; lfo.connect(lg); lg.connect(pg.gain); lfo.start();
+      const len = ctx.sampleRate * 2, buf = ctx.createBuffer(1, len, ctx.sampleRate), d = buf.getChannelData(0);
+      for (let i = 0, x = 7; i < len; i++) { x = Math.imul(x, 1103515245) + 12345 | 0; d[i] = (x >>> 9) / 4194304 - 1; }   // ruído fixo: o sorteio do jogo não é tocado
+      const ns = ctx.createBufferSource(), bp = f('bandpass', 700, .8), ng = g(); ns.buffer = buf; ns.loop = true; ng.gain.value = 0; ns.connect(bp); bp.connect(ng); ng.connect(out); ns.start();
+      n = { out, lp, dz, pg, lfo, lg, bp, ng };
+      return true;
+    } catch (e) { ctx = null; n = null; return false; }
+  }
+  // intensidade de 0 a 1: no cerco, a agitação que o painel mostra; antes dele, um fundo baixo; no desfecho e na nota, silêncio
+  const nivel = () => !G || G.phase === 'outcome' || G.phase === 'post' ? null : G.phase === 'siege' ? clamp(perceivedAgit().v / 100, 0, 1) : .15;
+  function update() {
+    if (!ctx || !n) return;
+    const x = on ? nivel() : null, k = x == null ? -1 : Math.round(x * 50) / 50;
+    if (k === alvo) return; alvo = k;
+    const t = ctx.currentTime, set = (p, v, tc = 1.2) => p.setTargetAtTime(v, t, tc);
+    if (k < 0) { set(n.out.gain, 0, .25); return; }
+    set(n.out.gain, .2);
+    set(n.dz.gain, .22 + .18 * k); set(n.lp.frequency, 150 + 850 * k * k);
+    set(n.pg.gain, .45 * k); set(n.lg.gain, .45 * k); set(n.lfo.frequency, .7 + 1.3 * k);
+    set(n.ng.gain, .015 + .1 * k); set(n.bp.frequency, 600 + 1200 * k);
+  }
+  // liga o áudio de fato (só dentro de um gesto do jogador): no botão, ou no primeiro clique depois de recarregar com a trilha escolhida
+  function acorda() {
+    if (on && !ctx && !montar()) on = false;
+    if (on && ctx.state === 'suspended') ctx.resume().catch(() => {});
+    alvo = -2; update();
+  }
+  function toggle() {
+    on = !on; clearTimeout(dorme); acorda(); guarda();
+    if (!on && ctx) dorme = setTimeout(() => { if (!on && ctx) ctx.suspend().catch(() => {}); }, 900);   // depois do fade, o áudio para de gastar CPU
+    return on;
+  }
+  const gesto = e => { if (e.target && e.target.closest && e.target.closest('[data-act=som]')) return; if (on && (!ctx || ctx.state === 'suspended') && !document.hidden) acorda(); };
+  document.addEventListener('pointerdown', gesto, true); document.addEventListener('keydown', gesto, true);
+  const pausa = () => { if (ctx && ctx.state === 'running') ctx.suspend().catch(() => {}); };
+  const retoma = () => { if (ctx && on && ctx.state === 'suspended') ctx.resume().catch(() => {}); };
+  return { get on() { return on; }, get alvo() { return alvo; }, get estado() { return ctx ? ctx.state : 'sem-audio'; }, toggle, update, pausa, retoma };
+})();
 function tutorModal() {
   return `<div class="modalback"><div class="tutor" role="dialog" aria-modal="true" aria-labelledby="tutt">
     <h2 class="h3" id="tutt">Como funciona</h2>
@@ -2787,7 +2881,7 @@ function tutorModal() {
     <p class="muted"><b>3. Comande</b> 8 rodadas: leia o painel e escolha 2 ou 3 ações em <b>Tática, Negociação, Inteligência e Comunicação</b>.</p>
     <p class="muted"><b>4. A crise termina</b> em rendição, intervenção, fuga ou ultimato. A nota pesa vidas (40%), prisões (20%), valores (15%), custo (10%) e confiança (15%). Mortes, intervenção fracassada ou entrada com menos de 50% de chance limitam a nota.</p>
     <p class="muted">Dicas: negocie um degrau de cada vez e passe o mouse sobre o nome de um agente para ver os atributos dele.</p>
-    <p class="faint" style="font-size:12px">Para facilitadores: quem preferir não participar pode sair pelo Menu a qualquer momento; ofereça uma atividade alternativa.</p>
+    <p class="faint" style="font-size:12px">Para facilitadores: com um código da turma combinado no menu, todas as equipes jogam o mesmo cenário e recebem as mesmas cartas de evento, e as notas podem ser comparadas. Quem preferir não participar pode sair pelo Menu a qualquer momento; ofereça uma atividade alternativa.</p>
     <div class="row"><button class="btn primary" data-act="closehowto">Entendi</button><span class="faint" style="font-size:12px">Esc também fecha</span></div></div></div>`;
 }
 
@@ -3507,7 +3601,7 @@ function scoreHTML() {
   ];
   const hint = nextGradeHint(S, dims);
   return `<div class="scorehead"><div style="text-align:center">${radarSVG(dims)}</div>
-    <div class="grid" style="gap:10px"><div class="eyebrow">Nota final</div><h1 class="sr">Pontuação final: nota ${S.grade}, ${dec(S.total)} de 100</h1><div class="grade ${S.grade}" aria-hidden="true">${S.grade}</div><div class="bigscore" aria-hidden="true">${dec(S.total)} / 100</div>
+    <div class="grid" style="gap:10px"><div class="eyebrow">Nota final${G.code ? ` · turma ${G.code}` : ''}</div><h1 class="sr">Pontuação final: nota ${S.grade}, ${dec(S.total)} de 100</h1><div class="grade ${S.grade}" aria-hidden="true">${S.grade}</div><div class="bigscore" aria-hidden="true">${dec(S.total)} / 100</div>
     ${S.capped ? `<div class="insight warn">${icon('alert', '', 1.8)}<span>Teto aplicado: a pontuação bruta (${dec(S.raw)}) foi limitada a ${S.cap} ${capReason(S, H, E)}</span></div>` : ''}
     ${S.penal ? `<div class="insight bad">${icon('alert', '', 1.8)}<span>Penalidade: −${S.penal} pontos por ${E.agentsHurt.length} ${plural(E.agentsHurt.length, 'agente ferido', 'agentes feridos')} em ação (${E.agentsHurt.map(id => shortName(agentById(id).nome)).join(', ')}). Quem protege também conta os próprios.</span></div>` : ''}
     <p class="muted" style="max-width:520px">${S.grade === 'S' ? 'Operação exemplar.' : S.grade === 'A' ? 'Excelente condução, com pouco a corrigir.' : S.grade === 'B' ? 'Boa condução, com trade-offs visíveis.' : S.grade === 'C' ? 'Resultado aceitável, mas com perdas evitáveis.' : S.grade === 'D' ? 'Resultado fraco: as decisões se acumularam contra você.' : 'Operação malsucedida. A falha também ensina: veja o debrief.'}</p>
@@ -3711,9 +3805,10 @@ const focusFirst = (...sels) => { for (const q of sels) { const el = $app.queryS
 function setPhase(p) { G.phase = p; saveGame(); render(); }
 
 ACT.diff = when(inMenu, d => { UI.diffSel = d.v; render(); });
-function startNew() { SAVE_LOST = false; resetUI(); newGame(UI.diffSel, { noLimit: UI.noLimit }); setPhase('briefing'); }
+function startNew() { SAVE_LOST = false; resetUI(); newGame(UI.diffSel, { noLimit: UI.noLimit, code: UI.code }); setPhase('briefing'); }
 /* Iniciar por cima de uma partida em andamento pergunta antes: o botão primário fica ao lado do "Continuar" e um clique errado apagaria o jogo. */
 ACT.start = when(inMenu, () => {
+  const inp = document.getElementById('turma'); if (inp) UI.code = inp.value;   // o código digitado vale mesmo sem o campo perder o foco
   const sv = loadSave();
   if (sv && sv.phase !== 'post' && !UI.newConfirm) { UI.newConfirm = true; render(); return; }
   startNew();
@@ -3775,6 +3870,8 @@ ACT.torecruit = when(() => at('recruit'), () => {
 CHG.camplus = when(() => at('recruit'), v => { if (!has(ATTR, v)) return; G.camAdj.plus = v; if (G.camAdj.minus === v) G.camAdj.minus = Object.keys(ATTR).find(k => k !== v); saveGame(); render(); });
 CHG.camminus = when(() => at('recruit'), v => { if (!has(ATTR, v)) return; G.camAdj.minus = v; if (G.camAdj.plus === v) G.camAdj.plus = Object.keys(ATTR).find(k => k !== v); saveGame(); render(); });
 CHG.nolimit = (v, d, el) => { UI.noLimit = !!el.checked; };
+CHG.turma = v => { UI.code = String(v).slice(0, 32); };   // sem redesenhar: o clique em "Iniciar" que tirou o foco do campo não pode se perder
+ACT.som = (d, el) => { SOM.toggle(); if (el && el.isConnected) { el.setAttribute('aria-pressed', SOM.on); el.title = (SOM.on ? 'Desligar' : 'Ligar') + ' a trilha sonora'; el.innerHTML = icon(SOM.on ? 'som' : 'mudo'); } };
 ACT.selchip = when(() => at('perimeter'), d => { UI.sel = (UI.sel && UI.sel.t === d.t && UI.sel.id === d.id) ? null : { t: d.t, id: d.id }; render(); });
 ACT.place = when(() => at('perimeter'), d => {
   if (UI.sel) { if (UI.sel.t === 'a') G.az[UI.sel.id] = d.z; else G.gz[UI.sel.id] = d.z; UI.sel = null; saveGame(); }
@@ -3930,6 +4027,7 @@ function draw() {
   else stopTimer();
   // animação dos medidores do feedback
   requestAnimationFrame(() => requestAnimationFrame(() => document.querySelectorAll('.meter>i[data-to]').forEach(i => { i.style.width = i.dataset.to + '%'; })));
+  SOM.update();
 }
 $app.addEventListener('click', e => {
   const el = e.target.closest('[data-act]');
@@ -3977,8 +4075,8 @@ document.addEventListener('keydown', e => {
 });
 onSaveFail = () => toast('COMANDO', 'Não foi possível salvar a partida neste navegador (armazenamento bloqueado ou cheio). Você pode seguir jogando, mas ela não será retomada se a página for recarregada.', 'warn');
 /* O relógio da rodada espera com a aba oculta, e o que sobrava dele é salvo ao sair da página (recarregar continua de onde parou). */
-document.addEventListener('visibilitychange', () => { if (document.hidden) pauseTimer(); else resumeTimer(); });
+document.addEventListener('visibilitychange', () => { if (document.hidden) { pauseTimer(); SOM.pausa(); } else { resumeTimer(); SOM.retoma(); } });
 window.addEventListener('pagehide', () => { if (G && UI.timerId) G.tleft = timeLeft(); saveGame(); });
-window.PERIMETRO = { get G() { return G; }, newGame, startRound, resolveDecisions, chooseEvent, finishRound, addDecision, computeScore, zoneCoverage, intervProb, negoParts, autoPlace, confirmPerimeter, render, ACT, UI };
+window.PERIMETRO = { get G() { return G; }, newGame, startRound, resolveDecisions, chooseEvent, finishRound, addDecision, computeScore, zoneCoverage, intervProb, negoParts, autoPlace, confirmPerimeter, render, ACT, UI, SOM };
 render();
 </script>

@@ -10,4 +10,5 @@ roda ui-limites node tools/ui/limites.js
 for p in negociadora agressiva equilibrada semEquipe lento gastaTudo; do roda "e2e-$p-complexo" node tools/ui/e2e.js "$p" complexo noshots; done
 roda e2e-gastaTudo-caotico node tools/ui/e2e.js gastaTudo caotico noshots
 roda e2e-negociadora-protocolar node tools/ui/e2e.js negociadora protocolar noshots
+roda turma node tools/ui/turma.js
 echo "fim"
