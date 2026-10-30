@@ -1558,7 +1558,9 @@ function syncHL(R) {
   const pickOne = (cands, pid) => cands.find(h => h.id === pid) || cands[Math.floor(rnd() * cands.length)];
   let dead = L.filter(h => h.st === 'dead').length;
   while (dead < H.dead) {
-    let c = L.filter(h => h.in && h.st === 'hurt'); if (!c.length) c = L.filter(h => h.st === 'hurt'); if (!c.length) c = L.filter(h => h.st === 'ok');
+    // L2.1: a morte cai primeiro sobre quem está ferido lá dentro e, se faltar, sobre quem está ileso lá dentro; quem já saiu só em último caso
+    let c = L.filter(h => h.in && h.st === 'hurt'); if (!c.length) c = L.filter(h => h.in && h.st === 'ok'); if (!c.length) c = L.filter(h => h.st === 'hurt'); if (!c.length) c = L.filter(h => h.st === 'ok');
+    if (pref.keep && c.length > 1) c = c.filter(h => h.id !== pref.keep);   // L2.1: quem acabou de se estabilizar não recebe a morte de outro ferido
     if (!c.length) break; const h = pickOne(c, pref.dead); h.st = 'dead'; h.in = true; dead++; ch.push({ id: h.id, what: 'dead' });
   }
   let hurt = L.filter(h => h.st === 'hurt').length;
@@ -1618,9 +1620,12 @@ function doIntervention(forced) {
   if (G.agit > 70 && variant !== 'fracasso' && rnd() < (G.agit - 70) * .01) d += 1;
   if (kit && d > 0 && rnd() < .5) { d -= 1; h += 1; }
   const H = G.hostages;
-  const free = HOSTAGES - H.dead - H.hurt;
+  // L2.1: a entrada só alcança quem ainda está lá dentro. Quem saiu antes (troca, contraproposta, troca humanitária) já está com as famílias.
+  const free = H.inside - H.dead - H.hurt;
   const hh = Math.min(h, Math.max(0, free)); H.hurt += hh;
-  const dd = Math.min(d, HOSTAGES - H.dead); const fromHurt = Math.min(dd, H.hurt); H.hurt -= fromHurt; H.dead += dd;
+  const dd = Math.min(d, Math.max(0, H.inside - H.dead)); const fromHurt = Math.min(dd, H.hurt); H.hurt -= fromHurt; H.dead += dd;
+  // L2.1: uma entrada que custa uma vida não é "limpa" (a história, a Gazeta e o selo Mão firme contam a variante): vira "com baixas".
+  if (variant === 'limpa' && dd > 0) { variant = 'baixas'; loot = .35; }
   H.inside = H.dead; H.freed = HOSTAGES - H.dead; // todos saem do interior; os mortos permanecem contabilizados e só os vivos contam como libertados
   const agHurt = agentsHurtIn(variant);
   return { type: 'intervencao', variant, captured: cap, lootF: loot, P, forced: !!forced, newHurt: hh, newDead: dd, agentsHurt: agHurt };
@@ -1643,15 +1648,17 @@ function doEscape(cause) {
   if (G.vehicleGiven) cov *= .88;
   cov = Math.round(cov);
   const pc = clamp(cov / 100 * .9 + .05, .05, .95);
+  const pool = H.inside - H.dead - H.hurt;
   H.freed += H.inside - H.dead; H.inside = H.dead;
   let extraHurt = 0;
-  if (cause === 'desespero' && rnd() < .25) extraHurt = addHurtFree(1);
+  if (cause === 'desespero' && rnd() < .25) extraHurt = addHurtFree(1, pool);
   if (rnd() < pc) return { type: 'fuga', variant: 'barrada', zone: z, cov, pc, adapted, cause, captured: .85, lootF: .35, newHurt: extraHurt };
   const pp = clamp(.15 + zoneCoverage('avenida') / 100 * .35 + (hasGear('viatura') ? .15 : 0) + (gearIn('avenida').includes('drone') ? .08 : 0), .1, .7);
   if (rnd() < pp) return { type: 'fuga', variant: 'perseguicao', zone: z, cov, pc, pp, adapted, cause, captured: .7, lootF: .5, newHurt: extraHurt };
   return { type: 'fuga', variant: 'escapou', zone: z, cov, pc, pp, adapted, cause, captured: .2, lootF: 1.0, newHurt: extraHurt };
 }
-function addHurtFree(n) { const H = G.hostages; const free = HOSTAGES - H.dead - H.hurt; n = Math.max(0, Math.min(n, free)); H.hurt += n; return n; }
+/* Ferido na saída (fuga, ultimato aceito): só entre quem estava lá dentro, vivo e ileso, no momento do desfecho (`pool`, contado antes da saída). */
+function addHurtFree(n, pool) { const H = G.hostages; n = Math.max(0, Math.min(n, pool, HOSTAGES - H.dead - H.hurt)); H.hurt += n; return n; }
 /* Ultimato final: o líder decide aceitar a última proposta ou forçar a mão. Quanto mais a escada avançou, mais baixa a agitação
    e mais fechado o perímetro (o BATNA), maior a chance de ele ceder; do contrário, a entrada é forçada com a prontidão que existir. */
 function ultimatumProb() {
@@ -1661,8 +1668,8 @@ function ultimatumProb() {
 function doUltimatum() {
   const p = ultimatumProb();
   if (rnd() < p) {
-    const H = G.hostages; H.freed += H.inside - H.dead; H.inside = H.dead;
-    const h = rnd() < .3 ? addHurtFree(1) : 0;
+    const H = G.hostages, pool = H.inside - H.dead - H.hurt; H.freed += H.inside - H.dead; H.inside = H.dead;
+    const h = rnd() < .3 ? addHurtFree(1, pool) : 0;
     return { type: 'prazo', variant: 'cedeu', captured: .9, lootF: .45, p, newHurt: h };
   }
   const o = doIntervention(true);
@@ -1685,7 +1692,10 @@ function eficienciaCusto() { return clamp(.6 * Math.min(1, Math.max(0, G.credits
 function gradeOf(s) { return s >= 90 ? 'S' : s >= 80 ? 'A' : s >= 65 ? 'B' : s >= 50 ? 'C' : s >= 35 ? 'D' : 'F'; }
 function computeScore() {
   const E = G.end, H = G.hostages;
-  if (G.mayorPromise && !(E.type === 'rendicao' || (E.type === 'intervencao' && (E.variant === 'limpa' || E.variant === 'baixas')))) stake('prefeito', -20);
+  // Promessa ao prefeito: desfecho limpo antes das 20h. O desfecho da rodada 8 sai às 20h37 (L2.1: antes o atraso não era cobrado).
+  const limpo = E.type === 'rendicao' || (E.type === 'intervencao' && (E.variant === 'limpa' || E.variant === 'baixas'));
+  const promessa = G.mayorPromise ? (limpo && G.round < MAX_ROUNDS ? 'cumprida' : 'quebrada') : null;
+  if (promessa === 'quebrada') stake('prefeito', -20);
   const vidas = vidasScore(H);
   const captura = clamp(E.captured, 0, 1);
   const valores = clamp(1 - E.lootF * (G.vault / 100), 0, 1);
@@ -1704,7 +1714,7 @@ function computeScore() {
   const teto = tetos.sort((a, b) => a.v - b.v)[0] || { v: 100, why: null };
   const cap = teto.v;
   const total = Math.round(Math.max(0, Math.min(raw, cap) - penal) * 10) / 10;   // uma casa decimal, a mesma que a tela mostra: a nota e a faixa nunca discordam
-  G.score = { vidas, captura, valores, eficiencia, confianca, raw, total, cap, capWhy: teto.why, capped: raw > cap, penal, grade: gradeOf(total) };
+  G.score = { vidas, captura, valores, eficiencia, confianca, raw, total, cap, capWhy: teto.why, capped: raw > cap, penal, grade: gradeOf(total), promessa };
   return G.score;
 }
 
@@ -2099,11 +2109,14 @@ function resolveDecisions() {
   }
   // reféns feridos agravam. Com o kit médico ninguém morre por isso; o que ele evitou é sorteado à parte e aparece no resultado
   const H = G.hostages;
-  if (H.hurt > 0 && !hasGear('kit')) {
-    let died = 0; for (let i = 0; i < H.hurt; i++) if (rnd() < .12 * D.lethal) died++;
+  // L2.1: quem está em estado crítico e tem o desfecho sorteado nesta rodada (Dona Lúcia, logo abaixo) fica fora do agravamento comum:
+  // antes a mesma morte podia ser contada duas vezes, e a segunda caía sobre um refém ileso.
+  const crit = G.pendingDeath && G.pendingDeath.left <= 1 && G.hl.some(h => h.id === (G.pendingDeath.who || 'lucia') && h.in && h.st === 'hurt') ? 1 : 0;
+  if (H.hurt > crit && !hasGear('kit')) {
+    let died = 0; for (let i = 0; i < H.hurt - crit; i++) if (rnd() < .12 * D.lethal) died++;
     if (died) { addDead(died); L(R, 'bad', 'heart', died === 1 ? 'Sem atendimento adequado, um refém ferido não resiste. Uma morte confirmada.' : `Sem atendimento adequado, ${died} reféns feridos não resistem. ${died} mortes confirmadas.`); }
-  } else if (H.hurt > 0) {
-    let saved = 0; for (let i = 0; i < H.hurt; i++) if (sideRoll(i) < .12 * D.lethal) saved++;
+  } else if (H.hurt > crit) {
+    let saved = 0; for (let i = 0; i < H.hurt - crit; i++) if (sideRoll(i) < .12 * D.lethal) saved++;
     if (saved) {
       G.stats.kitSaves = (G.stats.kitSaves || 0) + saved;
       L(R, 'good', 'heart', saved === 1 ? 'O kit médico estabilizou um refém ferido que estava piorando. Sem ele, teria sido uma morte.' : `O kit médico estabilizou ${saved} reféns feridos que estavam piorando. Sem ele, teriam sido ${saved} mortes.`);
@@ -2115,7 +2128,12 @@ function resolveDecisions() {
   }
   if (G.pendingDeath) {
     const pd = G.pendingDeath; pd.left--;
-    if (pd.left <= 0) { G.pendingDeath = null; if (rnd() < pd.p) { G.hPref.dead = pd.who || 'lucia'; addDead(1); L(R, 'bad', 'heart', 'Lúcia Andrade, 67 anos, não resistiu. A sala de comando fica em silêncio.'); } else L(R, 'good', 'heart', 'Dona Lúcia se estabilizou a tempo. Alguém lá dentro conseguiu dar o açúcar que restava na bolsa dela.'); }
+    if (pd.left <= 0) {
+      G.pendingDeath = null;
+      if (!crit) { /* ela já não está em estado crítico lá dentro: não há o que sortear */ }
+      else if (rnd() < pd.p) { G.hPref.dead = pd.who || 'lucia'; addDead(1); L(R, 'bad', 'heart', 'Lúcia Andrade, 67 anos, não resistiu. A sala de comando fica em silêncio.'); }
+      else { G.hPref.keep = pd.who || 'lucia'; L(R, 'good', 'heart', 'Dona Lúcia se estabilizou a tempo. Alguém lá dentro conseguiu dar o açúcar que restava na bolsa dela.'); }
+    }
   }
   // stakeholders
   stakePassives(R);
@@ -2186,7 +2204,7 @@ const EVENT_FX = {
   prefeito:  { elig: g => g.round >= 3 && g.round <= 6, choices: [
     { label: 'Garantir que resolverá antes das 20h', hint: 'Agrada hoje, cobra amanhã (escalada de comprometimento).', run: R => {
       stake('prefeito', 12); G.mayorPromise = true; G.stress += 6;
-      L(R, 'warn', 'mayor', 'Você promete o desfecho antes do horário nobre. O prefeito sobe 12 pontos, mas a promessa pesa sobre a equipe (+6 de pressão). Se o final não for limpo, a conta chega.'); } },
+      L(R, 'warn', 'mayor', 'Você promete o desfecho antes do horário nobre. O prefeito sobe 12 pontos, mas a promessa pesa sobre a equipe (+6 de pressão). Se o final não for limpo ou passar das 20h, a conta chega (−20 com o prefeito).'); } },
     { label: 'Pedir confiança no protocolo', hint: 'Honesto, mas pode irritar.', run: R => {
       if (G.stk.prefeito.sat < 50) { stake('prefeito', -5); L(R, 'bad', 'mayor', 'O prefeito já estava insatisfeito e interpreta o pedido como evasiva (−5).'); }
       else { stake('prefeito', 3); L(R, 'good', 'mayor', 'O prefeito aceita o argumento técnico por ora (+3).'); } } }] },
@@ -3483,7 +3501,7 @@ function scoreHTML() {
     { k: 'Prisões', v: S.captura, w: .20, why: `${outName(E)}: ${Math.round(S.captura * 100)}% dos responsáveis presos.` },
     { k: 'Valores', v: S.valores, w: .15, why: `Cofre em ${Math.round(G.vault)}% no desfecho; fator de perda do desfecho ${String(E.lootF).replace('.', ',')}.` },
     { k: 'Eficiência', v: S.eficiencia, w: .10, why: `${fmt(G.credits)} créditos sobraram e a crise durou ${G.round} ${plural(G.round, 'rodada', 'rodadas')}. O plantão custou ${fmt(G.spent.plantao)} no total${G.deficit ? ` e ${G.deficit} ${plural(G.deficit, 'rodada', 'rodadas')} ficaram no vermelho` : ''}.` },
-    { k: 'Confiança', v: S.confianca, w: .15, why: `Média ponderada dos stakeholders: ${STK_KEYS.map(k => `${STK[k].nome} ${Math.round(G.stk[k].sat)}`).join(' · ')}.` }
+    { k: 'Confiança', v: S.confianca, w: .15, why: `Média ponderada dos stakeholders: ${STK_KEYS.map(k => `${STK[k].nome} ${Math.round(G.stk[k].sat)}`).join(' · ')}.${S.promessa === 'quebrada' ? ' O prefeito cobrou a promessa de um desfecho limpo antes das 20h (−20).' : ''}` }
   ];
   const hint = nextGradeHint(S, dims);
   return `<div class="scorehead"><div style="text-align:center">${radarSVG(dims)}</div>

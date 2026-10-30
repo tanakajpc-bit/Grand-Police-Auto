@@ -123,7 +123,7 @@ function scoreHTML() {
     { k: 'Prisões', v: S.captura, w: .20, why: `${outName(E)}: ${Math.round(S.captura * 100)}% dos responsáveis presos.` },
     { k: 'Valores', v: S.valores, w: .15, why: `Cofre em ${Math.round(G.vault)}% no desfecho; fator de perda do desfecho ${String(E.lootF).replace('.', ',')}.` },
     { k: 'Eficiência', v: S.eficiencia, w: .10, why: `${fmt(G.credits)} créditos sobraram e a crise durou ${G.round} ${plural(G.round, 'rodada', 'rodadas')}. O plantão custou ${fmt(G.spent.plantao)} no total${G.deficit ? ` e ${G.deficit} ${plural(G.deficit, 'rodada', 'rodadas')} ficaram no vermelho` : ''}.` },
-    { k: 'Confiança', v: S.confianca, w: .15, why: `Média ponderada dos stakeholders: ${STK_KEYS.map(k => `${STK[k].nome} ${Math.round(G.stk[k].sat)}`).join(' · ')}.` }
+    { k: 'Confiança', v: S.confianca, w: .15, why: `Média ponderada dos stakeholders: ${STK_KEYS.map(k => `${STK[k].nome} ${Math.round(G.stk[k].sat)}`).join(' · ')}.${S.promessa === 'quebrada' ? ' O prefeito cobrou a promessa de um desfecho limpo antes das 20h (−20).' : ''}` }
   ];
   const hint = nextGradeHint(S, dims);
   return `<div class="scorehead"><div style="text-align:center">${radarSVG(dims)}</div>

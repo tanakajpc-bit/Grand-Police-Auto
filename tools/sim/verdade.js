@@ -235,7 +235,7 @@ function historia(rec, F) {
 }
 
 /* ---------- 3. Tela de pontuação ---------- */
-function pontuacao(rec) {
+function pontuacao(rec, F) {
   const G = A.G, S = G.score, H = G.hostages, tag = rec.tag;
   const ck = (ok, id, det) => C(ok, 'pontuação: ' + id, tag + ' | ' + det);
   const html = A.scoreHTML(), t = strip(html);
@@ -251,6 +251,10 @@ function pontuacao(rec) {
   }
   ck(t.includes(`${H.dead} ${pl(H.dead, 'morto', 'mortos')} e ${H.hurt} ${pl(H.hurt, 'ferido', 'feridos')} entre 17 reféns`), 'vidas: mortos e feridos citados', `${H.dead}/${H.hurt}`);
   ck(A.STK_KEYS.every(k => t.includes(`${A.STK[k].nome} ${Math.round(G.stk[k].sat)}`)), 'confiança: satisfação final de cada stakeholder', '');
+  // promessa ao prefeito (L2.1): cobrada quando o desfecho não foi limpo ou saiu depois das 20h (rodada 8), e a tela diz isso só nesse caso
+  const Ed = G.end, limpo = Ed.type === 'rendicao' || (Ed.type === 'intervencao' && ['limpa', 'baixas'].includes(Ed.variant));
+  const cobrada = !!F.promessa && (!limpo || G.round >= 8);
+  ck(t.includes('O prefeito cobrou a promessa') === cobrada, 'confiança: a promessa ao prefeito cobrada só quando foi quebrada', `${F.promessa} ${Ed.type}:${Ed.variant} r${G.round}`);
   ck(inc(t, `a crise durou ${G.round} ${pl(G.round, 'rodada', 'rodadas')}`), 'eficiência: duração da crise, no plural certo', `${G.round}`);
 }
 
