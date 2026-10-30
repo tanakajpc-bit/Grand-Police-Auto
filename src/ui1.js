@@ -43,6 +43,37 @@ function toast(title, text, tone = '') {
   el.querySelector('.tx').addEventListener('click', kill);
   setTimeout(kill, 20000);
 }
+/* Os avisos flutuam sobre o conteúdo: a página ganha no fim a altura que eles ocupam, para o último botão sempre poder rolar para fora de baixo deles. */
+(() => { const box = document.getElementById('toasts'); if (box && window.ResizeObserver) new ResizeObserver(() => document.body.style.setProperty('--toasth', box.offsetHeight ? box.offsetHeight + 16 + 'px' : '0px')).observe(box); })();
+
+/* ---------- Dica flutuante ----------
+   Passar o mouse (ou o foco do teclado) sobre o nome de um agente mostra os cinco atributos dele, em qualquer tela (data-ag).
+   Os detalhes que saíram da tela aparecem do mesmo jeito: data-tip (texto) ou o filho .tipc (escondido, mas presente na página). */
+const $tip = document.createElement('div'); $tip.id = 'tip'; $tip.setAttribute('role', 'tooltip'); $tip.hidden = true; document.body.appendChild($tip);
+const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+/* Regras longas viram um "ⓘ" com o texto na dica: continuam a um gesto de distância, sem ocupar a tela. */
+const infoTip = (label, html) => `<span class="helptip hastip" tabindex="0">ⓘ${label ? ' ' + label : ''}<span class="tipc">${html}</span></span>`;
+function agentTip(id) {
+  const a = agentById(id); if (!a) return '';
+  return `<b class="tn">${a.nome}</b><span class="tt"><b>${a.trait}.</b> ${a.tdesc}</span><div class="attrs">${Object.keys(ATTR).map(k => bar(ATTR[k], G ? stat(id, k) : a.s[k])).join('')}</div>`;
+}
+let tipFor = null;
+function showTip(el) {
+  const c = el.dataset.ag ? null : [...el.children].find(x => x.classList.contains('tipc'));
+  const html = el.dataset.ag ? agentTip(el.dataset.ag) : c ? c.innerHTML : el.dataset.tip ? esc(el.dataset.tip) : '';
+  if (!html) { hideTip(); return; }
+  tipFor = el; $tip.innerHTML = html; $tip.className = el.dataset.ag ? 'ag' : ''; $tip.hidden = false;
+  const r = el.getBoundingClientRect(), w = $tip.offsetWidth, h = $tip.offsetHeight;
+  const x = Math.min(Math.max(8, r.left + r.width / 2 - w / 2), innerWidth - w - 8);
+  const y = r.bottom + 8 + h <= innerHeight - 8 ? r.bottom + 8 : Math.max(8, r.top - h - 8);
+  $tip.style.left = Math.round(x) + 'px'; $tip.style.top = Math.round(y) + 'px';
+}
+function hideTip() { tipFor = null; $tip.hidden = true; }
+const tipTarget = t => t && t.closest ? t.closest('[data-ag],[data-tip],.hastip') : null;
+document.addEventListener('mouseover', e => { const el = tipTarget(e.target); if (el !== tipFor) { if (el) showTip(el); else hideTip(); } });
+document.addEventListener('focusin', e => { const el = tipTarget(e.target); if (el) showTip(el); else hideTip(); });
+document.addEventListener('focusout', hideTip);
+addEventListener('scroll', hideTip, { passive: true });
 
 /* ---------- Timer ---------- */
 /* Pacing: as duas primeiras rodadas são de orientação e dão mais tempo para ler o painel. */
@@ -106,23 +137,22 @@ function mapSVG(o = {}) {
     const cap = short ? (wide ? 20 : Math.max(1, 3 - nG)) : narrow ? 16 : z.h >= 120 ? 12 : 4;
     const shown = ags.length > cap ? ags.slice(0, cap - 1) : ags, extra = ags.slice(shown.length);
     const agPos = i => short ? [z.x + z.w - 17 - nG * 20 - i * 23, z.y + 31] : [z.x + 17 + (i % perRow) * 23, z.y + z.h - 15 - Math.floor(i / perRow) * 21];
-    s += `<g class="zone${isSel ? ' sel' : ''}" ${act}>
-      <title>${z.nome} — ${z.tip}</title>
+    s += `<g class="zone${isSel ? ' sel' : ''}" ${act} data-tip="${esc(z.nome + ': ' + z.tip)}">
       <rect class="z" x="${z.x}" y="${z.y}" width="${z.w}" height="${z.h}" rx="7" fill="${fill}" stroke="${stroke}" ${z.dash ? 'stroke-dasharray="7 4"' : ''}/>
       <rect x="${z.x}" y="${z.y}" width="${z.w}" height="${z.h}" rx="7" fill="url(#hatch)" opacity="${cl === 'r' ? 1 : cl === 'a' ? .45 : 0}" pointer-events="none"/>
       <text x="${z.x + 9}" y="${z.y + 18}" fill="#e8edf5" font-size="13" font-weight="700">${nm}</text>
       ${narrow ? pct(z.x + 9, z.y + 37, 'start') : short ? pct(z.x + z.w - 9, z.y + 19, 'end') : pct(z.x + z.w - 9, z.y + 37, 'end')}
       <text x="${z.x + 9}" y="${z.y + yS}" fill="${stroke}" font-size="12.5" font-weight="600">${covSym(cov)} ${covTxt(cov)}</text>
       ${mark ? `<text x="${z.x + xM}" y="${z.y + yM}" fill="#cfe0ff" font-size="12.5" font-weight="600">${mark}</text>` : ''}
-      ${shown.map((id, i) => { const [cx, cy] = agPos(i); return `<g><circle cx="${cx}" cy="${cy}" r="9.5" fill="${+G.transit[id] ? '#3b4f6e' : '#27456d'}" stroke="${+G.transit[id] ? '#f6a623' : '#7fb4ee'}" stroke-width="1.5" ${+G.transit[id] ? 'stroke-dasharray="3 2"' : ''}/><text x="${cx}" y="${cy + 3.5}" text-anchor="middle" fill="#fff" font-size="10" font-weight="700">${initials(agentById(id).nome)}</text></g>`; }).join('')}
-      ${extra.length ? (() => { const [cx, cy] = agPos(shown.length); return `<g><title>${extra.map(id => agentById(id).nome).join(', ')}</title><circle cx="${cx}" cy="${cy}" r="9.5" fill="#1b2a44" stroke="#7fb4ee" stroke-width="1.5"/><text x="${cx}" y="${cy + 3.5}" text-anchor="middle" fill="#cfe0ff" font-size="10" font-weight="700">+${extra.length}</text></g>`; })() : ''}
+      ${shown.map((id, i) => { const [cx, cy] = agPos(i); return `<g data-ag="${id}"><circle cx="${cx}" cy="${cy}" r="9.5" fill="${+G.transit[id] ? '#3b4f6e' : '#27456d'}" stroke="${+G.transit[id] ? '#f6a623' : '#7fb4ee'}" stroke-width="1.5" ${+G.transit[id] ? 'stroke-dasharray="3 2"' : ''}/><text x="${cx}" y="${cy + 3.5}" text-anchor="middle" fill="#fff" font-size="10" font-weight="700">${initials(agentById(id).nome)}</text></g>`; }).join('')}
+      ${extra.length ? (() => { const [cx, cy] = agPos(shown.length); return `<g data-tip="${esc(extra.map(id => agentById(id).nome).join(', '))}"><circle cx="${cx}" cy="${cy}" r="9.5" fill="#1b2a44" stroke="#7fb4ee" stroke-width="1.5"/><text x="${cx}" y="${cy + 3.5}" text-anchor="middle" fill="#cfe0ff" font-size="10" font-weight="700">+${extra.length}</text></g>`; })() : ''}
       ${away.map((id, i) => `<text x="${z.x + z.w - 10}" y="${z.y + z.h - 8 - (nG && !short ? 20 : 0) - i * 13}" text-anchor="end" fill="#ff9aa7" font-size="11.5">✕ ${initials(agentById(id).nome)} ausente</text>`).join('')}
-      ${gearIn(z.id).map((e, i) => `<g><title>${EQ[e].nome}</title><rect x="${z.x + z.w - 24 - i * 20}" y="${z.y + z.h - 24}" width="16" height="16" rx="3" fill="#0d1523" stroke="#4da6ff"/><text x="${z.x + z.w - 16 - i * 20}" y="${z.y + z.h - 12}" text-anchor="middle" fill="#4da6ff" font-size="10.5" font-weight="700">${EQ[e].nome[0]}</text></g>`).join('')}
+      ${gearIn(z.id).map((e, i) => `<g data-tip="${esc(EQ[e].nome + ': ' + EQ[e].dshort)}"><rect x="${z.x + z.w - 24 - i * 20}" y="${z.y + z.h - 24}" width="16" height="16" rx="3" fill="#0d1523" stroke="#4da6ff"/><text x="${z.x + z.w - 16 - i * 20}" y="${z.y + z.h - 12}" text-anchor="middle" fill="#4da6ff" font-size="10.5" font-weight="700">${EQ[e].nome[0]}</text></g>`).join('')}
     </g>`;
   });
   return s + '</svg>';
 }
-const legendHTML = () => `<div class="legend"><span><i style="background:#41d08f"></i>✓ adequada (≥${ADEQ}%)</span><span><i style="background:#f6a623"></i>! parcial (30–59%)</span><span><i style="background:#ff5468"></i>✕ descoberta (&lt;30%)</span><span><i class="sq"></i>equipamento (inicial do nome)</span><span>★ rota provável · ◆ candidata · ○ improvável</span></div>`;
+const legendHTML = () => `<div class="legend"><span><i style="background:#41d08f"></i>adequada (≥${ADEQ}%)</span><span><i style="background:#f6a623"></i>parcial (30–59%)</span><span><i style="background:#ff5468"></i>descoberta</span><span><i class="sq"></i>equipamento</span></div>`;
 
 /* ===================================================================
    MENU
@@ -143,10 +173,10 @@ const saveLabel = s => s.phase === 'siege' ? 'rodada ' + s.round : s.phase === '
 function renderMenu() {
   const save = loadSave(), lost = SAVE_LOST; SAVE_LOST = false;
   const dcards = Object.entries(DIFF).map(([k, d]) => `
-    <button class="diffcard" role="radio" data-act="diff" data-v="${k}" aria-checked="${UI.diffSel === k}" tabindex="${UI.diffSel === k ? 0 : -1}">
+    <button class="diffcard" role="radio" data-act="diff" data-v="${k}" aria-checked="${UI.diffSel === k}" tabindex="${UI.diffSel === k ? 0 : -1}" data-tip="${d.slots} decisões e ${d.timer} segundos por rodada · eventos em ${Math.round(d.evChance * 100)}% das rodadas · ${d.ops === 1 ? 'plantão padrão' : 'plantão ' + (d.ops < 1 ? '−' : '+') + Math.round(Math.abs(1 - d.ops) * 100) + '%'}">
       <span class="dot" aria-hidden="true"></span>
       <span><b class="dname">${d.nome}</b><span class="dblurb">${d.blurb}</span></span>
-      <span class="dparams">${d.slots} decisões<br>${d.timer}s/rodada<br>eventos ${Math.round(d.evChance * 100)}%<br>${d.ops === 1 ? 'plantão padrão' : 'plantão ' + (d.ops < 1 ? '−' : '+') + Math.round(Math.abs(1 - d.ops) * 100) + '%'}</span>
+      <span class="dparams">${d.slots} decisões<br>${d.timer} s</span>
     </button>`).join('');
   return `<div class="screen menu">
     <div class="sky">${skyline()}<i class="siren r"></i><i class="siren b"></i><i class="siren r2"></i><i class="siren b2"></i>
@@ -159,13 +189,13 @@ function renderMenu() {
           ${save ? `<button class="btn lg" data-act="continue">Continuar partida <span class="faint" style="font-weight:400">(${DIFF[save.diff].nome}, ${saveLabel(save)})</span></button>` : ''}
         </div>
         ${lost ? `<div class="insight warn" role="status">${icon('alert', '', 1.8)}<span>A partida salva neste navegador estava corrompida ou era de outra versão e foi descartada. Uma nova simulação começa do zero.</span></div>` : ''}
-        <label class="check"><input type="checkbox" id="nolimit" data-chg="nolimit" ${UI.noLimit ? 'checked' : ''}><span>Cronômetro sem limite (acessibilidade): o relógio aparece, mas não encerra a rodada</span></label>
+        <label class="check"><input type="checkbox" id="nolimit" data-chg="nolimit" ${UI.noLimit ? 'checked' : ''}><span>Sem limite de tempo (acessibilidade)</span></label>
       </div>
       <div class="card">
         <h2 class="h3">Sua missão</h2>
-        <p class="serif" style="font-size:16.5px;line-height:1.6;color:#dfe6f1">Você é o comandante do incidente. Em 8 rodadas, equilibre cinco objetivos que competem entre si: <b>vidas</b>, <b>prisões</b>, <b>valores</b>, <b>custo</b> e <b>confiança pública</b>. Não existe estratégia dominante.</p>
-        <div class="row" style="margin-top:12px"><button class="btn sm" data-act="howto">Como funciona</button><span class="faint" style="font-size:12.5px">25 a 40 min · salva automaticamente no navegador</span></div>
-        <p class="faint" style="font-size:12px;margin-top:14px"><b>Aviso de conteúdo:</b> a simulação trata de uma crise com reféns num assalto a banco, sempre pela perspectiva de quem protege. Nenhuma mecânica recompensa a violência, as ações táticas são abstratas e não há imagens explícitas. Quem preferir não participar pode sair a qualquer momento pelo Menu, e o facilitador deve oferecer uma atividade alternativa. Todos os nomes, lugares e instituições são fictícios.</p>
+        <p class="serif" style="font-size:16.5px;line-height:1.6;color:#dfe6f1">Você comanda a resposta a um assalto com 17 reféns. Em 8 rodadas, equilibre <b>vidas</b>, <b>prisões</b>, <b>valores</b>, <b>custo</b> e <b>confiança pública</b>.</p>
+        <div class="row" style="margin-top:12px"><button class="btn sm" data-act="howto">Como funciona</button><span class="faint" style="font-size:12.5px">25 a 40 min · salva sozinho</span></div>
+        <p class="faint" style="font-size:12px;margin-top:14px">Uma crise com reféns vista por quem protege, sem imagens explícitas. Nomes, lugares e instituições são fictícios.</p>
       </div>
     </div>
     ${UI.tutor ? tutorModal() : ''}${UI.newConfirm && save ? newConfirmModal(save) : ''}
@@ -187,12 +217,13 @@ function menuConfirmModal() {
 const menuBtn = () => '<button class="btn sm ghost hudmenu" type="button" data-act="menu" title="Voltar ao menu (a partida fica salva)">Menu</button>';
 function tutorModal() {
   return `<div class="modalback"><div class="tutor" role="dialog" aria-modal="true" aria-labelledby="tutt">
-    <h2 class="h3" id="tutt">Como funciona o PERÍMETRO</h2>
-    <p class="muted"><b>1. Recrute</b> uma equipe com 1.000 créditos. O que sobrar é sua reserva para investigações, apoio externo e horas extras, e também paga o <b>plantão</b>: toda rodada, cada agente em campo custa verba. Sem reserva, a operação entra no vermelho.</p>
-    <p class="muted"><b>2. Posicione</b> agentes e equipamentos em 7 zonas. Quatro delas são rotas de fuga possíveis, mas você não sabe quais. Os recursos só cobrem bem cerca de metade das zonas: é preciso apostar, ou investir em inteligência. Mudar alguém de zona tem custo: ele rende menos por duas rodadas.</p>
-    <p class="muted"><b>3. Comande o cerco</b> por 8 rodadas. Em cada uma você recebe informações parciais (Percepção), lê indicadores (Compreensão) e vê tendências (Projeção). Então toma 2 ou 3 decisões em quatro frentes: <b>Tática, Negociação, Inteligência e Comunicação</b>.</p>
-    <p class="muted"><b>4. A crise termina</b> por rendição negociada, intervenção, fuga ou prazo esgotado: ao fim da rodada 8, o líder escolhe entre ceder e forçar a mão. A nota combina vidas (40%), prisões (20%), valores (15%), eficiência de custo (10%) e confiança pública (15%). Mortes e intervenção fracassada põem um teto na nota, e entrar com menos de 50% de chance é aposta: se der certo, o máximo é A.</p>
-    <p class="muted">Dica: a negociação sobe uma escada de 5 degraus, um por vez. Pular etapas reduz pela metade a chance de avançar. O painel mostra o <b>gargalo</b> da operação: ele muda de informação para pessoal e depois para tempo, e gastar fora dele rende pouco.</p>
+    <h2 class="h3" id="tutt">Como funciona</h2>
+    <p class="muted"><b>1. Recrute</b> a equipe com 1.000 créditos. O que sobrar paga o <b>plantão</b> de cada rodada e as ações do cerco.</p>
+    <p class="muted"><b>2. Posicione</b> agentes e equipamentos nas 7 zonas. Quatro podem ser rotas de fuga, e você não sabe quais.</p>
+    <p class="muted"><b>3. Comande</b> 8 rodadas: leia o painel e escolha 2 ou 3 ações em <b>Tática, Negociação, Inteligência e Comunicação</b>.</p>
+    <p class="muted"><b>4. A crise termina</b> em rendição, intervenção, fuga ou ultimato. A nota pesa vidas (40%), prisões (20%), valores (15%), custo (10%) e confiança (15%). Mortes, intervenção fracassada ou entrada com menos de 50% de chance limitam a nota.</p>
+    <p class="muted">Dicas: negocie um degrau de cada vez e passe o mouse sobre o nome de um agente para ver os atributos dele.</p>
+    <p class="faint" style="font-size:12px">Para facilitadores: quem preferir não participar pode sair pelo Menu a qualquer momento; ofereça uma atividade alternativa.</p>
     <div class="row"><button class="btn primary" data-act="closehowto">Entendi</button><span class="faint" style="font-size:12px">Esc também fecha</span></div></div></div>`;
 }
 
@@ -201,8 +232,8 @@ function tutorModal() {
    =================================================================== */
 /* Manchetes em movimento contínuo: pausam com o mouse ou o foco, e o botão ❚❚ congela de vez (WCAG 2.2.2). */
 function tickerHTML(items, label = 'AO VIVO') {
-  const t = items.map(x => `<span>${x}</span>`).join('<i>◆</i>');
-  return `<div class="ticker${UI.tkPause ? ' paused' : ''}" role="marquee" aria-label="Manchetes ao vivo: ${items.join('. ')}"><b>${label}</b><div class="tk"><div class="tkin" aria-hidden="true">${t}<i>◆</i>${t}<i>◆</i></div></div><button class="tkp" type="button" data-act="tkpause" aria-pressed="${UI.tkPause}" aria-label="${UI.tkPause ? 'Retomar' : 'Pausar'} as manchetes" title="${UI.tkPause ? 'Retomar' : 'Pausar'} as manchetes">${UI.tkPause ? '▶' : '❚❚'}</button></div>`;
+  const t = items.map(x => `<span>${x}</span>`).join('<i>◆</i>'), t2 = items.map(x => `<span class="d">${x}</span>`).join('<i class="d">◆</i>');   // a segunda cópia só existe para o letreiro dar a volta sem emenda
+  return `<div class="ticker${UI.tkPause ? ' paused' : ''}" role="marquee" aria-label="Manchetes ao vivo: ${items.join('. ')}"><b>${label}</b><div class="tk"><div class="tkin" aria-hidden="true">${t}<i>◆</i>${t2}<i class="d">◆</i></div></div><button class="tkp" type="button" data-act="tkpause" aria-pressed="${UI.tkPause}" aria-label="${UI.tkPause ? 'Retomar' : 'Pausar'} as manchetes" title="${UI.tkPause ? 'Retomar' : 'Pausar'} as manchetes">${UI.tkPause ? '▶' : '❚❚'}</button></div>`;
 }
 function hostageStrip(cls = '') {
   return `<div class="hstrip ${cls}" aria-label="Os 17 reféns: ${HOSTAGE_LIST.map(h => h.nome).join(', ')}">${HOSTAGE_LIST.map((h, i) => `<span class="hp" style="--i:${i}" title="${h.nome}, ${h.idade} anos, ${h.papel}${h.nota ? ' (' + h.nota + ')' : ''}">${sil1()}<small>${h.nome.split(' ')[0]}</small></span>`).join('')}</div>`;
@@ -215,70 +246,60 @@ function renderBriefing() {
     <h1 class="sr">Briefing: assalto com reféns na Agência Central</h1>
     <div class="row" style="justify-content:space-between;align-items:flex-end"><div><div class="day">Sexta-feira</div><div class="time">14h07</div></div><div class="row">${menuBtn()}<button class="btn sm ghost skipb" type="button" data-act="skipbrief">Pular animação</button></div></div>
     <div class="narr">
-      <p>O alarme silencioso da Agência Central do Banco Meridiano acaba de disparar. As primeiras viaturas confirmam: há pelo menos dois homens armados no interior da agência.</p>
-      <p>Dezessete pessoas, entre clientes e funcionários, estão impedidas de sair. Uma aposentada que veio pagar contas. Um caixa de 24 anos no segundo mês de emprego. Uma cliente grávida de sete meses.</p>
-      <p>Uma equipe da TV Porto Alto já estaciona o caminhão de transmissão na esquina da Rua Marechal Deodoro. O delegado titular está em férias. Você é o próximo na cadeia de comando. <b>A partir de agora, todas as decisões são suas.</b></p>
+      <p>O alarme silencioso da Agência Central do Banco Meridiano acaba de disparar. Há homens armados lá dentro.</p>
+      <p>Dezessete pessoas não podem sair: uma aposentada que veio pagar contas, um caixa de 24 anos, uma cliente grávida de sete meses.</p>
+      <p>A TV já está na esquina e o delegado titular está de férias. <b>A partir de agora, todas as decisões são suas.</b></p>
     </div>
     <div class="after">
       <div class="eyebrow" style="margin-top:4px">Quem está lá dentro</div>
       ${hostageStrip()}
-      <p class="faint" style="font-size:13px;margin-top:8px">Você tem mil créditos, doze profissionais de plantão e um mapa com sete zonas. Não tem tempo, nem informação suficiente, e nenhuma decisão vai agradar a todos.</p>
       <div class="eyebrow" style="margin-top:20px">Cinco objetivos em tensão</div>
       <div class="objgrid">${w.map((p, i) => `<div class="obj" style="--w:${p * 2.2}%"><b>${p}%</b><span>${names[i]}</span></div>`).join('')}</div>
-      <div class="row" style="margin-top:26px"><button class="btn primary lg" data-act="tobrief">Assumir o comando</button><span class="faint" style="font-size:13px">Próximo: Fase 0, recrutamento da equipe</span></div>
-      <p class="faint" style="font-size:12.5px;margin-top:16px">Todos os nomes, lugares e instituições são fictícios. O Menu, no alto da tela, deixa sair a qualquer momento.</p>
+      <div class="row" style="margin-top:26px"><button class="btn primary lg" data-act="tobrief">Assumir o comando</button></div>
     </div></div>`;
 }
 
 /* ===================================================================
    FASE 0 — RECRUTAMENTO
    =================================================================== */
-function teamSummary() {
-  const t = G.team; if (!t.length) return '<p class="faint" style="font-size:12.5px">Nenhum agente recrutado.</p>';
-  const sum = k => t.reduce((s, id) => s + stat(id, k), 0), best = k => Math.max(...t.map(id => stat(id, k)));
-  return `<div class="attrs">${bar('Tática (soma)', sum('tat'), 'n', 50)}${bar('Melhor negoc.', best('neg'))}${bar('Melhor intel.', best('int'))}${bar('Melhor comun.', best('com'))}</div>`;
-}
-/* Rodapé do cartão: diz o estado e o que o clique faz (recrutar, dispensar, ou por que não dá). */
-const cardFoot = (on, can, falta, verbOn, verbOff) => on ? `<span class="cfoot on">✓ ${verbOn} · clique para desfazer</span>` : can ? `<span class="cfoot">Clique para ${verbOff}</span>` : `<span class="cfoot no">Faltam ${fmt(falta)} créditos</span>`;
+/* Atributos em uma linha (abreviados); o nome por extenso fica na dica do agente. */
+const ATTR3 = { tat: 'Tát', neg: 'Neg', int: 'Int', res: 'Res', com: 'Com' };
+const miniAttrs = id => `<div class="mattrs" aria-label="${Object.keys(ATTR).map(k => ATTR[k] + ' ' + stat(id, k)).join(', ')}">${Object.keys(ATTR).map(k => `<span><small>${ATTR3[k]}</small><b>${stat(id, k)}</b><i style="--v:${stat(id, k) * 10}%"></i></span>`).join('')}</div>`;
 function renderRecruit() {
   const agents = AGENTS.map(a => {
     const on = G.team.includes(a.id), can = on || G.credits >= a.custo;
     return `<button class="acard" data-act="hire" data-id="${a.id}" aria-pressed="${on}" ${can ? '' : `aria-disabled="true" data-why="Faltam ${fmt(a.custo - G.credits)} créditos para chamar ${a.nome}. Dispense alguém ou um equipamento para liberar verba."`}>
-      <div class="top"><div class="sil">${sil(a.id)}</div><div><b class="an">${a.nome}</b><span class="faint" style="font-size:12px">${a.trait}</span></div><span class="cost">${a.custo}</span></div>
-      <div class="attrs">${Object.keys(ATTR).map(k => bar(ATTR[k], stat(a.id, k))).join('')}</div>
-      <p class="bio">${BIOS[a.id] || ''}</p>
-      <div class="trait"><b>${a.trait}</b>${a.tdesc}</div>
-      ${cardFoot(on, can, a.custo - G.credits, 'Na equipe', 'recrutar')}</button>`;
+      <div class="top" data-ag="${a.id}"><div class="sil">${sil(a.id, 40)}</div><div><b class="an">${a.nome}</b><span class="faint" style="font-size:12px">${a.trait}</span></div><span class="cost">${a.custo}</span></div>
+      ${miniAttrs(a.id)}
+      <p class="teff">${a.tshort}</p>
+      ${on ? '<span class="cfoot on">✓ Na equipe</span>' : can ? '' : `<span class="cfoot no">Faltam ${fmt(a.custo - G.credits)} créditos</span>`}</button>`;
   }).join('');
-  const gear = EQUIPMENT_HTML();
-  const reserve = G.credits;
   const warns = [], F = budgetForecast(), cap = capacityPreview();
-  if (G.team.length && !G.team.some(id => stat(id, 'neg') >= 7)) warns.push('Nenhum negociador forte (7+): a escada de negociação será lenta.');
-  if (G.team.length && F.free < 0) warns.push(`A reserva não paga o plantão até o fim (faltam ~${Math.round(-F.free)}). Haverá rodadas no vermelho: o banco perde 5 e a pressão sobe 3 em cada uma.`);
-  else if (G.team.length && F.free < 60) warns.push('Quase nada sobra depois do plantão: nenhuma investigação, nenhum apoio externo, nenhuma hora extra.');
-  if (G.team.length && cap.adq <= 1) warns.push(`Espalhada pelo mapa, esta equipe cobre bem só ${cap.adq} de 7 zonas. Você vai concentrar agentes e apostar o resto no escuro.`);
-  const cam = G.team.includes('camila') ? `<div class="card flat"><h3>Camila Araújo · Versátil</h3><div class="row" style="gap:8px">
+  if (G.team.length && !G.team.some(id => stat(id, 'neg') >= 7)) warns.push('Nenhum negociador forte (7+): a negociação será lenta.');
+  if (G.team.length && F.free < 0) warns.push(`A reserva não paga o plantão até o fim (faltam ~${Math.round(-F.free)}).`);
+  else if (G.team.length && F.free < 60) warns.push('Quase nada sobra para o cerco depois do plantão.');
+  if (G.team.length && cap.adq <= 1) warns.push(`Espalhada, esta equipe cobre bem só ${cap.adq} de 7 zonas.`);
+  const cam = G.team.includes('camila') ? `<div class="card flat"><h3 data-ag="camila">Camila Araújo · Versátil</h3><div class="row" style="gap:8px">
     <label class="field">+1 em<select data-chg="camplus" id="camplus">${Object.keys(ATTR).map(k => `<option value="${k}" ${G.camAdj.plus === k ? 'selected' : ''}>${ATTR[k]}</option>`).join('')}</select></label>
     <label class="field">−1 em<select data-chg="camminus" id="camminus">${Object.keys(ATTR).map(k => `<option value="${k}" ${G.camAdj.minus === k ? 'selected' : ''}>${ATTR[k]}</option>`).join('')}</select></label></div></div>` : '';
+  const resCol = G.credits < 150 ? 'var(--red)' : G.credits < 350 ? 'var(--amber)' : 'var(--green)';
   setBar(recruitBar());
   return `<div class="screen">
-    <div class="hud"><div class="hudrow"><span class="brand">PERÍMETRO</span>${menuBtn()}<span class="pill">Fase 0 · Recrutamento</span><span class="spacer"></span><div class="stat"><small>Créditos</small><b style="color:var(--amber)" data-k="cred" data-n="${Math.round(G.credits)}">${fmt(G.credits)}</b></div></div></div>
+    <div class="hud"><div class="hudrow"><span class="brand">PERÍMETRO</span>${menuBtn()}<span class="pill">Recrutamento</span><span class="spacer"></span><div class="stat"><small>Créditos</small><b style="color:var(--amber)" data-k="cred" data-n="${Math.round(G.credits)}">${fmt(G.credits)}</b></div></div></div>
     <div class="recr">
       <div class="grid" style="gap:18px">
-        <div><div class="row" style="justify-content:space-between"><div class="eyebrow">Pool de profissionais</div><a class="jump" href="#equip">Catálogo de equipamentos ↓</a></div><h1 class="ptitle">Quem entra na sua força-tarefa?</h1><p class="serif muted" style="font-size:15.5px;margin-bottom:12px;max-width:820px">14h12. A Secretaria liberou mil créditos e doze profissionais de plantão. Quem você chamar chega em quinze minutos. O que sobrar é tudo o que você terá para investigar, pedir apoio e pagar horas extras até o fim da noite.</p><div class="agents">${agents}</div></div>
-        <div id="equip" class="anchor"><div class="eyebrow">Catálogo de equipamentos</div><h2 class="sr">Equipamentos</h2><div class="gear" style="margin-top:8px;grid-template-columns:repeat(auto-fill,minmax(300px,1fr))">${gear}</div></div>
+        <div><h1 class="ptitle">Monte sua força-tarefa</h1><p class="muted" style="margin-bottom:12px"><span class="mono">14h12</span>. Mil créditos para a equipe e os equipamentos; quem você chamar chega em 15 minutos. O que sobrar paga o cerco.</p><div class="agents">${agents}</div></div>
+        <div id="equip" class="anchor"><h2 class="eyebrow">Equipamentos</h2><div class="gear" style="margin-top:8px;grid-template-columns:repeat(auto-fill,minmax(280px,1fr))">${EQUIPMENT_HTML()}</div></div>
       </div>
       <aside class="side">
-        <div class="card"><h3>Orçamento</h3><div class="credits num" data-k="cred2" data-n="${Math.round(G.credits)}">${fmt(G.credits)}</div><p class="muted" style="font-size:12.5px;margin-top:6px">Reserva operacional. Cada crédito gasto agora é um crédito a menos para investigar, pedir apoio externo ou pagar o plantão de cada rodada.</p>
-          <div class="stack" style="margin-top:10px" role="img" aria-label="Equipe ${G.spent.rec}, equipamento ${G.spent.equip}, reserva ${G.credits}"><i style="width:${G.spent.rec / 10}%;background:var(--blue)"></i><i style="width:${G.spent.equip / 10}%;background:var(--violet)"></i><i style="width:${G.credits / 10}%;background:${G.credits < 150 ? 'var(--red)' : G.credits < 350 ? 'var(--amber)' : 'var(--green)'}"></i></div>
-          <div class="stackleg"><span><i style="background:var(--blue)"></i>Equipe <b class="mono">${G.spent.rec}</b></span><span><i style="background:var(--violet)"></i>Equipamento <b class="mono">${G.spent.equip}</b></span><span><i style="background:${G.credits < 150 ? 'var(--red)' : G.credits < 350 ? 'var(--amber)' : 'var(--green)'}"></i>Reserva <b class="mono">${fmt(G.credits)}</b></span></div></div>
-        ${G.team.length ? `<div class="card"><h3>O que a reserva precisa pagar</h3>
-          <div class="fc"><span>Plantão previsto</span><b class="mono">~${F.per}/rodada</b><small>${F.nField} ${F.nField === 1 ? 'agente' : 'agentes'} em campo. Reserva e reconvocados não custam.</small></div>
-          <div class="fc"><span>Nas 8 rodadas</span><b class="mono">~${F.total}</b><small>com o multiplicador de plantão da dificuldade ${D_().nome} (×${dec(D_().ops, D_().ops % 1 ? 1 : 0)}).</small></div>
-          <div class="fc ${F.free < 0 ? 'bad' : F.free < 60 ? 'warn' : 'ok'}"><span>Sobra para decidir</span><b class="mono">${F.free < 0 ? '−' + Math.round(-F.free) : Math.round(F.free)}</b><small>${F.free <= 0 ? 'nada para investigar, apoiar ou pagar horas extras' : `≈ ${F.intels} ${plural(F.intels, 'investigação', 'investigações')} ou ${F.apoios} apoio${F.apoios === 1 ? '' : 's'} externo${F.apoios === 1 ? '' : 's'}`}</small></div>
-          <div class="fc ${cap.adq >= 3 ? 'ok' : cap.adq === 2 ? 'warn' : 'bad'}"><span>Capacidade de cobertura</span><b class="mono">${cap.adq} / 7 zonas</b><small>adequadas (≥60%) se os agentes forem espalhados. Concentrar agentes cobre melhor menos zonas.</small></div></div>` : ''}
-        <div class="card"><h3>Equipe (${G.team.length})</h3>${teamSummary()}
-          <div style="margin-top:10px">${G.team.map(id => `<div class="mini"><span>${shortName(agentById(id).nome)}</span><span class="mono">${agentById(id).custo}</span></div>`).join('')}${G.gear.map(id => `<div class="mini"><span>${EQ[id].nome}</span><span class="mono">${EQ[id].custo}</span></div>`).join('')}</div>
+        <div class="card"><h3>Orçamento</h3><div class="credits num" data-k="cred2" data-n="${Math.round(G.credits)}">${fmt(G.credits)}</div>
+          <div class="stack" style="margin-top:10px" role="img" aria-label="Equipe ${G.spent.rec}, equipamento ${G.spent.equip}, reserva ${G.credits}"><i style="width:${G.spent.rec / 10}%;background:var(--blue)"></i><i style="width:${G.spent.equip / 10}%;background:var(--violet)"></i><i style="width:${G.credits / 10}%;background:${resCol}"></i></div>
+          <div class="stackleg"><span><i style="background:var(--blue)"></i>Equipe <b class="mono">${G.spent.rec}</b></span><span><i style="background:var(--violet)"></i>Equipamento <b class="mono">${G.spent.equip}</b></span><span><i style="background:${resCol}"></i>Reserva <b class="mono">${fmt(G.credits)}</b></span></div>
+          ${G.team.length ? `<div style="margin-top:10px"><div class="fc"><span>Plantão</span><b class="mono">~${F.per}/rodada</b></div>
+          <div class="fc ${F.free < 0 ? 'bad' : F.free < 60 ? 'warn' : 'ok'}"><span>Sobra para o cerco</span><b class="mono">${F.free < 0 ? '−' + Math.round(-F.free) : Math.round(F.free)}</b></div>
+          <div class="fc ${cap.adq >= 3 ? 'ok' : cap.adq === 2 ? 'warn' : 'bad'}"><span>Cobertura possível</span><b class="mono">${cap.adq} / 7 zonas</b></div></div>` : ''}</div>
+        <div class="card"><h3>Equipe (${G.team.length})</h3>
+          ${G.team.length || G.gear.length ? `<div>${G.team.map(id => `<div class="mini"><span data-ag="${id}">${shortName(agentById(id).nome)}</span><span class="mono">${agentById(id).custo}</span></div>`).join('')}${G.gear.map(id => `<div class="mini"><span>${EQ[id].nome}</span><span class="mono">${EQ[id].custo}</span></div>`).join('')}</div>` : '<p class="faint" style="font-size:12.5px">Ninguém ainda. Clique num agente para chamá-lo.</p>'}
           ${warns.map(w => `<div class="insight warn" style="margin-top:8px">${icon('alert', '', 1.8)}<span>${w}</span></div>`).join('')}</div>
         ${cam}
       </aside>
@@ -287,15 +308,15 @@ function renderRecruit() {
 function EQUIPMENT_HTML() {
   return EQUIP.map(e => {
     const on = G.gear.includes(e.id), can = on || G.credits >= e.custo;
-    return `<button class="gcard" data-act="buygear" data-id="${e.id}" aria-pressed="${on}" ${can ? '' : `aria-disabled="true" data-why="Faltam ${fmt(e.custo - G.credits)} créditos para ${e.nome}."`}>${icon(e.ic)}<span><b>${e.nome}</b><span>${e.desc}</span>${on ? '<span class="cfoot on">✓ Comprado · clique para devolver</span>' : can ? '' : `<span class="cfoot no">Faltam ${fmt(e.custo - G.credits)} créditos</span>`}</span><span class="cost mono">${e.custo}</span></button>`;
+    return `<button class="gcard hastip" data-act="buygear" data-id="${e.id}" aria-pressed="${on}" ${can ? '' : `aria-disabled="true" data-why="Faltam ${fmt(e.custo - G.credits)} créditos para ${e.nome}."`}>${icon(e.ic)}<span><b>${e.nome}</b><span>${e.dshort}</span>${on ? '<span class="cfoot on">✓ Comprado</span>' : can ? '' : `<span class="cfoot no">Faltam ${fmt(e.custo - G.credits)} créditos</span>`}</span><span class="cost mono">${e.custo}</span><span class="tipc"><b>${e.nome}</b><br>${e.desc}</span></button>`;
   }).join('');
 }
 /* Barra de ação do recrutamento: o resumo e o próximo passo sempre à vista. */
 function recruitBar() {
   const empty = !G.team.length;
   return `<div class="absum"><span class="abk">Sua força-tarefa</span><span><b class="mono">${G.team.length}</b> ${plural(G.team.length, 'agente', 'agentes')} · <b class="mono">${G.gear.length}</b> ${plural(G.gear.length, 'equipamento', 'equipamentos')} · reserva <b class="mono" style="color:var(--amber)">${fmt(G.credits)}</b></span></div>
-    ${UI.emptyConfirm && empty ? `<p class="abmsg bad">${icon('alert', 'ico', 1.8)}Sem agentes, a guarnição local improvisa dois patrulheiros (Tática 3): cobertura mínima e negociação amadora. Confirma?</p>` : '<span class="spacer"></span>'}
-    <button class="btn primary lg" data-act="torecruit">${UI.emptyConfirm && empty ? 'Sim, seguir sem equipe' : 'Posicionar o perímetro →'}</button>`;
+    ${UI.emptyConfirm && empty ? `<p class="abmsg bad">${icon('alert', 'ico', 1.8)}Sem agentes, a guarnição local improvisa dois patrulheiros fracos. Seguir assim?</p>` : '<span class="spacer"></span>'}
+    <button class="btn primary lg" data-act="torecruit">${UI.emptyConfirm && empty ? 'Sim, seguir sem equipe' : 'Posicionar a equipe →'}</button>`;
 }
 
 /* ===================================================================
@@ -303,44 +324,44 @@ function recruitBar() {
    =================================================================== */
 function chipHTML(kind, id) {
   const sel = UI.sel && UI.sel.t === kind && UI.sel.id === id;
-  if (kind === 'a') { const a = agentById(id); return `<button class="chip" data-act="selchip" data-t="a" data-id="${id}" aria-pressed="${!!sel}" title="${a.nome}"><span class="in">${initials(a.nome)}</span>${shortName(a.nome).replace(/^(Cap\.|Sgt\.|Det\.|Neg\.|Ag\.)\s*/, '')} · T${stat(id, 'tat')}</button>`; }
-  return `<button class="chip" data-act="selchip" data-t="g" data-id="${id}" aria-pressed="${!!sel}" title="${EQ[id].nome}">${icon(EQ[id].ic, 'ico" style="width:16px;height:16px')}${EQ[id].nome}</button>`;
+  if (kind === 'a') { const a = agentById(id); return `<button class="chip" data-act="selchip" data-t="a" data-id="${id}" data-ag="${id}" aria-pressed="${!!sel}"><span class="in">${initials(a.nome)}</span>${shortName(a.nome).replace(/^(Cap\.|Sgt\.|Det\.|Neg\.|Ag\.)\s*/, '')} · T${stat(id, 'tat')}</button>`; }
+  return `<button class="chip" data-act="selchip" data-t="g" data-id="${id}" aria-pressed="${!!sel}" data-tip="${esc(EQ[id].nome + ': ' + EQ[id].dshort)}">${icon(EQ[id].ic, 'ico" style="width:16px;height:16px')}${EQ[id].nome}</button>`;
 }
 function renderPerimeter() {
   const reserveA = G.team.filter(id => (G.az[id] || 'reserva') === 'reserva'), reserveG = G.gear.filter(id => (G.gz[id] || 'reserva') === 'reserva');
-  const adq = adequateCount();
+  const adq = adequateCount(), adqCol = adq >= 4 ? 'green' : adq >= 3 ? 'amber' : 'red';
   const intel = INTEL.filter(i => i.fase1).map(i => {
     const r = G.p1intel[i.id], done = r && typeof r === 'object', c = intelCost(i.id), can = G.credits >= c;
     return `<div class="icard ${done && r.ok ? 'done' : ''}"><b>${icon(i.ic, 'ico" style="width:18px;height:18px;vertical-align:-4px;margin-right:6px')}${i.nome}</b><p>${i.desc}</p>
       ${done ? dossierHTML(r) : `<button class="btn sm" data-act="p1intel" data-id="${i.id}" ${can ? '' : `aria-disabled="true" data-why="Faltam ${fmt(c - G.credits)} créditos para esta investigação."`}>Investigar · ${c} créditos</button>${can ? '' : `<small class="unav">Faltam ${fmt(c - G.credits)} créditos</small>`}`}</div>`;
   }).join('');
-  const zrows = ZONES.map(z => {
-    const cov = zoneCoverage(z.id), sel = UI.sel;
-    return `<div class="zrow ${UI.pickZone === z.id ? 'sel' : ''}"><div><span class="nm">${z.nome}</span> <span class="pill ${covCls(cov) === 'g' ? 'green' : covCls(cov) === 'a' ? 'amber' : 'red'}">${covSym(cov)} ${covTxt(cov)}</span></div><span class="cv" style="color:var(--${covCls(cov) === 'g' ? 'green' : covCls(cov) === 'a' ? 'amber' : 'red'})">${cov}%</span>
-      <div class="chips">${agentsIn(z.id).map(id => chipHTML('a', id)).join('')}${gearIn(z.id).map(id => chipHTML('g', id)).join('')}${sel ? `<button class="btn sm" data-act="place" data-z="${z.id}">Posicionar aqui</button>` : ''}</div></div>`;
+  /* Lista compacta: só as zonas ocupadas (o mapa já mostra a cobertura de todas). É por ela que se pega quem já está posicionado. */
+  const zrows = ZONES.filter(z => agentsIn(z.id).length || gearIn(z.id).length || UI.sel).map(z => {
+    const cov = zoneCoverage(z.id), cc = covCls(cov) === 'g' ? 'green' : covCls(cov) === 'a' ? 'amber' : 'red';
+    return `<div class="zrow ${UI.pickZone === z.id ? 'sel' : ''}"><span class="nm">${z.nome}</span><span class="cv" style="color:var(--${cc})">${cov}%</span>
+      <div class="chips">${agentsIn(z.id).map(id => chipHTML('a', id)).join('')}${gearIn(z.id).map(id => chipHTML('g', id)).join('')}${UI.sel ? `<button class="btn sm" data-act="place" data-z="${z.id}">Posicionar aqui</button>` : ''}</div></div>`;
   }).join('');
   const selName = UI.sel ? (UI.sel.t === 'a' ? agentById(UI.sel.id).nome : EQ[UI.sel.id].nome) : '';
-  setBar(`<div class="absum"><span class="abk">Perímetro</span><span><b class="mono" style="color:var(--${adq >= 4 ? 'green' : adq >= 3 ? 'amber' : 'red'})">${adq} de 7</b> zonas adequadas · ${reserveA.length} ${plural(reserveA.length, 'agente', 'agentes')} na reserva · plantão <b class="mono">−${plantaoCost()}</b>/rod.</span></div>
-    <span class="spacer"></span><button class="btn" data-act="autoplace">Distribuição automática</button><button class="btn primary lg" data-act="tosiege">Confirmar e iniciar o cerco →</button>`);
+  setBar(`<div class="absum"><span class="abk">Perímetro</span><span><b class="mono" style="color:var(--${adqCol})">${adq} de 7</b> zonas adequadas</span></div>
+    <span class="spacer"></span><button class="btn" data-act="autoplace">Distribuição automática</button><button class="btn primary lg" data-act="tosiege">Iniciar o cerco →</button>`);
   return `<div class="screen">
-    <div class="hud"><div class="hudrow"><span class="brand">PERÍMETRO</span>${menuBtn()}<span class="pill">Fase 1 · Posicionamento</span><span class="spacer"></span>
-      <div class="stat"><small>Zonas adequadas</small><b style="color:var(--${adq >= 4 ? 'green' : adq >= 3 ? 'amber' : 'red'})">${adq} / 7</b></div>
-      <div class="stat"><small>Plantão previsto</small><b>−${plantaoCost()}/rod.</b></div>
+    <div class="hud"><div class="hudrow"><span class="brand">PERÍMETRO</span>${menuBtn()}<span class="pill">Posicionamento</span><span class="spacer"></span>
+      <div class="stat"><small>Zonas adequadas</small><b style="color:var(--${adqCol})">${adq} / 7</b></div>
+      <div class="stat"><small>Plantão</small><b>−${plantaoCost()}/rod.</b></div>
       <div class="stat"><small>Créditos</small><b style="color:var(--amber)" data-k="cred" data-n="${Math.round(G.credits)}">${fmt(G.credits)}</b></div></div></div>
     <div class="perim">
       <div class="grid">
-        <div><div class="eyebrow">Mapa esquemático</div><h1 class="ptitle">Onde você vai apostar?</h1>
-          <p class="muted" style="margin-bottom:10px;max-width:760px">Quatro das sete zonas são rotas de fuga possíveis, mas você não sabe quais. Selecione um agente ou equipamento e clique na zona de destino. A cobertura combina a eficiência tática dos agentes com o fator dos equipamentos (×1,0 sem · ×1,3 com um · ×1,6 com dois).</p>
-          ${UI.sel ? `<div class="target" role="status">${icon('map', 'ico', 1.8)}<span>Posicionando <b>${selName}</b>: clique na zona de destino no mapa ou em “Posicionar aqui” na lista. <kbd>Esc</kbd> cancela.</span></div>` : ''}
+        <div><h1 class="ptitle">Posicione a equipe</h1>
+          <p class="muted" style="margin-bottom:10px">Selecione um agente ou equipamento e clique numa zona. Quatro zonas podem ser rotas de fuga.</p>
+          ${UI.sel ? `<div class="target" role="status">${icon('map', 'ico', 1.8)}<span>Posicionando <b>${selName}</b>: clique na zona de destino. <kbd>Esc</kbd> cancela.</span></div>` : ''}
           <div class="mapwrap">${mapSVG({ interactive: true, sel: UI.pickZone, targeting: !!UI.sel })}${legendHTML()}</div></div>
-        <div><div class="eyebrow">Inteligência prévia (resultado imediato, 15% menos confiável)</div><div class="intelgrid" style="margin-top:8px">${intel}</div></div>
+        <div><h2 class="eyebrow">Investigar antes do cerco</h2><div class="intelgrid" style="margin-top:8px">${intel}</div></div>
       </div>
       <aside class="side">
         <div class="card"><h2 class="h3">Reserva <span class="pill">${reserveA.length} ${plural(reserveA.length, 'agente', 'agentes')}</span></h2>
           <div class="row" style="gap:6px">${reserveA.map(id => chipHTML('a', id)).join('') || '<span class="faint" style="font-size:12.5px">Todos posicionados.</span>'}${reserveG.map(id => chipHTML('g', id)).join('')}</div>
-          ${UI.sel ? `<div class="row" style="margin-top:10px"><button class="btn sm" data-act="place" data-z="reserva">Devolver à reserva</button><span class="faint" style="font-size:12.5px">${selName} selecionado</span></div>` : '<p class="faint" style="font-size:12.5px;margin-top:8px">Clique em um item e depois em uma zona. Agentes na reserva descansam, mas não cobrem zona nenhuma.</p>'}</div>
-        <div class="card"><h2 class="h3">Zonas</h2><div class="zlist">${zrows}</div></div>
-        <p class="faint" style="font-size:12px">Cobertura calculada com a pressão inicial (${G.pressure}): eficiência × ${dec(pressureFactor(G.pressure * .95), 2)}. Ela muda ao longo do cerco.</p>
+          ${UI.sel ? `<div class="row" style="margin-top:10px"><button class="btn sm" data-act="place" data-z="reserva">Devolver à reserva</button></div>` : '<p class="faint" style="font-size:12.5px;margin-top:8px">Na reserva, o agente descansa e não custa plantão, mas não cobre zona.</p>'}</div>
+        ${zrows ? `<div class="card"><h2 class="h3">Em campo</h2><div class="zlist">${zrows}</div></div>` : ''}
       </aside>
     </div></div>`;
 }

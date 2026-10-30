@@ -22,7 +22,7 @@
 *{box-sizing:border-box}
 html,body{margin:0}
 body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.5;
-  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 40px;min-height:100vh;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 calc(40px + var(--toasth,0px));min-height:100vh;
   background-image:radial-gradient(1200px 600px at 70% -10%,rgba(77,166,255,.07),transparent 60%),radial-gradient(900px 500px at -10% 110%,rgba(246,166,35,.05),transparent 60%);}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--bg);z-index:60}
 h1,h2,h3,h4{margin:0;font-weight:600;line-height:1.2;text-wrap:balance}
@@ -150,7 +150,13 @@ button,select,input{font:inherit;color:inherit}
 .acard[aria-pressed=true]{border-color:var(--green);box-shadow:0 0 0 1px var(--green),0 8px 26px rgba(65,208,143,.12)}
 .acard[aria-disabled=true]{opacity:.72;border-style:dashed;cursor:not-allowed;background:var(--bg2)}
 .acard[aria-disabled=true]:hover{transform:none;border-color:var(--line2)}
-.acard .top{display:grid;grid-template-columns:54px 1fr auto;gap:10px;align-items:center}
+.acard .top{display:grid;grid-template-columns:40px 1fr auto;gap:10px;align-items:center}
+.acard .top .sil{width:40px;height:46px}
+.mattrs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.mattrs span{display:grid;grid-template-columns:auto 1fr;align-items:baseline;gap:0 4px;font-size:11px;color:var(--ink3);font-family:var(--cond);text-transform:uppercase;letter-spacing:.06em}
+.mattrs b{font-family:var(--mono);font-size:13px;color:var(--ink);text-align:right;letter-spacing:0}
+.mattrs i{grid-column:1/-1;height:3px;margin-top:3px;border-radius:2px;background:linear-gradient(90deg,#5f87c4 var(--v),#24324a var(--v))}
+.teff{font-size:12.5px;color:var(--ink2);line-height:1.35}
 .sil{width:54px;height:62px;border-radius:8px;background:linear-gradient(160deg,#1f3150,#0e1626);border:1px solid var(--line);display:grid;place-items:end center;overflow:hidden}
 .acard .an{font-size:14px;display:block;line-height:1.25}
 .acard .cost{font-family:var(--mono);color:var(--amber);font-weight:600}
@@ -271,13 +277,19 @@ select{background:#0d1523;border:1px solid var(--line2);border-radius:7px;paddin
 select:hover{border-color:var(--blue)}
 .queue{display:grid;gap:6px}
 .qitem{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;padding:7px 10px;background:var(--bg2);border:1px solid var(--line2);border-radius:8px;font-size:12.5px;animation:fadein .25s}
-.ladder{display:grid;gap:5px}
-.step{display:grid;grid-template-columns:30px 1fr auto;gap:10px;align-items:center;padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:var(--bg2);font-size:12.5px;transition:background .4s,border-color .4s}
-.step b{display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:#0b1320;border:1px solid var(--line2);font-family:var(--mono)}
-.step.done{border-color:rgba(65,208,143,.4)}.step.done b{background:var(--green);color:#052b1a;border-color:var(--green)}
-.step.cur{border-color:var(--amber);background:var(--amber-bg)}.step.cur b{background:var(--amber);color:#1b1305;border-color:var(--amber);animation:pulse 1.8s infinite}
+.ladder{display:grid;grid-template-columns:repeat(5,1fr);padding-top:2px}
+.step{display:grid;justify-items:center;position:relative;cursor:help}
+.step::before{content:'';position:absolute;top:12px;right:50%;width:100%;height:2px;background:var(--line2)}
+.step:first-child::before{display:none}
+.step.done::before,.step.cur::before{background:var(--green)}
+.step b{position:relative;display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:#0b1320;border:1px solid var(--line2);font-family:var(--mono);font-size:12.5px;transition:background .4s,border-color .4s}
+.step.done b{background:var(--green);color:#052b1a;border-color:var(--green)}
+.step.cur b{background:var(--amber);color:#1b1305;border-color:var(--amber);animation:pulse 1.8s infinite}
 @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(246,166,35,.5)}50%{box-shadow:0 0 0 7px rgba(246,166,35,0)}}
-.step small{color:var(--ink3);font-size:12px}
+.ladcap{font-size:12.5px;color:var(--ink2);text-align:center;margin-top:-2px}
+.step b .ico{width:14px;height:14px}
+.unkline{font-size:12.5px;color:var(--ink3);line-height:1.45}.unkline b{color:var(--ink2);font-weight:600}.unkline .unk{font-style:italic}
+.ladcap b{color:var(--ink)}
 .team{display:grid;gap:6px}
 .trow{display:grid;grid-template-columns:1fr auto;gap:6px;align-items:center;padding:6px 8px;background:var(--bg2);border:1px solid var(--line);border-radius:8px;font-size:12.5px}
 .trow small{color:var(--ink3);display:block;font-size:11.5px}
@@ -304,6 +316,15 @@ select:hover{border-color:var(--blue)}
 .tutor h3{font-size:18px}
 
 /* toasts */
+#tip{position:fixed;z-index:120;max-width:300px;padding:10px 12px;background:#0d1626;border:1px solid var(--line2);border-radius:8px;box-shadow:0 10px 30px rgba(0,0,0,.45);font-size:12.5px;line-height:1.45;color:var(--ink2);pointer-events:none}
+#tip[hidden]{display:none}
+#tip b{color:var(--ink)}
+#tip.ag{width:270px}
+#tip .tn{display:block;font-size:13.5px;margin-bottom:2px}
+#tip .tt{display:block;margin-bottom:8px}
+#tip .tt b{color:var(--amber);font-weight:600}
+#tip .attrs{display:grid;gap:4px}
+.tipc{display:none!important}
 #toasts{position:fixed;left:max(14px,env(safe-area-inset-left,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:90;display:grid;gap:8px;width:min(360px,calc(100vw - 28px));pointer-events:none;transition:bottom .2s}
 body.withbar #toasts{bottom:calc(96px + env(safe-area-inset-bottom,0px))}
 .toast{position:relative;pointer-events:auto;background:#0c1424;border:1px solid var(--line2);border-left:4px solid var(--blue);border-radius:8px;padding:10px 34px 10px 12px;font-family:var(--mono);font-size:12.5px;color:#d6e0ef;box-shadow:0 10px 30px rgba(0,0,0,.5);animation:toastin .35s both,toastout .4s 6.5s forwards}
@@ -361,6 +382,8 @@ body.withbar #toasts{bottom:calc(96px + env(safe-area-inset-bottom,0px))}
 .concept .ref{font-size:12px;color:var(--ink3);font-family:var(--mono)}
 .concept .you{font-size:13px;padding:8px 10px;border-radius:8px;background:var(--bg2);border-left:3px solid var(--amber)}
 .concept .les{font-size:13px;color:var(--ink2)}
+.concept details.more{margin-top:2px}.concept details.more[open]>summary{margin-bottom:6px}
+.concept{align-content:start}
 .kolb{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
 @media (max-width:820px){.kolb{grid-template-columns:1fr 1fr}}
 .table{width:100%;border-collapse:collapse;font-size:13px}
@@ -403,7 +426,7 @@ body.withbar #toasts{bottom:calc(96px + env(safe-area-inset-bottom,0px))}
 .ticker .tkin i{color:var(--red);font-style:normal;font-size:9px;align-self:center}
 @keyframes tick{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 .brief .ticker{margin:0 0 22px}
-@media (prefers-reduced-motion:reduce){.ticker .tkin{animation:none;white-space:normal;flex-wrap:wrap}}
+@media (prefers-reduced-motion:reduce){.ticker .tkin{animation:none;white-space:normal;flex-wrap:wrap}.ticker .tkin .d{display:none}}
 /* reféns no briefing */
 .hstrip{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
 .hstrip .hp{display:grid;justify-items:center;gap:2px;width:52px;opacity:0;animation:rise .5s ease forwards;animation-delay:calc(3.9s + var(--i) * 70ms)}
@@ -496,8 +519,8 @@ body.withbar #toasts{bottom:calc(96px + env(safe-area-inset-bottom,0px))}
 .hc.hurt{border-color:rgba(246,166,35,.5);background:var(--amber-bg)}.hc.hurt .ico{color:var(--amber)}
 .hc.dead{border-color:#5b6475;background:#141922}.hc.dead .ico{color:var(--ink3)}
 /* revelação final */
-.truth .trows{display:grid;gap:6px}
-.truth .tr{display:grid;grid-template-columns:150px 1fr;gap:4px 12px;padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:var(--bg2);font-size:13px}
+.truth .trows{display:grid;gap:6px;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr))}
+.truth .tr{display:grid;grid-template-columns:130px 1fr;gap:4px 12px;padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:var(--bg2);font-size:13px}
 .truth .tr small{grid-column:1/-1;color:var(--ink3);font-size:12px}
 .truth .tr.k small{color:var(--green)}.truth .tr.u small{color:#ff9aa7}
 .truth .tr b{font-family:var(--mono)}
@@ -519,8 +542,6 @@ body.withbar #toasts{bottom:calc(96px + env(safe-area-inset-bottom,0px))}
    ===================================================================== */
 .stat .burn{font-style:normal;font-family:var(--mono);font-size:11px;color:var(--ink3);margin-top:1px}
 .stat .burn.bad{color:#ff9aa7;font-weight:600}
-.stat.tocchip b{font-family:var(--cond);font-size:14px;letter-spacing:.04em}
-.stat.tocchip.violet b{color:var(--violet)}.stat.tocchip.blue b{color:var(--blue)}.stat.tocchip.amber b{color:var(--amber)}
 /* caixa */
 .cashtop{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
 .cashtop div{background:var(--bg2);border:1px solid var(--line);border-radius:8px;padding:7px 9px}
@@ -533,46 +554,29 @@ body.withbar #toasts{bottom:calc(96px + env(safe-area-inset-bottom,0px))}
 .stackleg{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:8px;font-size:12px;color:var(--ink2)}
 .stackleg i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px}
 .stackleg b{color:var(--ink);font-weight:600}
-/* utilização da equipe */
-.util{display:flex;gap:6px;margin-bottom:8px}
-.util span{flex:1;text-align:center;background:var(--bg2);border:1px solid var(--line);border-radius:8px;padding:5px 4px;font-size:11.5px;color:var(--ink3);line-height:1.2}
-.util b{display:block;font-family:var(--mono);font-size:17px;color:var(--ink)}
 .trow small .tr1,.trow small .tr2{color:var(--amber);font-weight:600}
-/* equipamentos */
-.gearlist{display:grid;gap:6px}
-.gl{display:grid;grid-template-columns:24px 1fr;gap:8px;align-items:center;font-size:12.5px;padding:6px 8px;background:var(--bg2);border:1px solid var(--line);border-radius:8px}
-.gl .ico{width:20px;height:20px}
-.gl small{display:block;color:var(--ink3);font-size:11.5px}
-.gl.idle{border-style:dashed;opacity:.8}.gl.idle small{color:var(--amber)}
-/* alertas */
-.alerts .alert{display:grid;grid-template-columns:24px 1fr auto;gap:10px;align-items:center;padding:9px 10px;border-radius:8px;border:1px solid var(--line);background:var(--bg2);margin-bottom:8px}
-.alerts .alert .ico{width:22px;height:22px}
-.alerts .alert b{font-size:13.5px}
-.alerts .alert em{font-style:normal;font-family:var(--cond);text-transform:uppercase;letter-spacing:.1em;font-size:11px;margin-left:6px;padding:1px 6px;border-radius:99px;border:1px solid currentColor}
-.alerts .alert span{display:block;font-size:12.5px;color:var(--ink2);line-height:1.4;margin-top:2px}
-.alerts .alert.s3{border-color:rgba(255,84,104,.6);background:var(--red-bg)}.alerts .alert.s3 .ico,.alerts .alert.s3 em{color:#ff9aa7}
-.alerts .alert.s2{border-color:rgba(246,166,35,.55);background:var(--amber-bg)}.alerts .alert.s2 .ico,.alerts .alert.s2 em{color:var(--amber)}
-.alerts .alert.s1{border-color:rgba(77,166,255,.4);background:var(--blue-bg)}.alerts .alert.s1 .ico,.alerts .alert.s1 em{color:var(--blue)}
-.alerts.calm{border-color:rgba(65,208,143,.35)}
-/* gargalo */
-.tocbars{display:grid;gap:8px}
-.tocb{display:grid;grid-template-columns:150px 1fr 34px auto;gap:10px;align-items:center;font-size:12.5px;color:var(--ink2)}
-.tocb span{display:flex;align-items:center;gap:6px}
-.tocb .ico{width:16px;height:16px}
-.tocb b{text-align:right;color:var(--ink)}
-.tocb em{font-style:normal;font-family:var(--cond);text-transform:uppercase;letter-spacing:.12em;font-size:11px;padding:1px 7px;border-radius:99px;background:var(--amber);color:#1b1305;font-weight:700}
-.tocb:not(.lead) em{display:none}.tocb:not(.lead){opacity:.78}
-.tocb.lead .meter{height:11px}
-.toctl{display:flex;align-items:center;gap:10px;margin:10px 0 6px;font-size:11.5px;color:var(--ink3)}
-.toctl small{font-family:var(--cond);text-transform:uppercase;letter-spacing:.1em;font-size:11px}
-.toctl span{display:flex;gap:5px}
-.td{display:inline-block;width:20px;height:9px;border-radius:3px;background:var(--panel2);border:1px solid var(--line)}
-.td.violet{background:var(--violet);border-color:var(--violet)}.td.blue{background:var(--blue);border-color:var(--blue)}.td.amber{background:var(--amber);border-color:var(--amber)}
-.td.now{outline:2px solid var(--ink);outline-offset:1px}
-.toc .why{font-size:13px;line-height:1.45}
-.toc .elev{font-size:12.5px;color:var(--ink2);margin-top:6px;padding:7px 10px;border-radius:8px;background:var(--green-bg);border:1px solid rgba(65,208,143,.35);line-height:1.4}
-.toc .elev small{font-family:var(--cond);text-transform:uppercase;letter-spacing:.12em;font-size:11px;color:var(--green);font-weight:700;margin-right:8px}
-.toc .elev.stop{background:var(--red-bg);border-color:rgba(255,84,104,.35)}.toc .elev.stop small{color:#ff9aa7}
+/* equipamentos: fichas compactas; o efeito de cada um fica na dica */
+.gearlist{display:flex;flex-wrap:wrap;gap:6px}
+.gl{display:inline-flex;align-items:center;gap:6px;padding:4px 10px 4px 7px;border-radius:99px;font-size:12.5px;background:var(--bg2);border:1px solid var(--line);cursor:help}
+.gl .ico{width:16px;height:16px;color:var(--blue)}
+.gl b{font-weight:600}
+.gl.idle{border-style:dashed;color:var(--ink3)}.gl.idle .ico{color:var(--ink3)}.gl.idle b{color:var(--ink2)}
+/* alertas: uma linha por alerta (ícone, título, ação); a explicação fica na dica */
+.alerts{display:grid;gap:6px}
+.alerts .alert{display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:10px;align-items:center;padding:7px 8px 7px 10px;border-radius:9px;border:1px solid var(--line);background:var(--bg2);cursor:help}
+.alerts .alert .ico{width:20px;height:20px}
+.alerts .alert b{font-size:13.5px;line-height:1.3}
+.alerts .alert .btn{cursor:pointer}
+.alerts .alert.s3{border-color:rgba(255,84,104,.6);background:var(--red-bg)}.alerts .alert.s3 .ico{color:#ff9aa7}
+.alerts .alert.s2{border-color:rgba(246,166,35,.55);background:var(--amber-bg)}.alerts .alert.s2 .ico{color:var(--amber)}
+.alerts .alert.s1{border-color:rgba(77,166,255,.4);background:var(--blue-bg)}.alerts .alert.s1 .ico{color:var(--blue)}
+/* gargalo (Teoria das Restrições) numa linha */
+.tocbar{display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:10px;align-items:center;padding:7px 8px 7px 10px;border-radius:9px;border:1px solid var(--line);background:var(--bg2);font-size:13px;color:var(--ink2);cursor:help}
+.tocbar .ico{width:18px;height:18px}
+.tocbar b{color:var(--ink)}
+.tocbar.violet{border-color:rgba(167,139,250,.45)}.tocbar.violet .ico{color:var(--violet)}
+.tocbar.blue{border-color:rgba(77,166,255,.4)}.tocbar.blue .ico{color:var(--blue)}
+.tocbar.amber{border-color:rgba(246,166,35,.45)}.tocbar.amber .ico{color:var(--amber)}
 .tocshift .tsrow{display:grid;grid-template-columns:34px 1fr;gap:12px;align-items:start}
 .tocshift .tsrow .ico{width:28px;height:28px;color:var(--amber)}
 .tocshift p{font-size:13.5px;color:var(--ink2);margin-top:4px;line-height:1.5}
@@ -603,7 +607,6 @@ body.withbar #toasts{bottom:calc(96px + env(safe-area-inset-bottom,0px))}
 .econ .runs{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
 .econ .run{padding:4px 10px;border-radius:8px;font-size:12.5px;border:1px solid var(--line2)}
 .econ .run.violet{border-color:var(--violet);background:rgba(167,139,250,.12)}.econ .run.blue{border-color:var(--blue);background:var(--blue-bg)}.econ .run.amber{border-color:var(--amber);background:var(--amber-bg)}
-@media (max-width:1180px){.tocb{grid-template-columns:120px 1fr 30px auto}.alerts .alert{grid-template-columns:24px 1fr}.alerts .alert .btn{grid-column:2;justify-self:start}}
 
 /* =====================================================================
    L1.4 — revisão de UX/UI: hierarquia, affordances, foco, microinterações
@@ -622,7 +625,7 @@ kbd{font-family:var(--mono);font-size:11.5px;padding:1px 6px;border-radius:4px;b
 .abk{font-family:var(--cond);text-transform:uppercase;letter-spacing:.14em;font-size:11.5px;color:var(--ink3);font-weight:600;white-space:nowrap}
 .abmsg{flex:1;display:flex;align-items:center;gap:8px;font-size:13px;color:#ffc2ca;min-width:0}
 .abmsg .ico{width:20px;height:20px;color:#ff9aa7;flex:none}
-body.withbar{padding-bottom:104px}
+body.withbar{padding-bottom:calc(104px + var(--toasth,0px))}
 .slotc{display:inline-flex;align-items:center;gap:5px}
 .slotc b{font-size:13px;color:var(--ink);margin-left:3px;letter-spacing:0}
 .qchips{flex:1;display:flex;gap:6px;align-items:center;min-width:0;overflow:hidden;font-size:13px}
@@ -677,9 +680,17 @@ small.unav{margin:0}
 .calmbar{display:grid;grid-template-columns:22px 1fr;gap:8px;align-items:center;padding:9px 12px;border-radius:10px;border:1px solid rgba(65,208,143,.35);background:var(--green-bg);font-size:13px;color:var(--ink2)}
 .calmbar .ico{width:18px;height:18px;color:var(--green)}
 .calmbar b{color:var(--ink)}
-/* gargalo mais enxuto */
-.elevs{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:8px;margin-top:8px}
-.elevs .elev{margin-top:0}
+.calmbar.guide{border-color:rgba(77,166,255,.4);background:var(--blue-bg)}.calmbar.guide .ico{color:var(--blue)}
+/* L2.5+: regras longas num "ⓘ" com dica, explicações opcionais num "Por que" recolhido */
+.helptip{display:inline-block;justify-self:start;margin-left:6px;font-size:11.5px;font-weight:400;color:var(--ink3);border-bottom:1px dotted currentColor;cursor:help;text-transform:none;letter-spacing:0;font-family:var(--sans);line-height:1.3}
+.helptip:hover,.helptip:focus-visible{color:var(--ink2)}
+details.more{margin-top:10px}
+details.more>summary{cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--blue);list-style:none;padding:2px 0}
+details.more>summary::-webkit-details-marker{display:none}
+details.more>summary::before{content:'▸';font-size:11px;transition:transform .15s}
+details.more[open]>summary::before{transform:rotate(90deg)}
+details.more[open]>summary{margin-bottom:10px}
+.pr[data-tip],.stat[data-tip],.bsc[data-tip],.roster .rp[data-tip],.trow [data-ag],.trow [data-tip],.report .src[data-ag],.adv [data-ag]{cursor:help}
 /* abas: frentes de decisão e níveis de Endsley */
 .tdot{position:absolute;top:5px;right:7px;width:7px;height:7px;border-radius:50%;background:var(--amber);box-shadow:0 0 0 2px var(--bg2)}
 .tab[aria-selected=true] .tdot{box-shadow:0 0 0 2px var(--blue)}
@@ -826,23 +837,23 @@ const ZNAME = id => id === 'reserva' ? 'Reserva' : ZONE[id].nome;
 
 /* ---------- AGENTES (12, exatamente como no projeto) ---------- */
 const AGENTS = [
-  { id:'renata',   nome:'Cap. Renata Alves',   s:{tat:9,neg:5,int:6,res:8,com:6},  trait:'Veterana',      tdesc:'Reconhece padrões: +15% de confiabilidade nas investigações e uma intuição na rodada 3.', custo:150 },
-  { id:'marcos',   nome:'Sgt. Marcos Ribeiro', s:{tat:8,neg:3,int:5,res:9,com:4},  trait:'Disciplinado',  tdesc:'Fadiga reduzida: cansa na metade da velocidade e não sofre a perda da Fadiga crítica.', custo:120 },
-  { id:'carla',    nome:'Det. Carla Mendes',   s:{tat:4,neg:8,int:9,res:5,com:7},  trait:'Analítica',     tdesc:'Bônus de investigação (+10% de confiabilidade) e correlaciona os relatos: a convergência aparece no painel com 1 indício ponderado em vez de 1,5.', custo:140 },
-  { id:'paulo',    nome:'Neg. Paulo Duarte',   s:{tat:3,neg:10,int:6,res:4,com:9}, trait:'Empático',      tdesc:'Como negociador: +10% de avanço e efeito calmante ampliado nos degraus 1 a 3.', custo:135 },
-  { id:'lucas',    nome:'Ag. Lucas Ferreira',  s:{tat:7,neg:4,int:7,res:7,com:5},  trait:'Adaptável',     tdesc:'Sem penalidade ao ser reposicionado.', custo:110 },
-  { id:'fernanda', nome:'Ag. Fernanda Costa',  s:{tat:6,neg:6,int:8,res:5,com:8},  trait:'Comunicativa',  tdesc:'Bônus de +30% nas ações com stakeholders, e os comunicados dela vazam menos.', custo:125 },
-  { id:'andre',    nome:'Sgt. André Gomes',    s:{tat:8,neg:2,int:4,res:10,com:3}, trait:'Implacável',    tdesc:'Bônus na intervenção (+8 de prontidão), mas penalidade como negociador (−12%).', custo:115 },
-  { id:'sofia',    nome:'Det. Sofia Takahashi',s:{tat:5,neg:7,int:10,res:4,com:6}, trait:'Metódica',      tdesc:'Investigações custam 20% menos.', custo:145 },
-  { id:'roberto',  nome:'Ag. Roberto Nunes',   s:{tat:7,neg:5,int:5,res:8,com:5},  trait:'Impulsivo',     tdesc:'Sob pressão alta (>65) pode agir sozinho e elevar a agitação.', custo:80 },
-  { id:'camila',   nome:'Ag. Camila Araújo',   s:{tat:6,neg:6,int:6,res:6,com:7},  trait:'Versátil',      tdesc:'Atributos ajustáveis: +1 em um e −1 em outro, à sua escolha.', custo:100 },
-  { id:'diego',    nome:'Cap. Diego Monteiro', s:{tat:9,neg:4,int:7,res:7,com:5},  trait:'Estrategista',  tdesc:'Pausa de Comando revela mais (duas pistas em vez de uma).', custo:155 },
-  { id:'marina',   nome:'Ag. Marina Silva',    s:{tat:5,neg:9,int:5,res:5,com:8},  trait:'Pacificadora',  tdesc:'Reduz passivamente a agitação do líder em 2 por rodada.', custo:130 }
+  { id:'renata',   nome:'Cap. Renata Alves',   s:{tat:9,neg:5,int:6,res:8,com:6},  trait:'Veterana',      tshort:'+15% nas investigações e uma intuição na rodada 3', tdesc:'Reconhece padrões: +15% de confiabilidade nas investigações e uma intuição na rodada 3.', custo:150 },
+  { id:'marcos',   nome:'Sgt. Marcos Ribeiro', s:{tat:8,neg:3,int:5,res:9,com:4},  trait:'Disciplinado',  tshort:'Cansa na metade da velocidade', tdesc:'Fadiga reduzida: cansa na metade da velocidade e não sofre a perda da Fadiga crítica.', custo:120 },
+  { id:'carla',    nome:'Det. Carla Mendes',   s:{tat:4,neg:8,int:9,res:5,com:7},  trait:'Analítica',     tshort:'+10% nas investigações e correlaciona os relatos', tdesc:'Bônus de investigação (+10% de confiabilidade) e correlaciona os relatos: a convergência aparece no painel com 1 indício ponderado em vez de 1,5.', custo:140 },
+  { id:'paulo',    nome:'Neg. Paulo Duarte',   s:{tat:3,neg:10,int:6,res:4,com:9}, trait:'Empático',      tshort:'+10% de avanço quando negocia', tdesc:'Como negociador: +10% de avanço e efeito calmante ampliado nos degraus 1 a 3.', custo:135 },
+  { id:'lucas',    nome:'Ag. Lucas Ferreira',  s:{tat:7,neg:4,int:7,res:7,com:5},  trait:'Adaptável',     tshort:'Reposiciona sem perder eficiência', tdesc:'Sem penalidade ao ser reposicionado.', custo:110 },
+  { id:'fernanda', nome:'Ag. Fernanda Costa',  s:{tat:6,neg:6,int:8,res:5,com:8},  trait:'Comunicativa',  tshort:'+30% nas ações com stakeholders', tdesc:'Bônus de +30% nas ações com stakeholders, e os comunicados dela vazam menos.', custo:125 },
+  { id:'andre',    nome:'Sgt. André Gomes',    s:{tat:8,neg:2,int:4,res:10,com:3}, trait:'Implacável',    tshort:'+8 na intervenção, −12% quando negocia', tdesc:'Bônus na intervenção (+8 de prontidão), mas penalidade como negociador (−12%).', custo:115 },
+  { id:'sofia',    nome:'Det. Sofia Takahashi',s:{tat:5,neg:7,int:10,res:4,com:6}, trait:'Metódica',      tshort:'Investigações 20% mais baratas', tdesc:'Investigações custam 20% menos.', custo:145 },
+  { id:'roberto',  nome:'Ag. Roberto Nunes',   s:{tat:7,neg:5,int:5,res:8,com:5},  trait:'Impulsivo',     tshort:'Sob pressão alta, pode agir sozinho', tdesc:'Sob pressão alta (>65) pode agir sozinho e elevar a agitação.', custo:80 },
+  { id:'camila',   nome:'Ag. Camila Araújo',   s:{tat:6,neg:6,int:6,res:6,com:7},  trait:'Versátil',      tshort:'+1 e −1 nos atributos, à sua escolha', tdesc:'Atributos ajustáveis: +1 em um e −1 em outro, à sua escolha.', custo:100 },
+  { id:'diego',    nome:'Cap. Diego Monteiro', s:{tat:9,neg:4,int:7,res:7,com:5},  trait:'Estrategista',  tshort:'A Pausa de Comando dá duas pistas', tdesc:'Pausa de Comando revela mais (duas pistas em vez de uma).', custo:155 },
+  { id:'marina',   nome:'Ag. Marina Silva',    s:{tat:5,neg:9,int:5,res:5,com:8},  trait:'Pacificadora',  tshort:'Acalma o líder: −2 de agitação por rodada', tdesc:'Reduz passivamente a agitação do líder em 2 por rodada.', custo:130 }
 ];
 /* Guarnição improvisada: só entra se o jogador não recrutar ninguém (evita dead end). */
 const GENERICS = [
-  { id:'g1', nome:'Patrulheiro da guarnição A', s:{tat:3,neg:2,int:2,res:4,com:3}, trait:'Improvisado', tdesc:'Guarnição local convocada às pressas.', custo:0, generic:true },
-  { id:'g2', nome:'Patrulheiro da guarnição B', s:{tat:3,neg:2,int:2,res:4,com:3}, trait:'Improvisado', tdesc:'Guarnição local convocada às pressas.', custo:0, generic:true }
+  { id:'g1', nome:'Patrulheiro da guarnição A', s:{tat:3,neg:2,int:2,res:4,com:3}, trait:'Improvisado', tshort:'Guarnição local convocada às pressas', tdesc:'Guarnição local convocada às pressas.', custo:0, generic:true },
+  { id:'g2', nome:'Patrulheiro da guarnição B', s:{tat:3,neg:2,int:2,res:4,com:3}, trait:'Improvisado', tshort:'Guarnição local convocada às pressas', tdesc:'Guarnição local convocada às pressas.', custo:0, generic:true }
 ];
 const ALL_AGENTS = AGENTS.concat(GENERICS);
 const agentById = id => ALL_AGENTS.find(a => a.id === id);
@@ -850,14 +861,14 @@ const ATTR = { tat:'Tática', neg:'Negociação', int:'Inteligência', res:'Resi
 
 /* ---------- EQUIPAMENTOS (8) ---------- */
 const EQUIP = [
-  { id:'drone',   nome:'Drone de vigilância',   custo:80, ic:'drone',  desc:'+15 de cobertura aérea na zona em que for posicionado. Revela se essa zona é uma das quatro rotas de fuga candidatas. Sobre a Avenida, ainda ajuda a seguir quem fugir (+8 pontos na perseguição).' },
-  { id:'escudo',  nome:'Escudo tático',         custo:50, ic:'shield', desc:'+10 de eficiência na intervenção (em qualquer posição) e metade da chance de um agente se ferir na entrada.' },
-  { id:'termica', nome:'Câmera térmica',        custo:70, ic:'thermal',desc:'Revela o número de pessoas em 1 zona. Em zona vizinha ao banco, revela quantos assaltantes há.' },
-  { id:'negofone',nome:'Negofone seguro',       custo:60, ic:'phone',  desc:'+10% de chance de avanço na negociação.' },
-  { id:'sniper',  nome:'Sniper de precisão',    custo:90, ic:'scope',  desc:'+20 de eficiência na zona posicionada (precisa de ao menos 1 agente lá). Reforça a prontidão de intervenção.' },
-  { id:'kit',     nome:'Kit médico avançado',   custo:40, ic:'med',    desc:'Estabiliza reféns feridos: ninguém piora por falta de atendimento. Reduz à metade o mal-estar do cativeiro longo e os ferimentos em eventos, e atenua as baixas numa intervenção.' },
-  { id:'jammer',  nome:'Jammer de comunicação', custo:75, ic:'jammer', desc:'Bloqueia celulares dos assaltantes: sem cúmplice coordenado e sem lives, e o negociador vira o único canal do líder (+6% de avanço). O isolamento eleva a agitação em +1/rodada, e a mídia sobe 2 pontos a menos por rodada.' },
-  { id:'viatura', nome:'Viatura descaracterizada', custo:55, ic:'car', desc:'Mobilidade rápida: reposicionar agentes não gera perda de eficiência na rodada, e alcançar quem fugir fica mais fácil (+15 pontos na chance de captura numa perseguição).' }
+  { id:'drone',   nome:'Drone de vigilância',   custo:80, ic:'drone',  dshort:'+15 de cobertura na zona e revela se ela é rota candidata', desc:'+15 de cobertura aérea na zona em que for posicionado. Revela se essa zona é uma das quatro rotas de fuga candidatas. Sobre a Avenida, ainda ajuda a seguir quem fugir (+8 pontos na perseguição).' },
+  { id:'escudo',  nome:'Escudo tático',         custo:50, ic:'shield', dshort:'+10 na intervenção e metade do risco de agente ferido', desc:'+10 de eficiência na intervenção (em qualquer posição) e metade da chance de um agente se ferir na entrada.' },
+  { id:'termica', nome:'Câmera térmica',        custo:70, ic:'thermal',dshort:'Conta as pessoas numa zona', desc:'Revela o número de pessoas em 1 zona. Em zona vizinha ao banco, revela quantos assaltantes há.' },
+  { id:'negofone',nome:'Negofone seguro',       custo:60, ic:'phone',  dshort:'+10% de avanço na negociação', desc:'+10% de chance de avanço na negociação.' },
+  { id:'sniper',  nome:'Sniper de precisão',    custo:90, ic:'scope',  dshort:'+20 na zona, se houver agente lá, e reforça a intervenção', desc:'+20 de eficiência na zona posicionada (precisa de ao menos 1 agente lá). Reforça a prontidão de intervenção.' },
+  { id:'kit',     nome:'Kit médico avançado',   custo:40, ic:'med',    dshort:'Feridos não pioram por falta de socorro', desc:'Estabiliza reféns feridos: ninguém piora por falta de atendimento. Reduz à metade o mal-estar do cativeiro longo e os ferimentos em eventos, e atenua as baixas numa intervenção.' },
+  { id:'jammer',  nome:'Jammer de comunicação', custo:75, ic:'jammer', dshort:'Corta o celular dos assaltantes e isola o líder', desc:'Bloqueia celulares dos assaltantes: sem cúmplice coordenado e sem lives, e o negociador vira o único canal do líder (+6% de avanço). O isolamento eleva a agitação em +1/rodada, e a mídia sobe 2 pontos a menos por rodada.' },
+  { id:'viatura', nome:'Viatura descaracterizada', custo:55, ic:'car', dshort:'Reposiciona sem perda e ajuda na perseguição', desc:'Mobilidade rápida: reposicionar agentes não gera perda de eficiência na rodada, e alcançar quem fugir fica mais fácil (+15 pontos na chance de captura numa perseguição).' }
 ];
 const EQ = Object.fromEntries(EQUIP.map(e => [e.id, e]));
 
@@ -884,12 +895,12 @@ const PROFILES = {
 /* ---------- DIFICULDADE ---------- */
 const DIFF = {
   protocolar: { nome:'Protocolar', slots:3, porta:60, ops:.7, timer:150, lev:.30, dist:.24, ivp:-.03, agit:-1, evChance:.35, media:.85, vault:.85, stk:65, desp:.8, pbase:25, intel:.00, fat:.9,  lethal:.7, ret:55, hostile:0, assail:[2,3],
-    blurb:'Para aprender a mecânica: bastante tempo, líder receptivo, eventos raros e plantão mais barato.' },
+    blurb:'Para aprender: tempo folgado e líder receptivo.' },
   complexo:   { nome:'Complexo',   slots:3, porta:60, ops:1,  timer:100, lev:.30, dist:.29, ivp:-.10, agit:0,  evChance:.55, media:1.0,  vault:1.0,  stk:58, desp:1.0, pbase:30, intel:.00, fat:1.0, lethal:1.0, ret:45, hostile:0, assail:[2,4],
-    blurb:'O equilíbrio do documento: tempo apertado, líder reservado e eventos frequentes.' },
+    blurb:'Recomendado: tempo apertado e eventos frequentes.' },
   caotico:    { nome:'Caótico',    slots:2, porta:50, ops:1.3,timer:65,  lev:.275, dist:.36, ivp:-.17, agit:2,  evChance:.80, media:1.2,  vault:1.2,  stk:58, desp:1.25,pbase:38, intel:-.10,fat:1.25,lethal:1.3, ret:45, hostile:1, assail:[3,4],
     ncalm:1.3, negoFloor:.7, adaptAt:50, adaptMin:.4, violent:.75,
-    blurb:'Só duas decisões por rodada, pouco tempo, líder hostil, investigações menos confiáveis, plantão mais caro e eventos quase toda rodada.' }
+    blurb:'Duas decisões por rodada e pressão máxima.' }
 };
 
 /* ---------- INTELIGÊNCIA ---------- */
@@ -928,11 +939,11 @@ const STK = {
 const STK_KEYS = Object.keys(STK);
 
 const COMMS = [
-  { id:'coletiva',  s:'imprensa', nome:'Coletiva transparente',      custo:0,  d:'Informa o que se sabe. Reduz a pressão da mídia (−5) e agrada a imprensa. Fala em público: corre o risco de vazar.' },
-  { id:'prefeito',  s:'prefeito', nome:'Relatório de situação ao prefeito', custo:0, d:'Briefing direto no gabinete. Reduz a ansiedade política. O gabinete também vaza, mas menos que a coletiva.' },
-  { id:'gerente',   s:'banco',    nome:'Reunião com a diretoria do banco', custo:0, d:'Alinha expectativas. A diretoria entrega a planta do cofre (revela o andamento exato).' },
-  { id:'acolhe',    s:'familias', nome:'Sala de acolhimento das famílias', custo:20, d:'Psicólogos e informação. As famílias descrevem os reféns (revela o estado deles).' },
-  { id:'geral',     s:'todos',    nome:'Comunicado geral',           custo:0,  d:'Nota única para os quatro públicos: efeito menor em cada um, mas atende todos. Fala em público: corre o risco de vazar.' }
+  { id:'coletiva',  s:'imprensa', nome:'Coletiva transparente',      custo:0,  ds:'Mídia −5 e agrada a imprensa. Pode vazar.', d:'Informa o que se sabe. Reduz a pressão da mídia (−5) e agrada a imprensa. Fala em público: corre o risco de vazar.' },
+  { id:'prefeito',  s:'prefeito', nome:'Relatório de situação ao prefeito', custo:0, ds:'Acalma o gabinete. Vaza menos que a coletiva.', d:'Briefing direto no gabinete. Reduz a ansiedade política. O gabinete também vaza, mas menos que a coletiva.' },
+  { id:'gerente',   s:'banco',    nome:'Reunião com a diretoria do banco', custo:0, ds:'Agrada o banco e revela o andamento do cofre.', d:'Alinha expectativas. A diretoria entrega a planta do cofre (revela o andamento exato).' },
+  { id:'acolhe',    s:'familias', nome:'Sala de acolhimento das famílias', custo:20, ds:'Agrada as famílias e revela o estado dos reféns.', d:'Psicólogos e informação. As famílias descrevem os reféns (revela o estado deles).' },
+  { id:'geral',     s:'todos',    nome:'Comunicado geral',           custo:0,  ds:'Um pouco para os quatro públicos. Pode vazar.', d:'Nota única para os quatro públicos: efeito menor em cada um, mas atende todos. Fala em público: corre o risco de vazar.' }
 ];
 
 /* ---------- EVENTOS ---------- */
@@ -975,15 +986,15 @@ const EVDEF = Object.fromEntries(EVENT_DEFS.map(e => [e.id, e]));
 /* ---------- TEORIA DAS RESTRIÇÕES: os três elos que migram (Goldratt & Cox, 1984) ----------
    Os cinco passos de foco: identificar a restrição, explorá-la, subordinar o resto a ela, elevá-la, repetir. */
 const TOCS = {
-  info:    { nome:'Informação',    ic:'eye',   tab:'intel',  cor:'violet', fase:'início do cerco',
+  info:    { nome:'Informação',    ic:'eye',   tab:'intel',  cor:'violet', curto:'investigue e abra o canal',  fase:'início do cerco',
              por:'Há variáveis ocultas demais: cada decisão tática é uma aposta no escuro.',
              elevar:'Investigue, abra o canal com o líder, use a Pausa de Comando ou chame a diretoria e as famílias (que revelam o cofre e os reféns).',
              parar:'Não adianta ainda gastar em força tática: sem saber onde atacar, mais gente só cobre mais escuro.' },
-  pessoal: { nome:'Pessoal tático', ic:'user',  tab:'tatica', cor:'blue',   fase:'meio do cerco',
+  pessoal: { nome:'Pessoal tático', ic:'user',  tab:'tatica', cor:'blue',   curto:'cubra as rotas candidatas',  fase:'meio do cerco',
              por:'Há rotas candidatas sem cobertura. Mais informação não vira cobertura sem gente.',
              elevar:'Reposicione quem está em zona improvável, peça apoio externo para a rota provável ou recupere agentes reconvocados.',
              parar:'Mais investigações agora trazem pouco: o que falta já não é saber, é ter quem cubra.' },
-  tempo:   { nome:'Tempo e fadiga', ic:'clock', tab:'tatica', cor:'amber',  fase:'fim do cerco',
+  tempo:   { nome:'Tempo e fadiga', ic:'clock', tab:'tatica', cor:'amber',  curto:'cuide da fadiga e do prazo',  fase:'fim do cerco',
              por:'O relógio e o cansaço viraram o elo mais fraco: rodízio e prazo decidem agora.',
              elevar:'Pague horas extras, faça rodízio pela reserva e use cada rodada para avançar a negociação ou fechar o desfecho.',
              parar:'Reforçar zonas e investigar mais já rendem pouco: o que se esgota é o tempo da equipe e da cidade.' }
@@ -2576,6 +2587,37 @@ function toast(title, text, tone = '') {
   el.querySelector('.tx').addEventListener('click', kill);
   setTimeout(kill, 20000);
 }
+/* Os avisos flutuam sobre o conteúdo: a página ganha no fim a altura que eles ocupam, para o último botão sempre poder rolar para fora de baixo deles. */
+(() => { const box = document.getElementById('toasts'); if (box && window.ResizeObserver) new ResizeObserver(() => document.body.style.setProperty('--toasth', box.offsetHeight ? box.offsetHeight + 16 + 'px' : '0px')).observe(box); })();
+
+/* ---------- Dica flutuante ----------
+   Passar o mouse (ou o foco do teclado) sobre o nome de um agente mostra os cinco atributos dele, em qualquer tela (data-ag).
+   Os detalhes que saíram da tela aparecem do mesmo jeito: data-tip (texto) ou o filho .tipc (escondido, mas presente na página). */
+const $tip = document.createElement('div'); $tip.id = 'tip'; $tip.setAttribute('role', 'tooltip'); $tip.hidden = true; document.body.appendChild($tip);
+const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+/* Regras longas viram um "ⓘ" com o texto na dica: continuam a um gesto de distância, sem ocupar a tela. */
+const infoTip = (label, html) => `<span class="helptip hastip" tabindex="0">ⓘ${label ? ' ' + label : ''}<span class="tipc">${html}</span></span>`;
+function agentTip(id) {
+  const a = agentById(id); if (!a) return '';
+  return `<b class="tn">${a.nome}</b><span class="tt"><b>${a.trait}.</b> ${a.tdesc}</span><div class="attrs">${Object.keys(ATTR).map(k => bar(ATTR[k], G ? stat(id, k) : a.s[k])).join('')}</div>`;
+}
+let tipFor = null;
+function showTip(el) {
+  const c = el.dataset.ag ? null : [...el.children].find(x => x.classList.contains('tipc'));
+  const html = el.dataset.ag ? agentTip(el.dataset.ag) : c ? c.innerHTML : el.dataset.tip ? esc(el.dataset.tip) : '';
+  if (!html) { hideTip(); return; }
+  tipFor = el; $tip.innerHTML = html; $tip.className = el.dataset.ag ? 'ag' : ''; $tip.hidden = false;
+  const r = el.getBoundingClientRect(), w = $tip.offsetWidth, h = $tip.offsetHeight;
+  const x = Math.min(Math.max(8, r.left + r.width / 2 - w / 2), innerWidth - w - 8);
+  const y = r.bottom + 8 + h <= innerHeight - 8 ? r.bottom + 8 : Math.max(8, r.top - h - 8);
+  $tip.style.left = Math.round(x) + 'px'; $tip.style.top = Math.round(y) + 'px';
+}
+function hideTip() { tipFor = null; $tip.hidden = true; }
+const tipTarget = t => t && t.closest ? t.closest('[data-ag],[data-tip],.hastip') : null;
+document.addEventListener('mouseover', e => { const el = tipTarget(e.target); if (el !== tipFor) { if (el) showTip(el); else hideTip(); } });
+document.addEventListener('focusin', e => { const el = tipTarget(e.target); if (el) showTip(el); else hideTip(); });
+document.addEventListener('focusout', hideTip);
+addEventListener('scroll', hideTip, { passive: true });
 
 /* ---------- Timer ---------- */
 /* Pacing: as duas primeiras rodadas são de orientação e dão mais tempo para ler o painel. */
@@ -2639,23 +2681,22 @@ function mapSVG(o = {}) {
     const cap = short ? (wide ? 20 : Math.max(1, 3 - nG)) : narrow ? 16 : z.h >= 120 ? 12 : 4;
     const shown = ags.length > cap ? ags.slice(0, cap - 1) : ags, extra = ags.slice(shown.length);
     const agPos = i => short ? [z.x + z.w - 17 - nG * 20 - i * 23, z.y + 31] : [z.x + 17 + (i % perRow) * 23, z.y + z.h - 15 - Math.floor(i / perRow) * 21];
-    s += `<g class="zone${isSel ? ' sel' : ''}" ${act}>
-      <title>${z.nome} — ${z.tip}</title>
+    s += `<g class="zone${isSel ? ' sel' : ''}" ${act} data-tip="${esc(z.nome + ': ' + z.tip)}">
       <rect class="z" x="${z.x}" y="${z.y}" width="${z.w}" height="${z.h}" rx="7" fill="${fill}" stroke="${stroke}" ${z.dash ? 'stroke-dasharray="7 4"' : ''}/>
       <rect x="${z.x}" y="${z.y}" width="${z.w}" height="${z.h}" rx="7" fill="url(#hatch)" opacity="${cl === 'r' ? 1 : cl === 'a' ? .45 : 0}" pointer-events="none"/>
       <text x="${z.x + 9}" y="${z.y + 18}" fill="#e8edf5" font-size="13" font-weight="700">${nm}</text>
       ${narrow ? pct(z.x + 9, z.y + 37, 'start') : short ? pct(z.x + z.w - 9, z.y + 19, 'end') : pct(z.x + z.w - 9, z.y + 37, 'end')}
       <text x="${z.x + 9}" y="${z.y + yS}" fill="${stroke}" font-size="12.5" font-weight="600">${covSym(cov)} ${covTxt(cov)}</text>
       ${mark ? `<text x="${z.x + xM}" y="${z.y + yM}" fill="#cfe0ff" font-size="12.5" font-weight="600">${mark}</text>` : ''}
-      ${shown.map((id, i) => { const [cx, cy] = agPos(i); return `<g><circle cx="${cx}" cy="${cy}" r="9.5" fill="${+G.transit[id] ? '#3b4f6e' : '#27456d'}" stroke="${+G.transit[id] ? '#f6a623' : '#7fb4ee'}" stroke-width="1.5" ${+G.transit[id] ? 'stroke-dasharray="3 2"' : ''}/><text x="${cx}" y="${cy + 3.5}" text-anchor="middle" fill="#fff" font-size="10" font-weight="700">${initials(agentById(id).nome)}</text></g>`; }).join('')}
-      ${extra.length ? (() => { const [cx, cy] = agPos(shown.length); return `<g><title>${extra.map(id => agentById(id).nome).join(', ')}</title><circle cx="${cx}" cy="${cy}" r="9.5" fill="#1b2a44" stroke="#7fb4ee" stroke-width="1.5"/><text x="${cx}" y="${cy + 3.5}" text-anchor="middle" fill="#cfe0ff" font-size="10" font-weight="700">+${extra.length}</text></g>`; })() : ''}
+      ${shown.map((id, i) => { const [cx, cy] = agPos(i); return `<g data-ag="${id}"><circle cx="${cx}" cy="${cy}" r="9.5" fill="${+G.transit[id] ? '#3b4f6e' : '#27456d'}" stroke="${+G.transit[id] ? '#f6a623' : '#7fb4ee'}" stroke-width="1.5" ${+G.transit[id] ? 'stroke-dasharray="3 2"' : ''}/><text x="${cx}" y="${cy + 3.5}" text-anchor="middle" fill="#fff" font-size="10" font-weight="700">${initials(agentById(id).nome)}</text></g>`; }).join('')}
+      ${extra.length ? (() => { const [cx, cy] = agPos(shown.length); return `<g data-tip="${esc(extra.map(id => agentById(id).nome).join(', '))}"><circle cx="${cx}" cy="${cy}" r="9.5" fill="#1b2a44" stroke="#7fb4ee" stroke-width="1.5"/><text x="${cx}" y="${cy + 3.5}" text-anchor="middle" fill="#cfe0ff" font-size="10" font-weight="700">+${extra.length}</text></g>`; })() : ''}
       ${away.map((id, i) => `<text x="${z.x + z.w - 10}" y="${z.y + z.h - 8 - (nG && !short ? 20 : 0) - i * 13}" text-anchor="end" fill="#ff9aa7" font-size="11.5">✕ ${initials(agentById(id).nome)} ausente</text>`).join('')}
-      ${gearIn(z.id).map((e, i) => `<g><title>${EQ[e].nome}</title><rect x="${z.x + z.w - 24 - i * 20}" y="${z.y + z.h - 24}" width="16" height="16" rx="3" fill="#0d1523" stroke="#4da6ff"/><text x="${z.x + z.w - 16 - i * 20}" y="${z.y + z.h - 12}" text-anchor="middle" fill="#4da6ff" font-size="10.5" font-weight="700">${EQ[e].nome[0]}</text></g>`).join('')}
+      ${gearIn(z.id).map((e, i) => `<g data-tip="${esc(EQ[e].nome + ': ' + EQ[e].dshort)}"><rect x="${z.x + z.w - 24 - i * 20}" y="${z.y + z.h - 24}" width="16" height="16" rx="3" fill="#0d1523" stroke="#4da6ff"/><text x="${z.x + z.w - 16 - i * 20}" y="${z.y + z.h - 12}" text-anchor="middle" fill="#4da6ff" font-size="10.5" font-weight="700">${EQ[e].nome[0]}</text></g>`).join('')}
     </g>`;
   });
   return s + '</svg>';
 }
-const legendHTML = () => `<div class="legend"><span><i style="background:#41d08f"></i>✓ adequada (≥${ADEQ}%)</span><span><i style="background:#f6a623"></i>! parcial (30–59%)</span><span><i style="background:#ff5468"></i>✕ descoberta (&lt;30%)</span><span><i class="sq"></i>equipamento (inicial do nome)</span><span>★ rota provável · ◆ candidata · ○ improvável</span></div>`;
+const legendHTML = () => `<div class="legend"><span><i style="background:#41d08f"></i>adequada (≥${ADEQ}%)</span><span><i style="background:#f6a623"></i>parcial (30–59%)</span><span><i style="background:#ff5468"></i>descoberta</span><span><i class="sq"></i>equipamento</span></div>`;
 
 /* ===================================================================
    MENU
@@ -2676,10 +2717,10 @@ const saveLabel = s => s.phase === 'siege' ? 'rodada ' + s.round : s.phase === '
 function renderMenu() {
   const save = loadSave(), lost = SAVE_LOST; SAVE_LOST = false;
   const dcards = Object.entries(DIFF).map(([k, d]) => `
-    <button class="diffcard" role="radio" data-act="diff" data-v="${k}" aria-checked="${UI.diffSel === k}" tabindex="${UI.diffSel === k ? 0 : -1}">
+    <button class="diffcard" role="radio" data-act="diff" data-v="${k}" aria-checked="${UI.diffSel === k}" tabindex="${UI.diffSel === k ? 0 : -1}" data-tip="${d.slots} decisões e ${d.timer} segundos por rodada · eventos em ${Math.round(d.evChance * 100)}% das rodadas · ${d.ops === 1 ? 'plantão padrão' : 'plantão ' + (d.ops < 1 ? '−' : '+') + Math.round(Math.abs(1 - d.ops) * 100) + '%'}">
       <span class="dot" aria-hidden="true"></span>
       <span><b class="dname">${d.nome}</b><span class="dblurb">${d.blurb}</span></span>
-      <span class="dparams">${d.slots} decisões<br>${d.timer}s/rodada<br>eventos ${Math.round(d.evChance * 100)}%<br>${d.ops === 1 ? 'plantão padrão' : 'plantão ' + (d.ops < 1 ? '−' : '+') + Math.round(Math.abs(1 - d.ops) * 100) + '%'}</span>
+      <span class="dparams">${d.slots} decisões<br>${d.timer} s</span>
     </button>`).join('');
   return `<div class="screen menu">
     <div class="sky">${skyline()}<i class="siren r"></i><i class="siren b"></i><i class="siren r2"></i><i class="siren b2"></i>
@@ -2692,13 +2733,13 @@ function renderMenu() {
           ${save ? `<button class="btn lg" data-act="continue">Continuar partida <span class="faint" style="font-weight:400">(${DIFF[save.diff].nome}, ${saveLabel(save)})</span></button>` : ''}
         </div>
         ${lost ? `<div class="insight warn" role="status">${icon('alert', '', 1.8)}<span>A partida salva neste navegador estava corrompida ou era de outra versão e foi descartada. Uma nova simulação começa do zero.</span></div>` : ''}
-        <label class="check"><input type="checkbox" id="nolimit" data-chg="nolimit" ${UI.noLimit ? 'checked' : ''}><span>Cronômetro sem limite (acessibilidade): o relógio aparece, mas não encerra a rodada</span></label>
+        <label class="check"><input type="checkbox" id="nolimit" data-chg="nolimit" ${UI.noLimit ? 'checked' : ''}><span>Sem limite de tempo (acessibilidade)</span></label>
       </div>
       <div class="card">
         <h2 class="h3">Sua missão</h2>
-        <p class="serif" style="font-size:16.5px;line-height:1.6;color:#dfe6f1">Você é o comandante do incidente. Em 8 rodadas, equilibre cinco objetivos que competem entre si: <b>vidas</b>, <b>prisões</b>, <b>valores</b>, <b>custo</b> e <b>confiança pública</b>. Não existe estratégia dominante.</p>
-        <div class="row" style="margin-top:12px"><button class="btn sm" data-act="howto">Como funciona</button><span class="faint" style="font-size:12.5px">25 a 40 min · salva automaticamente no navegador</span></div>
-        <p class="faint" style="font-size:12px;margin-top:14px"><b>Aviso de conteúdo:</b> a simulação trata de uma crise com reféns num assalto a banco, sempre pela perspectiva de quem protege. Nenhuma mecânica recompensa a violência, as ações táticas são abstratas e não há imagens explícitas. Quem preferir não participar pode sair a qualquer momento pelo Menu, e o facilitador deve oferecer uma atividade alternativa. Todos os nomes, lugares e instituições são fictícios.</p>
+        <p class="serif" style="font-size:16.5px;line-height:1.6;color:#dfe6f1">Você comanda a resposta a um assalto com 17 reféns. Em 8 rodadas, equilibre <b>vidas</b>, <b>prisões</b>, <b>valores</b>, <b>custo</b> e <b>confiança pública</b>.</p>
+        <div class="row" style="margin-top:12px"><button class="btn sm" data-act="howto">Como funciona</button><span class="faint" style="font-size:12.5px">25 a 40 min · salva sozinho</span></div>
+        <p class="faint" style="font-size:12px;margin-top:14px">Uma crise com reféns vista por quem protege, sem imagens explícitas. Nomes, lugares e instituições são fictícios.</p>
       </div>
     </div>
     ${UI.tutor ? tutorModal() : ''}${UI.newConfirm && save ? newConfirmModal(save) : ''}
@@ -2720,12 +2761,13 @@ function menuConfirmModal() {
 const menuBtn = () => '<button class="btn sm ghost hudmenu" type="button" data-act="menu" title="Voltar ao menu (a partida fica salva)">Menu</button>';
 function tutorModal() {
   return `<div class="modalback"><div class="tutor" role="dialog" aria-modal="true" aria-labelledby="tutt">
-    <h2 class="h3" id="tutt">Como funciona o PERÍMETRO</h2>
-    <p class="muted"><b>1. Recrute</b> uma equipe com 1.000 créditos. O que sobrar é sua reserva para investigações, apoio externo e horas extras, e também paga o <b>plantão</b>: toda rodada, cada agente em campo custa verba. Sem reserva, a operação entra no vermelho.</p>
-    <p class="muted"><b>2. Posicione</b> agentes e equipamentos em 7 zonas. Quatro delas são rotas de fuga possíveis, mas você não sabe quais. Os recursos só cobrem bem cerca de metade das zonas: é preciso apostar, ou investir em inteligência. Mudar alguém de zona tem custo: ele rende menos por duas rodadas.</p>
-    <p class="muted"><b>3. Comande o cerco</b> por 8 rodadas. Em cada uma você recebe informações parciais (Percepção), lê indicadores (Compreensão) e vê tendências (Projeção). Então toma 2 ou 3 decisões em quatro frentes: <b>Tática, Negociação, Inteligência e Comunicação</b>.</p>
-    <p class="muted"><b>4. A crise termina</b> por rendição negociada, intervenção, fuga ou prazo esgotado: ao fim da rodada 8, o líder escolhe entre ceder e forçar a mão. A nota combina vidas (40%), prisões (20%), valores (15%), eficiência de custo (10%) e confiança pública (15%). Mortes e intervenção fracassada põem um teto na nota, e entrar com menos de 50% de chance é aposta: se der certo, o máximo é A.</p>
-    <p class="muted">Dica: a negociação sobe uma escada de 5 degraus, um por vez. Pular etapas reduz pela metade a chance de avançar. O painel mostra o <b>gargalo</b> da operação: ele muda de informação para pessoal e depois para tempo, e gastar fora dele rende pouco.</p>
+    <h2 class="h3" id="tutt">Como funciona</h2>
+    <p class="muted"><b>1. Recrute</b> a equipe com 1.000 créditos. O que sobrar paga o <b>plantão</b> de cada rodada e as ações do cerco.</p>
+    <p class="muted"><b>2. Posicione</b> agentes e equipamentos nas 7 zonas. Quatro podem ser rotas de fuga, e você não sabe quais.</p>
+    <p class="muted"><b>3. Comande</b> 8 rodadas: leia o painel e escolha 2 ou 3 ações em <b>Tática, Negociação, Inteligência e Comunicação</b>.</p>
+    <p class="muted"><b>4. A crise termina</b> em rendição, intervenção, fuga ou ultimato. A nota pesa vidas (40%), prisões (20%), valores (15%), custo (10%) e confiança (15%). Mortes, intervenção fracassada ou entrada com menos de 50% de chance limitam a nota.</p>
+    <p class="muted">Dicas: negocie um degrau de cada vez e passe o mouse sobre o nome de um agente para ver os atributos dele.</p>
+    <p class="faint" style="font-size:12px">Para facilitadores: quem preferir não participar pode sair pelo Menu a qualquer momento; ofereça uma atividade alternativa.</p>
     <div class="row"><button class="btn primary" data-act="closehowto">Entendi</button><span class="faint" style="font-size:12px">Esc também fecha</span></div></div></div>`;
 }
 
@@ -2734,8 +2776,8 @@ function tutorModal() {
    =================================================================== */
 /* Manchetes em movimento contínuo: pausam com o mouse ou o foco, e o botão ❚❚ congela de vez (WCAG 2.2.2). */
 function tickerHTML(items, label = 'AO VIVO') {
-  const t = items.map(x => `<span>${x}</span>`).join('<i>◆</i>');
-  return `<div class="ticker${UI.tkPause ? ' paused' : ''}" role="marquee" aria-label="Manchetes ao vivo: ${items.join('. ')}"><b>${label}</b><div class="tk"><div class="tkin" aria-hidden="true">${t}<i>◆</i>${t}<i>◆</i></div></div><button class="tkp" type="button" data-act="tkpause" aria-pressed="${UI.tkPause}" aria-label="${UI.tkPause ? 'Retomar' : 'Pausar'} as manchetes" title="${UI.tkPause ? 'Retomar' : 'Pausar'} as manchetes">${UI.tkPause ? '▶' : '❚❚'}</button></div>`;
+  const t = items.map(x => `<span>${x}</span>`).join('<i>◆</i>'), t2 = items.map(x => `<span class="d">${x}</span>`).join('<i class="d">◆</i>');   // a segunda cópia só existe para o letreiro dar a volta sem emenda
+  return `<div class="ticker${UI.tkPause ? ' paused' : ''}" role="marquee" aria-label="Manchetes ao vivo: ${items.join('. ')}"><b>${label}</b><div class="tk"><div class="tkin" aria-hidden="true">${t}<i>◆</i>${t2}<i class="d">◆</i></div></div><button class="tkp" type="button" data-act="tkpause" aria-pressed="${UI.tkPause}" aria-label="${UI.tkPause ? 'Retomar' : 'Pausar'} as manchetes" title="${UI.tkPause ? 'Retomar' : 'Pausar'} as manchetes">${UI.tkPause ? '▶' : '❚❚'}</button></div>`;
 }
 function hostageStrip(cls = '') {
   return `<div class="hstrip ${cls}" aria-label="Os 17 reféns: ${HOSTAGE_LIST.map(h => h.nome).join(', ')}">${HOSTAGE_LIST.map((h, i) => `<span class="hp" style="--i:${i}" title="${h.nome}, ${h.idade} anos, ${h.papel}${h.nota ? ' (' + h.nota + ')' : ''}">${sil1()}<small>${h.nome.split(' ')[0]}</small></span>`).join('')}</div>`;
@@ -2748,70 +2790,60 @@ function renderBriefing() {
     <h1 class="sr">Briefing: assalto com reféns na Agência Central</h1>
     <div class="row" style="justify-content:space-between;align-items:flex-end"><div><div class="day">Sexta-feira</div><div class="time">14h07</div></div><div class="row">${menuBtn()}<button class="btn sm ghost skipb" type="button" data-act="skipbrief">Pular animação</button></div></div>
     <div class="narr">
-      <p>O alarme silencioso da Agência Central do Banco Meridiano acaba de disparar. As primeiras viaturas confirmam: há pelo menos dois homens armados no interior da agência.</p>
-      <p>Dezessete pessoas, entre clientes e funcionários, estão impedidas de sair. Uma aposentada que veio pagar contas. Um caixa de 24 anos no segundo mês de emprego. Uma cliente grávida de sete meses.</p>
-      <p>Uma equipe da TV Porto Alto já estaciona o caminhão de transmissão na esquina da Rua Marechal Deodoro. O delegado titular está em férias. Você é o próximo na cadeia de comando. <b>A partir de agora, todas as decisões são suas.</b></p>
+      <p>O alarme silencioso da Agência Central do Banco Meridiano acaba de disparar. Há homens armados lá dentro.</p>
+      <p>Dezessete pessoas não podem sair: uma aposentada que veio pagar contas, um caixa de 24 anos, uma cliente grávida de sete meses.</p>
+      <p>A TV já está na esquina e o delegado titular está de férias. <b>A partir de agora, todas as decisões são suas.</b></p>
     </div>
     <div class="after">
       <div class="eyebrow" style="margin-top:4px">Quem está lá dentro</div>
       ${hostageStrip()}
-      <p class="faint" style="font-size:13px;margin-top:8px">Você tem mil créditos, doze profissionais de plantão e um mapa com sete zonas. Não tem tempo, nem informação suficiente, e nenhuma decisão vai agradar a todos.</p>
       <div class="eyebrow" style="margin-top:20px">Cinco objetivos em tensão</div>
       <div class="objgrid">${w.map((p, i) => `<div class="obj" style="--w:${p * 2.2}%"><b>${p}%</b><span>${names[i]}</span></div>`).join('')}</div>
-      <div class="row" style="margin-top:26px"><button class="btn primary lg" data-act="tobrief">Assumir o comando</button><span class="faint" style="font-size:13px">Próximo: Fase 0, recrutamento da equipe</span></div>
-      <p class="faint" style="font-size:12.5px;margin-top:16px">Todos os nomes, lugares e instituições são fictícios. O Menu, no alto da tela, deixa sair a qualquer momento.</p>
+      <div class="row" style="margin-top:26px"><button class="btn primary lg" data-act="tobrief">Assumir o comando</button></div>
     </div></div>`;
 }
 
 /* ===================================================================
    FASE 0 — RECRUTAMENTO
    =================================================================== */
-function teamSummary() {
-  const t = G.team; if (!t.length) return '<p class="faint" style="font-size:12.5px">Nenhum agente recrutado.</p>';
-  const sum = k => t.reduce((s, id) => s + stat(id, k), 0), best = k => Math.max(...t.map(id => stat(id, k)));
-  return `<div class="attrs">${bar('Tática (soma)', sum('tat'), 'n', 50)}${bar('Melhor negoc.', best('neg'))}${bar('Melhor intel.', best('int'))}${bar('Melhor comun.', best('com'))}</div>`;
-}
-/* Rodapé do cartão: diz o estado e o que o clique faz (recrutar, dispensar, ou por que não dá). */
-const cardFoot = (on, can, falta, verbOn, verbOff) => on ? `<span class="cfoot on">✓ ${verbOn} · clique para desfazer</span>` : can ? `<span class="cfoot">Clique para ${verbOff}</span>` : `<span class="cfoot no">Faltam ${fmt(falta)} créditos</span>`;
+/* Atributos em uma linha (abreviados); o nome por extenso fica na dica do agente. */
+const ATTR3 = { tat: 'Tát', neg: 'Neg', int: 'Int', res: 'Res', com: 'Com' };
+const miniAttrs = id => `<div class="mattrs" aria-label="${Object.keys(ATTR).map(k => ATTR[k] + ' ' + stat(id, k)).join(', ')}">${Object.keys(ATTR).map(k => `<span><small>${ATTR3[k]}</small><b>${stat(id, k)}</b><i style="--v:${stat(id, k) * 10}%"></i></span>`).join('')}</div>`;
 function renderRecruit() {
   const agents = AGENTS.map(a => {
     const on = G.team.includes(a.id), can = on || G.credits >= a.custo;
     return `<button class="acard" data-act="hire" data-id="${a.id}" aria-pressed="${on}" ${can ? '' : `aria-disabled="true" data-why="Faltam ${fmt(a.custo - G.credits)} créditos para chamar ${a.nome}. Dispense alguém ou um equipamento para liberar verba."`}>
-      <div class="top"><div class="sil">${sil(a.id)}</div><div><b class="an">${a.nome}</b><span class="faint" style="font-size:12px">${a.trait}</span></div><span class="cost">${a.custo}</span></div>
-      <div class="attrs">${Object.keys(ATTR).map(k => bar(ATTR[k], stat(a.id, k))).join('')}</div>
-      <p class="bio">${BIOS[a.id] || ''}</p>
-      <div class="trait"><b>${a.trait}</b>${a.tdesc}</div>
-      ${cardFoot(on, can, a.custo - G.credits, 'Na equipe', 'recrutar')}</button>`;
+      <div class="top" data-ag="${a.id}"><div class="sil">${sil(a.id, 40)}</div><div><b class="an">${a.nome}</b><span class="faint" style="font-size:12px">${a.trait}</span></div><span class="cost">${a.custo}</span></div>
+      ${miniAttrs(a.id)}
+      <p class="teff">${a.tshort}</p>
+      ${on ? '<span class="cfoot on">✓ Na equipe</span>' : can ? '' : `<span class="cfoot no">Faltam ${fmt(a.custo - G.credits)} créditos</span>`}</button>`;
   }).join('');
-  const gear = EQUIPMENT_HTML();
-  const reserve = G.credits;
   const warns = [], F = budgetForecast(), cap = capacityPreview();
-  if (G.team.length && !G.team.some(id => stat(id, 'neg') >= 7)) warns.push('Nenhum negociador forte (7+): a escada de negociação será lenta.');
-  if (G.team.length && F.free < 0) warns.push(`A reserva não paga o plantão até o fim (faltam ~${Math.round(-F.free)}). Haverá rodadas no vermelho: o banco perde 5 e a pressão sobe 3 em cada uma.`);
-  else if (G.team.length && F.free < 60) warns.push('Quase nada sobra depois do plantão: nenhuma investigação, nenhum apoio externo, nenhuma hora extra.');
-  if (G.team.length && cap.adq <= 1) warns.push(`Espalhada pelo mapa, esta equipe cobre bem só ${cap.adq} de 7 zonas. Você vai concentrar agentes e apostar o resto no escuro.`);
-  const cam = G.team.includes('camila') ? `<div class="card flat"><h3>Camila Araújo · Versátil</h3><div class="row" style="gap:8px">
+  if (G.team.length && !G.team.some(id => stat(id, 'neg') >= 7)) warns.push('Nenhum negociador forte (7+): a negociação será lenta.');
+  if (G.team.length && F.free < 0) warns.push(`A reserva não paga o plantão até o fim (faltam ~${Math.round(-F.free)}).`);
+  else if (G.team.length && F.free < 60) warns.push('Quase nada sobra para o cerco depois do plantão.');
+  if (G.team.length && cap.adq <= 1) warns.push(`Espalhada, esta equipe cobre bem só ${cap.adq} de 7 zonas.`);
+  const cam = G.team.includes('camila') ? `<div class="card flat"><h3 data-ag="camila">Camila Araújo · Versátil</h3><div class="row" style="gap:8px">
     <label class="field">+1 em<select data-chg="camplus" id="camplus">${Object.keys(ATTR).map(k => `<option value="${k}" ${G.camAdj.plus === k ? 'selected' : ''}>${ATTR[k]}</option>`).join('')}</select></label>
     <label class="field">−1 em<select data-chg="camminus" id="camminus">${Object.keys(ATTR).map(k => `<option value="${k}" ${G.camAdj.minus === k ? 'selected' : ''}>${ATTR[k]}</option>`).join('')}</select></label></div></div>` : '';
+  const resCol = G.credits < 150 ? 'var(--red)' : G.credits < 350 ? 'var(--amber)' : 'var(--green)';
   setBar(recruitBar());
   return `<div class="screen">
-    <div class="hud"><div class="hudrow"><span class="brand">PERÍMETRO</span>${menuBtn()}<span class="pill">Fase 0 · Recrutamento</span><span class="spacer"></span><div class="stat"><small>Créditos</small><b style="color:var(--amber)" data-k="cred" data-n="${Math.round(G.credits)}">${fmt(G.credits)}</b></div></div></div>
+    <div class="hud"><div class="hudrow"><span class="brand">PERÍMETRO</span>${menuBtn()}<span class="pill">Recrutamento</span><span class="spacer"></span><div class="stat"><small>Créditos</small><b style="color:var(--amber)" data-k="cred" data-n="${Math.round(G.credits)}">${fmt(G.credits)}</b></div></div></div>
     <div class="recr">
       <div class="grid" style="gap:18px">
-        <div><div class="row" style="justify-content:space-between"><div class="eyebrow">Pool de profissionais</div><a class="jump" href="#equip">Catálogo de equipamentos ↓</a></div><h1 class="ptitle">Quem entra na sua força-tarefa?</h1><p class="serif muted" style="font-size:15.5px;margin-bottom:12px;max-width:820px">14h12. A Secretaria liberou mil créditos e doze profissionais de plantão. Quem você chamar chega em quinze minutos. O que sobrar é tudo o que você terá para investigar, pedir apoio e pagar horas extras até o fim da noite.</p><div class="agents">${agents}</div></div>
-        <div id="equip" class="anchor"><div class="eyebrow">Catálogo de equipamentos</div><h2 class="sr">Equipamentos</h2><div class="gear" style="margin-top:8px;grid-template-columns:repeat(auto-fill,minmax(300px,1fr))">${gear}</div></div>
+        <div><h1 class="ptitle">Monte sua força-tarefa</h1><p class="muted" style="margin-bottom:12px"><span class="mono">14h12</span>. Mil créditos para a equipe e os equipamentos; quem você chamar chega em 15 minutos. O que sobrar paga o cerco.</p><div class="agents">${agents}</div></div>
+        <div id="equip" class="anchor"><h2 class="eyebrow">Equipamentos</h2><div class="gear" style="margin-top:8px;grid-template-columns:repeat(auto-fill,minmax(280px,1fr))">${EQUIPMENT_HTML()}</div></div>
       </div>
       <aside class="side">
-        <div class="card"><h3>Orçamento</h3><div class="credits num" data-k="cred2" data-n="${Math.round(G.credits)}">${fmt(G.credits)}</div><p class="muted" style="font-size:12.5px;margin-top:6px">Reserva operacional. Cada crédito gasto agora é um crédito a menos para investigar, pedir apoio externo ou pagar o plantão de cada rodada.</p>
-          <div class="stack" style="margin-top:10px" role="img" aria-label="Equipe ${G.spent.rec}, equipamento ${G.spent.equip}, reserva ${G.credits}"><i style="width:${G.spent.rec / 10}%;background:var(--blue)"></i><i style="width:${G.spent.equip / 10}%;background:var(--violet)"></i><i style="width:${G.credits / 10}%;background:${G.credits < 150 ? 'var(--red)' : G.credits < 350 ? 'var(--amber)' : 'var(--green)'}"></i></div>
-          <div class="stackleg"><span><i style="background:var(--blue)"></i>Equipe <b class="mono">${G.spent.rec}</b></span><span><i style="background:var(--violet)"></i>Equipamento <b class="mono">${G.spent.equip}</b></span><span><i style="background:${G.credits < 150 ? 'var(--red)' : G.credits < 350 ? 'var(--amber)' : 'var(--green)'}"></i>Reserva <b class="mono">${fmt(G.credits)}</b></span></div></div>
-        ${G.team.length ? `<div class="card"><h3>O que a reserva precisa pagar</h3>
-          <div class="fc"><span>Plantão previsto</span><b class="mono">~${F.per}/rodada</b><small>${F.nField} ${F.nField === 1 ? 'agente' : 'agentes'} em campo. Reserva e reconvocados não custam.</small></div>
-          <div class="fc"><span>Nas 8 rodadas</span><b class="mono">~${F.total}</b><small>com o multiplicador de plantão da dificuldade ${D_().nome} (×${dec(D_().ops, D_().ops % 1 ? 1 : 0)}).</small></div>
-          <div class="fc ${F.free < 0 ? 'bad' : F.free < 60 ? 'warn' : 'ok'}"><span>Sobra para decidir</span><b class="mono">${F.free < 0 ? '−' + Math.round(-F.free) : Math.round(F.free)}</b><small>${F.free <= 0 ? 'nada para investigar, apoiar ou pagar horas extras' : `≈ ${F.intels} ${plural(F.intels, 'investigação', 'investigações')} ou ${F.apoios} apoio${F.apoios === 1 ? '' : 's'} externo${F.apoios === 1 ? '' : 's'}`}</small></div>
-          <div class="fc ${cap.adq >= 3 ? 'ok' : cap.adq === 2 ? 'warn' : 'bad'}"><span>Capacidade de cobertura</span><b class="mono">${cap.adq} / 7 zonas</b><small>adequadas (≥60%) se os agentes forem espalhados. Concentrar agentes cobre melhor menos zonas.</small></div></div>` : ''}
-        <div class="card"><h3>Equipe (${G.team.length})</h3>${teamSummary()}
-          <div style="margin-top:10px">${G.team.map(id => `<div class="mini"><span>${shortName(agentById(id).nome)}</span><span class="mono">${agentById(id).custo}</span></div>`).join('')}${G.gear.map(id => `<div class="mini"><span>${EQ[id].nome}</span><span class="mono">${EQ[id].custo}</span></div>`).join('')}</div>
+        <div class="card"><h3>Orçamento</h3><div class="credits num" data-k="cred2" data-n="${Math.round(G.credits)}">${fmt(G.credits)}</div>
+          <div class="stack" style="margin-top:10px" role="img" aria-label="Equipe ${G.spent.rec}, equipamento ${G.spent.equip}, reserva ${G.credits}"><i style="width:${G.spent.rec / 10}%;background:var(--blue)"></i><i style="width:${G.spent.equip / 10}%;background:var(--violet)"></i><i style="width:${G.credits / 10}%;background:${resCol}"></i></div>
+          <div class="stackleg"><span><i style="background:var(--blue)"></i>Equipe <b class="mono">${G.spent.rec}</b></span><span><i style="background:var(--violet)"></i>Equipamento <b class="mono">${G.spent.equip}</b></span><span><i style="background:${resCol}"></i>Reserva <b class="mono">${fmt(G.credits)}</b></span></div>
+          ${G.team.length ? `<div style="margin-top:10px"><div class="fc"><span>Plantão</span><b class="mono">~${F.per}/rodada</b></div>
+          <div class="fc ${F.free < 0 ? 'bad' : F.free < 60 ? 'warn' : 'ok'}"><span>Sobra para o cerco</span><b class="mono">${F.free < 0 ? '−' + Math.round(-F.free) : Math.round(F.free)}</b></div>
+          <div class="fc ${cap.adq >= 3 ? 'ok' : cap.adq === 2 ? 'warn' : 'bad'}"><span>Cobertura possível</span><b class="mono">${cap.adq} / 7 zonas</b></div></div>` : ''}</div>
+        <div class="card"><h3>Equipe (${G.team.length})</h3>
+          ${G.team.length || G.gear.length ? `<div>${G.team.map(id => `<div class="mini"><span data-ag="${id}">${shortName(agentById(id).nome)}</span><span class="mono">${agentById(id).custo}</span></div>`).join('')}${G.gear.map(id => `<div class="mini"><span>${EQ[id].nome}</span><span class="mono">${EQ[id].custo}</span></div>`).join('')}</div>` : '<p class="faint" style="font-size:12.5px">Ninguém ainda. Clique num agente para chamá-lo.</p>'}
           ${warns.map(w => `<div class="insight warn" style="margin-top:8px">${icon('alert', '', 1.8)}<span>${w}</span></div>`).join('')}</div>
         ${cam}
       </aside>
@@ -2820,15 +2852,15 @@ function renderRecruit() {
 function EQUIPMENT_HTML() {
   return EQUIP.map(e => {
     const on = G.gear.includes(e.id), can = on || G.credits >= e.custo;
-    return `<button class="gcard" data-act="buygear" data-id="${e.id}" aria-pressed="${on}" ${can ? '' : `aria-disabled="true" data-why="Faltam ${fmt(e.custo - G.credits)} créditos para ${e.nome}."`}>${icon(e.ic)}<span><b>${e.nome}</b><span>${e.desc}</span>${on ? '<span class="cfoot on">✓ Comprado · clique para devolver</span>' : can ? '' : `<span class="cfoot no">Faltam ${fmt(e.custo - G.credits)} créditos</span>`}</span><span class="cost mono">${e.custo}</span></button>`;
+    return `<button class="gcard hastip" data-act="buygear" data-id="${e.id}" aria-pressed="${on}" ${can ? '' : `aria-disabled="true" data-why="Faltam ${fmt(e.custo - G.credits)} créditos para ${e.nome}."`}>${icon(e.ic)}<span><b>${e.nome}</b><span>${e.dshort}</span>${on ? '<span class="cfoot on">✓ Comprado</span>' : can ? '' : `<span class="cfoot no">Faltam ${fmt(e.custo - G.credits)} créditos</span>`}</span><span class="cost mono">${e.custo}</span><span class="tipc"><b>${e.nome}</b><br>${e.desc}</span></button>`;
   }).join('');
 }
 /* Barra de ação do recrutamento: o resumo e o próximo passo sempre à vista. */
 function recruitBar() {
   const empty = !G.team.length;
   return `<div class="absum"><span class="abk">Sua força-tarefa</span><span><b class="mono">${G.team.length}</b> ${plural(G.team.length, 'agente', 'agentes')} · <b class="mono">${G.gear.length}</b> ${plural(G.gear.length, 'equipamento', 'equipamentos')} · reserva <b class="mono" style="color:var(--amber)">${fmt(G.credits)}</b></span></div>
-    ${UI.emptyConfirm && empty ? `<p class="abmsg bad">${icon('alert', 'ico', 1.8)}Sem agentes, a guarnição local improvisa dois patrulheiros (Tática 3): cobertura mínima e negociação amadora. Confirma?</p>` : '<span class="spacer"></span>'}
-    <button class="btn primary lg" data-act="torecruit">${UI.emptyConfirm && empty ? 'Sim, seguir sem equipe' : 'Posicionar o perímetro →'}</button>`;
+    ${UI.emptyConfirm && empty ? `<p class="abmsg bad">${icon('alert', 'ico', 1.8)}Sem agentes, a guarnição local improvisa dois patrulheiros fracos. Seguir assim?</p>` : '<span class="spacer"></span>'}
+    <button class="btn primary lg" data-act="torecruit">${UI.emptyConfirm && empty ? 'Sim, seguir sem equipe' : 'Posicionar a equipe →'}</button>`;
 }
 
 /* ===================================================================
@@ -2836,44 +2868,44 @@ function recruitBar() {
    =================================================================== */
 function chipHTML(kind, id) {
   const sel = UI.sel && UI.sel.t === kind && UI.sel.id === id;
-  if (kind === 'a') { const a = agentById(id); return `<button class="chip" data-act="selchip" data-t="a" data-id="${id}" aria-pressed="${!!sel}" title="${a.nome}"><span class="in">${initials(a.nome)}</span>${shortName(a.nome).replace(/^(Cap\.|Sgt\.|Det\.|Neg\.|Ag\.)\s*/, '')} · T${stat(id, 'tat')}</button>`; }
-  return `<button class="chip" data-act="selchip" data-t="g" data-id="${id}" aria-pressed="${!!sel}" title="${EQ[id].nome}">${icon(EQ[id].ic, 'ico" style="width:16px;height:16px')}${EQ[id].nome}</button>`;
+  if (kind === 'a') { const a = agentById(id); return `<button class="chip" data-act="selchip" data-t="a" data-id="${id}" data-ag="${id}" aria-pressed="${!!sel}"><span class="in">${initials(a.nome)}</span>${shortName(a.nome).replace(/^(Cap\.|Sgt\.|Det\.|Neg\.|Ag\.)\s*/, '')} · T${stat(id, 'tat')}</button>`; }
+  return `<button class="chip" data-act="selchip" data-t="g" data-id="${id}" aria-pressed="${!!sel}" data-tip="${esc(EQ[id].nome + ': ' + EQ[id].dshort)}">${icon(EQ[id].ic, 'ico" style="width:16px;height:16px')}${EQ[id].nome}</button>`;
 }
 function renderPerimeter() {
   const reserveA = G.team.filter(id => (G.az[id] || 'reserva') === 'reserva'), reserveG = G.gear.filter(id => (G.gz[id] || 'reserva') === 'reserva');
-  const adq = adequateCount();
+  const adq = adequateCount(), adqCol = adq >= 4 ? 'green' : adq >= 3 ? 'amber' : 'red';
   const intel = INTEL.filter(i => i.fase1).map(i => {
     const r = G.p1intel[i.id], done = r && typeof r === 'object', c = intelCost(i.id), can = G.credits >= c;
     return `<div class="icard ${done && r.ok ? 'done' : ''}"><b>${icon(i.ic, 'ico" style="width:18px;height:18px;vertical-align:-4px;margin-right:6px')}${i.nome}</b><p>${i.desc}</p>
       ${done ? dossierHTML(r) : `<button class="btn sm" data-act="p1intel" data-id="${i.id}" ${can ? '' : `aria-disabled="true" data-why="Faltam ${fmt(c - G.credits)} créditos para esta investigação."`}>Investigar · ${c} créditos</button>${can ? '' : `<small class="unav">Faltam ${fmt(c - G.credits)} créditos</small>`}`}</div>`;
   }).join('');
-  const zrows = ZONES.map(z => {
-    const cov = zoneCoverage(z.id), sel = UI.sel;
-    return `<div class="zrow ${UI.pickZone === z.id ? 'sel' : ''}"><div><span class="nm">${z.nome}</span> <span class="pill ${covCls(cov) === 'g' ? 'green' : covCls(cov) === 'a' ? 'amber' : 'red'}">${covSym(cov)} ${covTxt(cov)}</span></div><span class="cv" style="color:var(--${covCls(cov) === 'g' ? 'green' : covCls(cov) === 'a' ? 'amber' : 'red'})">${cov}%</span>
-      <div class="chips">${agentsIn(z.id).map(id => chipHTML('a', id)).join('')}${gearIn(z.id).map(id => chipHTML('g', id)).join('')}${sel ? `<button class="btn sm" data-act="place" data-z="${z.id}">Posicionar aqui</button>` : ''}</div></div>`;
+  /* Lista compacta: só as zonas ocupadas (o mapa já mostra a cobertura de todas). É por ela que se pega quem já está posicionado. */
+  const zrows = ZONES.filter(z => agentsIn(z.id).length || gearIn(z.id).length || UI.sel).map(z => {
+    const cov = zoneCoverage(z.id), cc = covCls(cov) === 'g' ? 'green' : covCls(cov) === 'a' ? 'amber' : 'red';
+    return `<div class="zrow ${UI.pickZone === z.id ? 'sel' : ''}"><span class="nm">${z.nome}</span><span class="cv" style="color:var(--${cc})">${cov}%</span>
+      <div class="chips">${agentsIn(z.id).map(id => chipHTML('a', id)).join('')}${gearIn(z.id).map(id => chipHTML('g', id)).join('')}${UI.sel ? `<button class="btn sm" data-act="place" data-z="${z.id}">Posicionar aqui</button>` : ''}</div></div>`;
   }).join('');
   const selName = UI.sel ? (UI.sel.t === 'a' ? agentById(UI.sel.id).nome : EQ[UI.sel.id].nome) : '';
-  setBar(`<div class="absum"><span class="abk">Perímetro</span><span><b class="mono" style="color:var(--${adq >= 4 ? 'green' : adq >= 3 ? 'amber' : 'red'})">${adq} de 7</b> zonas adequadas · ${reserveA.length} ${plural(reserveA.length, 'agente', 'agentes')} na reserva · plantão <b class="mono">−${plantaoCost()}</b>/rod.</span></div>
-    <span class="spacer"></span><button class="btn" data-act="autoplace">Distribuição automática</button><button class="btn primary lg" data-act="tosiege">Confirmar e iniciar o cerco →</button>`);
+  setBar(`<div class="absum"><span class="abk">Perímetro</span><span><b class="mono" style="color:var(--${adqCol})">${adq} de 7</b> zonas adequadas</span></div>
+    <span class="spacer"></span><button class="btn" data-act="autoplace">Distribuição automática</button><button class="btn primary lg" data-act="tosiege">Iniciar o cerco →</button>`);
   return `<div class="screen">
-    <div class="hud"><div class="hudrow"><span class="brand">PERÍMETRO</span>${menuBtn()}<span class="pill">Fase 1 · Posicionamento</span><span class="spacer"></span>
-      <div class="stat"><small>Zonas adequadas</small><b style="color:var(--${adq >= 4 ? 'green' : adq >= 3 ? 'amber' : 'red'})">${adq} / 7</b></div>
-      <div class="stat"><small>Plantão previsto</small><b>−${plantaoCost()}/rod.</b></div>
+    <div class="hud"><div class="hudrow"><span class="brand">PERÍMETRO</span>${menuBtn()}<span class="pill">Posicionamento</span><span class="spacer"></span>
+      <div class="stat"><small>Zonas adequadas</small><b style="color:var(--${adqCol})">${adq} / 7</b></div>
+      <div class="stat"><small>Plantão</small><b>−${plantaoCost()}/rod.</b></div>
       <div class="stat"><small>Créditos</small><b style="color:var(--amber)" data-k="cred" data-n="${Math.round(G.credits)}">${fmt(G.credits)}</b></div></div></div>
     <div class="perim">
       <div class="grid">
-        <div><div class="eyebrow">Mapa esquemático</div><h1 class="ptitle">Onde você vai apostar?</h1>
-          <p class="muted" style="margin-bottom:10px;max-width:760px">Quatro das sete zonas são rotas de fuga possíveis, mas você não sabe quais. Selecione um agente ou equipamento e clique na zona de destino. A cobertura combina a eficiência tática dos agentes com o fator dos equipamentos (×1,0 sem · ×1,3 com um · ×1,6 com dois).</p>
-          ${UI.sel ? `<div class="target" role="status">${icon('map', 'ico', 1.8)}<span>Posicionando <b>${selName}</b>: clique na zona de destino no mapa ou em “Posicionar aqui” na lista. <kbd>Esc</kbd> cancela.</span></div>` : ''}
+        <div><h1 class="ptitle">Posicione a equipe</h1>
+          <p class="muted" style="margin-bottom:10px">Selecione um agente ou equipamento e clique numa zona. Quatro zonas podem ser rotas de fuga.</p>
+          ${UI.sel ? `<div class="target" role="status">${icon('map', 'ico', 1.8)}<span>Posicionando <b>${selName}</b>: clique na zona de destino. <kbd>Esc</kbd> cancela.</span></div>` : ''}
           <div class="mapwrap">${mapSVG({ interactive: true, sel: UI.pickZone, targeting: !!UI.sel })}${legendHTML()}</div></div>
-        <div><div class="eyebrow">Inteligência prévia (resultado imediato, 15% menos confiável)</div><div class="intelgrid" style="margin-top:8px">${intel}</div></div>
+        <div><h2 class="eyebrow">Investigar antes do cerco</h2><div class="intelgrid" style="margin-top:8px">${intel}</div></div>
       </div>
       <aside class="side">
         <div class="card"><h2 class="h3">Reserva <span class="pill">${reserveA.length} ${plural(reserveA.length, 'agente', 'agentes')}</span></h2>
           <div class="row" style="gap:6px">${reserveA.map(id => chipHTML('a', id)).join('') || '<span class="faint" style="font-size:12.5px">Todos posicionados.</span>'}${reserveG.map(id => chipHTML('g', id)).join('')}</div>
-          ${UI.sel ? `<div class="row" style="margin-top:10px"><button class="btn sm" data-act="place" data-z="reserva">Devolver à reserva</button><span class="faint" style="font-size:12.5px">${selName} selecionado</span></div>` : '<p class="faint" style="font-size:12.5px;margin-top:8px">Clique em um item e depois em uma zona. Agentes na reserva descansam, mas não cobrem zona nenhuma.</p>'}</div>
-        <div class="card"><h2 class="h3">Zonas</h2><div class="zlist">${zrows}</div></div>
-        <p class="faint" style="font-size:12px">Cobertura calculada com a pressão inicial (${G.pressure}): eficiência × ${dec(pressureFactor(G.pressure * .95), 2)}. Ela muda ao longo do cerco.</p>
+          ${UI.sel ? `<div class="row" style="margin-top:10px"><button class="btn sm" data-act="place" data-z="reserva">Devolver à reserva</button></div>` : '<p class="faint" style="font-size:12.5px;margin-top:8px">Na reserva, o agente descansa e não custa plantão, mas não cobre zona.</p>'}</div>
+        ${zrows ? `<div class="card"><h2 class="h3">Em campo</h2><div class="zlist">${zrows}</div></div>` : ''}
       </aside>
     </div></div>`;
 }
@@ -2894,9 +2926,11 @@ function cutHTML() {
 }
 /* =====================================================================
    INTERFACE — Cerco (fase 2)
+   Tela enxuta: o que decide fica à vista; o porquê de cada número fica na dica (passar o mouse ou focar).
    ===================================================================== */
 const ROUND_TITLE = ['', 'A primeira hora', 'O silêncio do outro lado', 'O cansaço chega', 'Metade do caminho', 'Fim de tarde', 'A cobrança', 'A última luz', 'Ultimato'];
 const FRONT_IC = { tatica: 'shield', nego: 'phone', intel: 'eye', com: 'mic' };
+const agIdByShort = nm => (ALL_AGENTS.find(a => shortName(a.nome) === nm) || {}).id;
 
 function bscValues() {
   const H = G.hostages, pv = perceivedVault();
@@ -2909,17 +2943,17 @@ function bscValues() {
     { k: 'Confiança', v: confidence() * 100, unk: false, cls: 'g' }
   ];
 }
+/* Letreiro de manchetes só na abertura da rodada: no painel, no resultado e nas cartas, texto em movimento cansa e disputa a atenção. */
 function hudHTML() {
-  const b = bscValues();
+  const b = bscValues(), pl = plantaoCost(), run = runway();
   return `<div class="hud"><div class="hudrow">
     <span class="brand">PERÍMETRO</span>${menuBtn()}
     <div class="stat"><small>Rodada</small><b>${G.round}/${MAX_ROUNDS}</b></div>
     <div class="stat"><small>Hora</small><b>${fmtTime(G.round)}</b></div>
     ${G.stage === 'panel' ? `<div class="timer" id="clock" role="timer" aria-label="Tempo restante da rodada">${G.noLimit ? '∞' : mmss(Math.max(0, Math.ceil((UI.deadline - Date.now()) / 1000)) || D_().timer)}</div>` : ''}
-    <div class="stat"><small>Créditos</small><b style="color:var(--amber)" data-k="cred" data-n="${Math.round(G.credits)}">${fmt(G.credits)}</b><em class="burn ${G.credits < plantaoCost() ? 'bad' : ''}" title="Custo de plantão cobrado ao fim de cada rodada">−${plantaoCost()}/rod.</em></div>
-    <div class="stat tocchip ${TOCS[tocConstraint().k].cor}" title="Elo mais fraco do sistema agora (Teoria das Restrições)"><small>Gargalo</small><b>${TOCS[tocConstraint().k].nome}</b></div>
-    <div class="bsc" title="Projeção dos cinco objetivos (placar equilibrado)">${b.map((x, i) => `<div><span>${x.k}</span><b ${x.unk ? 'title="Ainda desconhecido"' : `data-k="bscn${i}" data-n="${Math.round(x.v)}"`}>${x.unk ? '?' : Math.round(x.v)}</b>${meter(x.v, x.cls, `data-k="bsc${i}" data-val="${Math.round(x.v)}"`)}</div>`).join('')}</div>
-  </div>${tickerHTML(headlines(), 'TV PORTO ALTO')}</div>`;
+    <div class="stat" data-tip="Plantão de ${pl} por rodada, cobrado no fim de cada uma. A reserva ${run >= 99 ? 'cobre o plantão até o fim' : 'cobre ' + dec(run) + ' rodadas de plantão'}. Quem está na reserva ou foi reconvocado não custa."><small>Créditos</small><b style="color:var(--amber)" data-k="cred" data-n="${Math.round(G.credits)}">${fmt(G.credits)}</b><em class="burn ${G.credits < pl ? 'bad' : ''}">−${pl}/rod.</em></div>
+    <div class="bsc" data-tip="Projeção dos cinco objetivos da nota (? = ainda desconhecido)">${b.map((x, i) => `<div><span>${x.k}</span><b ${x.unk ? '' : `data-k="bscn${i}" data-n="${Math.round(x.v)}"`}>${x.unk ? '?' : Math.round(x.v)}</b>${meter(x.v, x.cls, `data-k="bsc${i}" data-val="${Math.round(x.v)}"`)}</div>`).join('')}</div>
+  </div>${G.stage === 'update' ? tickerHTML(headlines(), 'TV PORTO ALTO') : ''}</div>`;
 }
 
 /* ---------- Sparkline ---------- */
@@ -2938,8 +2972,9 @@ function spark(series, color, proj) {
     <circle cx="${X(series.length - 1).toFixed(1)}" cy="${Y(last).toFixed(1)}" r="3.5" fill="${color}"/></svg>`;
 }
 const ins = (tone, ic, text) => `<div class="insight ${tone}">${icon(ic, '', 1.8)}<span>${text}</span></div>`;
+const reportHTML = r => { const id = agIdByShort(r.ag); return `<div class="report"><span class="src"${id ? ` data-ag="${id}"` : ''}>${r.ag} · ${ZONE[r.z].curto}</span><span>${r.txt}. <span class="faint">Confiança ${r.conf}.</span></span></div>`; };
 
-/* ---------- Painel de Endsley ---------- */
+/* ---------- Painel de Endsley: perceber, compreender, projetar (um nível por vez) ---------- */
 function endsleyHTML() {
   const K = G.K, H = G.hostages, pa = perceivedAgit(), pv = perceivedVault(), P = PR_();
   const unk = t => `<span class="unk">${t}</span>`;
@@ -2956,86 +2991,59 @@ function endsleyHTML() {
     <div class="kv">
       <div><small>Pressão da mídia</small><b>${Math.round(G.media)}</b></div>
       <div><small>Agitação aparente</small><b>${pa.txt}</b></div>
-      <div><small>Cofre (atividade)</small>${pv.exact ? `<b>${pv.txt}</b>` : `<b>${pv.txt}</b>`}</div>
+      <div><small>Cofre (atividade)</small><b>${pv.txt}</b></div>
       <div><small>Degrau da negociação</small><b>${G.nego.step} / 5</b></div>
     </div>
     <p style="font-size:13.5px;margin-top:2px;font-family:var(--serif)">${hostagesFramed()}.</p>
-    <div class="eyebrow">Variáveis ocultas</div>
-    <div class="kv">${hid.map(([k, v]) => `<div><small>${k}</small>${v == null ? unk('desconhecido') : `<b style="font-size:14px">${v}</b>`}</div>`).join('')}</div>
-    <div class="eyebrow">Relatos de campo desta rodada</div>
-    <div>${reps.length ? reps.map(r => `<div class="report"><span class="src">${r.ag} · ${ZONE[r.z].curto}</span><span>${r.txt}. <span class="faint">Confiança ${r.conf}.</span></span></div>`).join('') : '<p class="faint" style="font-size:12.5px">Nenhum relato: zonas sem agentes não geram relatos. Você só ouve onde posiciona gente para ouvir.</p>'}</div>`;
+    ${hid.some(([, v]) => v != null) ? `<div class="eyebrow">O que você já descobriu</div><div class="kv">${hid.filter(([, v]) => v != null).map(([k, v]) => `<div><small>${k}</small><b style="font-size:14px">${v}</b></div>`).join('')}</div>` : ''}
+    ${hid.some(([, v]) => v == null) ? `<p class="unkline"><b>Ainda desconhecido:</b> ${unk(hid.filter(([, v]) => v == null).map(([k]) => k.toLowerCase()).join(', '))}.</p>` : ''}
+    <div class="eyebrow">Relatos de campo</div>
+    <div>${reps.length ? reps.map(reportHTML).join('') : '<p class="faint" style="font-size:12.5px">Nenhum relato: só há relato onde há agente.</p>'}</div>`;
   // Nível 2
-  const toc = tocConstraint(), fpAvg = deployed().length ? deployed().reduce((s, id) => s + fp(id), 0) / deployed().length : pressureFactor(G.pressure);
-  const zone = G.pressure < 30 ? 'baixa demais (complacência)' : G.pressure <= 62 ? 'zona ótima' : G.pressure <= 75 ? 'alta (desempenho caindo)' : 'sobrecarga';
+  const fpAvg = deployed().length ? deployed().reduce((s, id) => s + fp(id), 0) / deployed().length : pressureFactor(G.pressure);
+  const zone = G.pressure < 30 ? 'baixa demais' : G.pressure <= 62 ? 'zona ótima' : G.pressure <= 75 ? 'alta' : 'sobrecarga';
   const L2 = [];
-  L2.push(ins(G.pressure > 75 || G.pressure < 30 ? 'bad' : G.pressure > 62 ? 'warn' : 'good', 'bolt', `Pressão operacional ${G.pressure}: ${zone}. Eficiência média dos agentes ${Math.round(fpAvg * 100)}% do potencial (curva de Yerkes-Dodson).`));
+  L2.push(ins(G.pressure > 75 || G.pressure < 30 ? 'bad' : G.pressure > 62 ? 'warn' : 'good', 'bolt', `Pressão da equipe ${G.pressure} (${zone}): ela rende ${Math.round(fpAvg * 100)}% do potencial.`));
   const st = STEPS[G.nego.step - 1];
   L2.push(ins('info', 'phone', `Negociação no degrau ${G.nego.step} (${st.nome}). ${K.profile ? `Líder ${P.nome}: ${P.tip}` : G.nego.signalShown ? `Sinal do canal: “${P.sign}”` : 'O perfil do líder ainda é desconhecido, e a postura certa depende dele.'}`));
   const topEv = Object.entries(G.ev).sort((a, b) => b[1] - a[1])[0];
   const adq = adequateCount();
   L2.push(ins(adq >= 4 ? 'good' : 'warn', 'map', `${adq} de 7 zonas com cobertura adequada. ${topEv && topEv[1] >= evidenceMin() ? `Os relatos convergem para <b>${ZONE[topEv[0]].nome}</b> (${dec(topEv[1])} indícios ponderados).${evidenceMin() < 1.5 ? ' A Det. Mendes correlacionou os relatos.' : ''}` : 'Os relatos ainda não apontam uma rota com clareza.'}`));
   const tired = deployed().filter(id => ff(id) < .8), away = G.team.filter(isAway);
-  if (tired.length) L2.push(ins('warn', 'tired', `Fadiga: ${tired.map(id => shortName(agentById(id).nome)).join(', ')} abaixo de 80% de eficiência. Rodízio custa cobertura temporária.`));
+  if (tired.length) L2.push(ins('warn', 'tired', `Fadiga: ${tired.map(id => shortName(agentById(id).nome)).join(', ')} abaixo de 80%.`));
   if (away.length) L2.push(ins('bad', 'alert', `${away.map(id => shortName(agentById(id).nome)).join(', ')} reconvocado${away.length > 1 ? 's' : ''} pela cidade por ${Math.max(...away.map(id => G.away[id]))} rodada(s).`));
   const bad = STK_KEYS.filter(k => G.stk[k].sem >= 2 || G.stk[k].sat < 40);
-  if (bad.length) L2.push(ins('bad', 'family', `Risco com stakeholders: ${bad.map(k => `${STK[k].nome} (${Math.round(G.stk[k].sat)}${G.stk[k].sem >= 2 ? `, ${G.stk[k].sem} rodadas sem atenção` : ''})`).join('; ')}.`));
-  if (G.round >= 6) L2.push(ins('bad', 'mayor', 'O prefeito está em modo de urgência: perdas de confiança dele são ampliadas até o fim.'));
+  if (bad.length) L2.push(ins('bad', 'family', `Stakeholders em risco: ${bad.map(k => `${STK[k].nome} (${Math.round(G.stk[k].sat)}${G.stk[k].sem >= 2 ? `, ${G.stk[k].sem} rodadas sem atenção` : ''})`).join('; ')}.`));
+  if (G.round >= 6) L2.push(ins('bad', 'mayor', 'O prefeito está em urgência: as perdas de confiança dele crescem até o fim.'));
   G.hints.slice(-2).forEach(h => L2.push(ins('info', 'light', `Pista (rodada ${h.r}): ${br(h.t)}`)));
-  // Nível 3
-  const hist = G.hist, ag = hist.map(h => h.agit), md = hist.map(h => h.media), vl = hist.map(h => h.vault);
-  const agNow = [...ag, Math.round(G.agit)], mdNow = [...md, Math.round(G.media)], vlNow = [...vl, Math.round(G.vault)];
-  const trendA = agNow.length > 1 ? agNow[agNow.length - 1] - agNow[agNow.length - 2] : 0;
-  const mProj = clamp(Math.round(G.media + Array.from({ length: MAX_ROUNDS - G.round }, (_, i) => (8 + (G.round + 1 + i) * 2) * D_().media).reduce((a, b) => a + b, 0)), 0, 100);
-  const best = POSTURES.map(p => negoParts(p.t).p).reduce((a, b) => Math.max(a, b), 0), pc = negoParts(G.nego.step).p;
-  const roundsLeft = G.nego.step >= 5 ? 0 : Math.ceil((5 - G.nego.step) / Math.max(.05, pc));
-  const ip = intervProb(), band = .16 * (1 - infoFrac()), ul = ultimatumView();
+  // Nível 3: as curvas e os marcos mostram a tendência; os textos ficam só para o que pede decisão.
+  const hist = G.hist, agNow = [...hist.map(h => h.agit), Math.round(G.agit)], mdNow = [...hist.map(h => h.media), Math.round(G.media)], vlNow = [...hist.map(h => h.vault), Math.round(G.vault)];
+  const pc = negoParts(G.nego.step).p, roundsLeft = G.nego.step >= 5 ? 0 : Math.ceil((5 - G.nego.step) / Math.max(.05, pc));
+  const ip = intervProb(), band = .16 * (1 - infoFrac()), ul = ultimatumView(), blind = blindParts();
   const L3 = `
     <div class="grid" style="gap:8px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">
       <div><div class="eyebrow">Agitação aparente</div>${spark(agNow, '#ff5468', true)}</div>
       <div><div class="eyebrow">Pressão da mídia</div>${spark(mdNow, '#f6a623', true)}</div>
       <div><div class="eyebrow">Atividade no cofre</div>${spark(vlNow.map(v => perceivedVault(v).exact ? v : perceivedVault(v).v), '#4da6ff', true)}</div>
-      <div><div class="eyebrow">Reserva de créditos (por 10)</div>${spark(creditSeries(), '#41d08f', true)}</div>
+      <div><div class="eyebrow">Reserva de créditos (÷10)</div>${spark(creditSeries(), '#41d08f', true)}</div>
     </div>
     ${milestonesHTML()}
-    ${ins('info', 'radar', `Tendência da agitação: ${trendA > 2 ? 'subindo' : trendA < -2 ? 'caindo' : 'estável'}${G.nego.contact ? '' : ' (estimativa grosseira: sem canal aberto)'}. ${G.agit > 70 ? 'Acima de 80 há risco de ação desesperada.' : ''}`)}
-    ${ins(G.credits >= burnToEnd() ? 'good' : 'warn', 'coin', G.credits >= burnToEnd() ? `Reserva ${Math.round(G.credits)}: cobre o plantão até o fim (${burnToEnd()}) e sobram ${Math.round(G.credits - burnToEnd())} para investigar ou pedir apoio (próximo apoio: ${apoioCost()}).` : `Reserva ${Math.round(G.credits)}: o plantão até o fim custa ${burnToEnd()}. Faltam ${Math.round(burnToEnd() - G.credits)} créditos, e cada ordem paga aumenta o buraco.`)}
-    ${ins(mProj > 85 ? 'warn' : 'info', 'mic', `Sem comunicados, a mídia chega perto de ${mProj} até a rodada ${MAX_ROUNDS}.`)}
-    ${ins('info', 'bank', `Cofre: previsão de abertura em ${K.vault ? etaVault() : 'prazo desconhecido (faixa ampla, só a inteligência ou a diretoria do banco precisam)'}.`)}
-    ${ins('info', 'stairs', `Negociação: com a melhor postura, a chance de avançar é ${pLabel(pc)}; chegar ao degrau 5 leva cerca de ${roundsLeft || 'zero'} rodada${roundsLeft === 1 ? '' : 's'} se negociar todo turno. ${G.nego.step === 5 ? `Rendição ocorre se a agitação cair abaixo de ${D_().ret}.` : ''}`)}
-    ${ins(ip > .55 ? 'good' : ip > .3 ? 'warn' : 'bad', 'shield', `Intervenção hoje: chance estimada ${pLabel(ip)} (${Math.round(clamp(ip - band, 0, 1) * 100)}–${Math.round(clamp(ip + band, 0, 1) * 100)}%). Quanto menos você sabe, mais larga é a faixa${blindParts().length ? ', e entrar sem conhecer o interior custa ' + Math.round(-blindParts().reduce((s, b) => s + b.v, 0) * 100) + ' pontos de chance' : ''}.`)}
-    ${ins(ul.tone, 'clock', `Ultimato da rodada ${MAX_ROUNDS}: se a crise chegasse lá como está, o líder cederia com chance de ${ul.cede}; se não ceder, a entrada é forçada com ${ul.forca} de sucesso. Cada degrau a mais, rota fechada e ponto de agitação a menos ajudam a cessão.`)}
-    ${G.round < 6 ? ins('warn', 'mayor', `A urgência do prefeito aumenta na rodada 6 (faltam ${6 - G.round}).`) : ''}`;
-  /* Os três níveis de Endsley viram abas: o mesmo conteúdo, um nível por vez (o painel tinha ~1.500 px). */
+    ${ins(G.credits >= burnToEnd() ? 'good' : 'warn', 'coin', G.credits >= burnToEnd() ? `Reserva ${Math.round(G.credits)}: cobre o plantão até o fim e sobram ${Math.round(G.credits - burnToEnd())}.` : `Reserva ${Math.round(G.credits)}: faltam ${Math.round(burnToEnd() - G.credits)} para o plantão até o fim.`)}
+    ${ins('info', 'stairs', G.nego.step === 5 ? `Degrau 5: a rendição ocorre se a agitação cair abaixo de ${D_().ret}.` : `Negociação: chance ${pLabel(pc)} de avançar por rodada; o degrau 5 leva cerca de ${roundsLeft} rodada${roundsLeft === 1 ? '' : 's'}.`)}
+    ${ins(ip > .55 ? 'good' : ip > .3 ? 'warn' : 'bad', 'shield', `Intervenção hoje: chance ${pLabel(ip)} (${Math.round(clamp(ip - band, 0, 1) * 100)}–${Math.round(clamp(ip + band, 0, 1) * 100)}%)${blind.length ? `, com ${Math.round(-blind.reduce((s, b) => s + b.v, 0) * 100)} pontos a menos por entrar às cegas` : ''}.`)}
+    ${ins(ul.tone, 'clock', `Ultimato da rodada ${MAX_ROUNDS}: como está, o líder cede com ${ul.cede}; se não ceder, a entrada forçada tem ${ul.forca} de sucesso.`)}`;
   const l2s = L2.join(''), n2 = (l2s.match(/insight (warn|bad)/g) || []).length, n3 = (L3.match(/insight (warn|bad)/g) || []).length;
-  const lv = UI.lvl || 1, LV = [[1, 'Percepção', 'dados brutos', 0], [2, 'Compreensão', 'o que significa', n2], [3, 'Projeção', 'para onde vai', n3]];
-  return `<div class="card endsley"><h2 class="h3">Painel do comandante <span class="faint sub">consciência situacional</span></h2>
+  const lv = UI.lvl || 1, LV = [[1, 'Percepção', 'os dados', 0], [2, 'Compreensão', 'o que significam', n2], [3, 'Projeção', 'para onde vão', n3]];
+  return `<div class="card endsley"><h2 class="h3">Situação</h2>
     <div class="lvtabs" role="tablist" aria-label="Níveis de consciência situacional">${LV.map(([n, t, s, c]) => `<button class="lvtab l${n}" role="tab" id="lvt${n}" aria-controls="lvp" aria-selected="${lv === n}" tabindex="${lv === n ? 0 : -1}" data-act="lvl" data-t="${n}"><b>${n}</b><span>${t}<small>${s}</small></span>${c ? `<em title="${c} ${plural(c, 'leitura pede', 'leituras pedem')} atenção">${c}</em>` : ''}</button>`).join('')}</div>
     <div class="lvl l${lv}${UI.tabAnim ? ' swap' : ''}" id="lvp" role="tabpanel" aria-labelledby="lvt${lv}">${lv === 1 ? l1 : lv === 2 ? l2s : L3}</div></div>`;
 }
 
-
 /* ===================================================================
-   DASHBOARDS DE OPERAÇÃO (L1.3): caixa, gargalo, alertas, prévias
+   OPERAÇÃO: gargalo, alertas, prévias
    =================================================================== */
 const creditSeries = () => { const h = Array.from({ length: G.round }, (_, i) => G.creditsHist[i + 1]).filter(Number.isFinite).map(v => v / 10); return h.length ? h : [G.credits / 10]; };   // L2.4: sem buracos nem nulos (save antigo, sem histórico de verba)
-const TOCCLS = { violet: 'v', blue: 'b', amber: 'a' };
 
-function cashCard() {
-  const pl = plantaoCost(), left = MAX_ROUNDS - G.round, need = pl * left, run = runway();
-  const status = G.credits < pl ? ['red', 'no vermelho no próximo plantão'] : G.credits >= need ? ['green', 'cobre o plantão até o fim'] : ['amber', `faltam ~${Math.round(need - G.credits)} até o fim`];
-  const cats = spendBreakdown(), tot = cats.reduce((a, c) => a + c.v, 0) || 1;
-  return `<div class="card cash"><h3>Caixa <span class="pill ${status[0]}">${status[1]}</span></h3>
-    <div class="cashtop"><div><small>Reserva</small><b class="mono" data-k="cashres" data-n="${Math.round(G.credits)}">${fmt(G.credits)}</b></div><div><small>Plantão</small><b class="mono">−${pl}<i>/rod.</i></b></div><div><small>Cobre</small><b class="mono">${run >= 99 ? '∞' : dec(run)}<i> rod.</i></b></div></div>
-    <div class="stack" role="img" aria-label="Para onde foi o dinheiro: ${cats.filter(c => c.v > 0).map(c => c.k + ' ' + Math.round(c.v)).join(', ')}">${cats.filter(c => c.v > 0).map(c => `<i style="width:${c.v / tot * 100}%;background:${c.c}" title="${c.k}: ${Math.round(c.v)}"></i>`).join('')}</div>
-    <div class="stackleg">${cats.filter(c => c.v > 0).map(c => `<span><i style="background:${c.c}"></i>${c.k} <b class="mono">${Math.round(c.v)}</b></span>`).join('')}</div>
-    <p class="faint" style="font-size:12px;margin-top:8px">Próximos preços: apoio externo ${G.supportUsed >= APOIO_PRECOS.length ? 'esgotado' : apoioCost(0)} · horas extras ${horasCost()} · investigação 40–70. Quem descansa na reserva ou foi reconvocado não custa plantão.</p></div>`;
-}
-function utilHTML() {
-  const field = deployed().length, away = G.team.filter(isAway).length, rest = G.team.length - field - away;
-  const tight = rest === 0 && field > 0;
-  return `<div class="util" title="Utilização da equipe, como a capacidade de uma linha de produção"><span><b>${field}</b> em campo</span><span><b>${rest}</b> descansam</span><span><b>${away}</b> reconvocado${away === 1 ? '' : 's'}</span></div>
-    ${tight ? '<p class="faint" style="font-size:12px;margin:-4px 0 8px">Sem folga: ninguém descansa sem abrir uma zona. O cansaço acumulado só se resolve com rodízio ou horas extras.</p>' : ''}`;
-}
 function gearNote(e) {
   const z = G.gz[e] || 'reserva', placed = z !== 'reserva', has = placed && agentsIn(z).length;
   switch (e) {
@@ -3050,61 +3058,51 @@ function gearNote(e) {
   }
   return '';
 }
+/* Equipamento parado (na reserva, sem efeito) aparece apagado; o efeito de cada um fica na dica. */
 function gearCard() {
-  if (!G.gear.length) return `<div class="card"><h3>Equipamentos</h3><p class="faint" style="font-size:12.5px">Nenhum equipamento. A equipe opera com o que tem: sem fator de cobertura nas zonas.</p></div>`;
-  return `<div class="card"><h3>Equipamentos em campo</h3><div class="gearlist">${G.gear.map(e => { const idle = ['drone', 'sniper', 'termica'].includes(e) && (G.gz[e] || 'reserva') === 'reserva'; return `<div class="gl ${idle ? 'idle' : ''}">${icon(EQ[e].ic, 'ico')}<span><b>${EQ[e].nome}</b><small>${gearNote(e)}</small></span></div>`; }).join('')}</div></div>`;
+  if (!G.gear.length) return '';
+  return `<div class="card"><h2 class="h3">Equipamentos</h2><div class="gearlist">${G.gear.map(e => { const idle = ['drone', 'sniper', 'termica'].includes(e) && (G.gz[e] || 'reserva') === 'reserva'; return `<div class="gl hastip ${idle ? 'idle' : ''}" tabindex="0">${icon(EQ[e].ic, 'ico')}<b>${EQ[e].nome}</b><span class="tipc"><b>${EQ[e].nome}:</b> ${gearNote(e)}</span></div>`; }).join('')}</div></div>`;
 }
-const SEVN = { 3: 'crítico', 2: 'atenção', 1: 'aviso' };
+/* Até três alertas, só o título e a ação; a explicação de cada um fica na dica. */
 function alertsHTML() {
   const al = siegeAlerts();
-  if (!al.length) return `<div class="calmbar" role="status">${icon('check', 'ico', 2)}<span><b>Atenção agora:</b> nada exige ação imediata. Use a rodada para investir em informação, rodízio ou comunicação preventiva.</span></div>`;
-  const top = al.slice(0, 3);
-  return `<div class="card alerts"><h2 class="h3">Atenção agora <span class="pill ${al[0].sev === 3 ? 'red' : al[0].sev === 2 ? 'amber' : 'blue'}">${al.length} ${al.length === 1 ? 'alerta' : 'alertas'}</span></h2>
-    ${top.map(a => `<div class="alert s${a.sev}">${icon(a.ic, 'ico')}<div><b>${a.title}</b> <em>${SEVN[a.sev]}</em><span>${a.text}</span></div><button class="btn sm" data-act="tab" data-t="${a.tab}">${a.label}</button></div>`).join('')}
-    ${al.length > 3 ? `<small class="faint">Em segundo plano: ${al.slice(3).map(a => a.title).join(' · ')}</small>` : ''}</div>`;
+  if (!al.length) return `<div class="calmbar" role="status">${icon('check', 'ico', 2)}<span>Nada urgente agora.</span></div>`;
+  return `<div class="alerts" role="region" aria-label="Atenção agora">${al.slice(0, 3).map(a => `<div class="alert s${a.sev} hastip">${icon(a.ic, 'ico')}<b>${a.title}</b><button class="btn sm" data-act="tab" data-t="${a.tab}">${a.label}</button><span class="tipc">${a.text}</span></div>`).join('')}</div>`;
 }
 const TABN = { tatica: 'Tática', nego: 'Negociação', intel: 'Inteligência', com: 'Comunicação' };
+/* O gargalo (Teoria das Restrições) numa linha: o elo mais fraco agora e onde agir. */
 function tocWidget() {
-  const t = tocConstraint(), keys = ['info', 'pessoal', 'tempo'], X = TOCS[t.k];
-  const bars = keys.map(k => `<div class="tocb ${k === t.k ? 'lead' : ''}"><span>${icon(TOCS[k].ic, 'ico')}${TOCS[k].nome}</span>${meter(t.pct[k], TOCCLS[TOCS[k].cor], `data-k="toc${k}" data-val="${t.pct[k]}"`)}<b class="mono">${t.pct[k]}</b>${k === t.k ? '<em>gargalo</em>' : ''}</div>`).join('');
-  const dots = Array.from({ length: MAX_ROUNDS }, (_, i) => { const r = i + 1, k = G.tocLog[r]; return `<i class="td ${k ? TOCS[k].cor : ''} ${r === G.round ? 'now' : ''}" title="Rodada ${r}${k ? ': ' + TOCS[k].nome : ''}"></i>`; }).join('');
-  const hist = Array.from({ length: G.round }, (_, i) => G.tocLog[i + 1] ? `R${i + 1} ${TOCS[G.tocLog[i + 1]].nome}` : '').filter(Boolean).join(', ');
-  return `<div class="card toc"><h2 class="h3">Gargalo do sistema <span class="faint sub" title="O elo mais fraco decide o resultado do sistema">Teoria das Restrições</span></h2>
-    <div class="tocbars">${bars}</div>
-    <div class="toctl"><small>Gargalo por rodada</small><span aria-hidden="true">${dots}</span><span class="sr">${hist || 'sem histórico ainda'}</span></div>
-    <p class="why"><b>${X.nome}.</b> ${X.por}</p>
-    <div class="elevs"><div class="elev"><small>Elevar</small>${X.elevar}</div><div class="elev stop"><small>Pare de</small>${X.parar}</div></div>
-    <div class="row" style="margin-top:8px"><button class="btn sm" data-act="tab" data-t="${X.tab}">Ir para ${TABN[X.tab]} →</button><span class="faint" style="font-size:12px">${G.round <= 3 ? 'Esperado no início: informação.' : G.round <= 6 ? 'Esperado no meio: pessoal.' : 'Esperado no fim: tempo e fadiga.'}</span></div></div>`;
+  const X = TOCS[tocConstraint().k];
+  return `<div class="tocbar ${X.cor} hastip">${icon(X.ic, 'ico')}<span><b>Gargalo: ${X.nome}</b> · ${X.curto}</span><button class="btn sm" data-act="tab" data-t="${X.tab}">${TABN[X.tab]} →</button><span class="tipc"><b>Gargalo: ${X.nome}.</b> ${X.por}<br><b>Eleve:</b> ${X.elevar}<br><b>Pare de:</b> ${X.parar}</span></div>`;
 }
 function reposPreviewHTML() {
-  if (!UI.repoAgent || !UI.repoZone || G.az[UI.repoAgent] === UI.repoZone) return '<p class="faint" style="font-size:12px">Escolha agente e destino (ou clique numa zona do mapa) para ver o custo da mudança antes de assumi-la.</p>';
+  if (!UI.repoAgent || !UI.repoZone || G.az[UI.repoAgent] === UI.repoZone) return '';
   const p = reposPreview(UI.repoAgent, UI.repoZone), nm = shortName(agentById(UI.repoAgent).nome);
   const cell = (z, a, b, c) => `<div class="rp"><b>${ZNAME(z)}</b><span class="mono">${a}% → <em class="${b < a ? 'neg' : 'pos'}">${b}%</em>${c != null ? ` → ${c}%` : ''}</span></div>`;
   return `<div class="rprev"><div class="eyebrow">Prévia · ${nm}</div>
     ${p.from !== 'reserva' ? cell(p.from, p.before[p.from], p.now[p.from]) : ''}
-    ${p.z !== 'reserva' ? `<div class="rp"><b>${ZNAME(p.z)}</b><span class="mono">${p.before[p.z]}% → <em class="${p.now[p.z] < p.before[p.z] ? 'neg' : 'pos'}">${p.now[p.z]}%</em> nesta rodada → <em class="pos">${p.next[p.z]}%</em> na próxima</span></div>` : '<div class="rp"><b>Reserva</b><span>descansa: fadiga zera, a zona fica aberta</span></div>'}
-    <small class="faint">${p.free ? 'Sem perda de eficiência no deslocamento.' : 'Cobertura de destino só chega ao valor cheio daqui a duas rodadas.'}</small></div>`;
+    ${p.z !== 'reserva' ? `<div class="rp"><b>${ZNAME(p.z)}</b><span class="mono">${p.before[p.z]}% → <em class="${p.now[p.z] < p.before[p.z] ? 'neg' : 'pos'}">${p.now[p.z]}%</em> agora → <em class="pos">${p.next[p.z]}%</em> na próxima</span></div>` : '<div class="rp"><b>Reserva</b><span>descansa: fadiga zera, a zona fica aberta</span></div>'}</div>`;
 }
 function planPreviewHTML() {
   const rows = planPreview(); if (!rows.length) return '';
-  return `<div class="card pprev"><h2 class="h3">Prévia do plano <span class="faint sub">estimativa com o que você já enxerga</span></h2>${rows.map(r => r.txt != null
-    ? `<div class="pr"><span>${r.k}</span><b class="${r.tone}">${r.txt}</b><small>${r.note}</small></div>`
-    : `<div class="pr"><span>${r.k}</span><b class="mono ${Math.abs(r.b - r.a) < .5 ? '' : (r.b > r.a) === r.goodUp ? 'pos' : 'neg'}">${r.f(r.a)} → ${r.f(r.b)}</b><small>${r.note}</small></div>`).join('')}</div>`;
+  return `<div class="card pprev"><h2 class="h3">Prévia do plano</h2>${rows.map(r => r.txt != null
+    ? `<div class="pr" data-tip="${esc(r.note)}"><span>${r.k}</span><b class="${r.tone}">${r.txt}</b></div>`
+    : `<div class="pr" data-tip="${esc(r.note)}"><span>${r.k}</span><b class="mono ${Math.abs(r.b - r.a) < .5 ? '' : (r.b > r.a) === r.goodUp ? 'pos' : 'neg'}">${r.f(r.a)} → ${r.f(r.b)}</b></div>`).join('')}</div>`;
 }
 function milestonesHTML() {
   const ms = milestones(); if (!ms.length) return '';
   return `<div class="miles"><div class="eyebrow">Marcos à frente (se nada mudar)</div><div class="mlist">${ms.map(m => `<span class="mile ${m.tone}"><b>R${Math.min(m.r, MAX_ROUNDS + 1)}${m.r > MAX_ROUNDS ? '+' : ''}</b>${m.t}</span>`).join('')}</div></div>`;
 }
 
-/* ---------- Coluna A: mapa e equipe ---------- */
+/* ---------- Coluna A: equipe, reféns e equipamentos ---------- */
 function colA() {
   const team = G.team.map(id => {
     const a = agentById(id), z = G.az[id] || 'reserva', f = ff(id);
     const tr = +G.transit[id] || 0, eff = agentEff(id) / stat(id, 'tat');
-    return `<div class="trow ${isAway(id) ? 'away' : ''}"><div><b>${shortName(a.nome)}</b><small>${isAway(id) ? `reconvocado (${G.away[id]} rod.)` : ZNAME(z)}${tr ? ` · <span class="tr${tr}">em trânsito ${tr >= 2 ? '50' : '75'}%</span>` : ''} · ${a.trait}</small></div>
-      <div style="width:96px" title="Tática ${stat(id, 'tat')} × pressão ${Math.round(fp(id) * 100)}% × fadiga ${Math.round(f * 100)}%${tr ? ' × trânsito ' + (tr >= 2 ? '50' : '75') + '%' : ''}">${meter(f * 100, f > .75 ? 'g' : f > .55 ? 'a' : 'r', `data-k="ff${id}" data-val="${Math.round(f * 100)}"`)}<small class="mono faint" style="font-size:11px">rende ${Math.round(eff * 100)}%</small></div></div>`;
+    return `<div class="trow ${isAway(id) ? 'away' : ''}"><div data-ag="${id}"><b>${shortName(a.nome)}</b><small>${isAway(id) ? `reconvocado (${G.away[id]} rod.)` : ZNAME(z)}${tr ? ` · <span class="tr${tr}">em trânsito</span>` : ''}</small></div>
+      <div style="width:96px" data-tip="Rende ${Math.round(eff * 100)}% da Tática ${stat(id, 'tat')}: pressão ${Math.round(fp(id) * 100)}% × fadiga ${Math.round(f * 100)}%${tr ? ' × trânsito ' + (tr >= 2 ? '50' : '75') + '%' : ''}">${meter(f * 100, f > .75 ? 'g' : f > .55 ? 'a' : 'r', `data-k="ff${id}" data-val="${Math.round(f * 100)}"`)}<small class="mono faint" style="font-size:11px">rende ${Math.round(eff * 100)}%</small></div></div>`;
   }).join('');
-  return `<div class="colA">${cashCard()}${rosterCard()}<div class="card"><h2 class="h3">Equipe e fadiga</h2>${utilHTML()}<div class="team">${team || '<p class="faint">Sem agentes.</p>'}</div></div>${gearCard()}${radioCard()}</div>`;
+  return `<div class="colA"><div class="card"><h2 class="h3">Equipe</h2><div class="team">${team || '<p class="faint">Sem agentes.</p>'}</div></div>${rosterCard()}${gearCard()}</div>`;
 }
 /* ---------- Quem está lá dentro: os 17 reféns com nome ---------- */
 function hstate(h) {
@@ -3114,11 +3112,10 @@ function hstate(h) {
   return { c: G.K.hostages ? 'in' : 'in unk', t: G.K.hostages ? 'lá dentro' : 'não confirmado' };
 }
 function rosterCard() {
-  const H = G.hostages, out = G.hl.filter(h => !h.in).length, inside = H.inside - H.dead;
-  /* Compacto: só o nome; idade e papel ficam na dica. Estados fora do comum ganham texto, não só cor. */
-  return `<div class="card"><h2 class="h3">Quem está lá dentro <span class="pill ${H.dead ? 'red' : inside < HOSTAGES ? 'green' : ''}">${inside} no interior</span></h2>
-    <div class="roster">${G.hl.map(h => { const d = HOST[h.id], st = hstate(h), plain = st.c.includes('unk') || st.c === 'in'; return `<span class="rp ${st.c}" title="${d.nome}, ${d.idade} anos, ${d.papel}${d.nota ? ' (' + d.nota + ')' : ''}: ${st.t}"><b>${d.nome.split(' ')[0]}</b>${plain ? '' : `<small>${st.t}</small>`}</span>`; }).join('')}</div>
-    <p class="faint" style="font-size:12px;margin-top:8px">${out ? `${out} fora do banco. ` : ''}${G.K.hostages ? 'Estado dos reféns confirmado.' : 'Borda tracejada: estado não confirmado. A sala de acolhimento ou uma investigação revelam quem está ferido. Passe o mouse para ver idade e papel.'}</p></div>`;
+  const H = G.hostages, inside = H.inside - H.dead;
+  /* Só o primeiro nome; idade, papel e estado ficam na dica. Borda tracejada = estado não confirmado. */
+  return `<div class="card"><h2 class="h3">Reféns <span class="pill ${H.dead ? 'red' : inside < HOSTAGES ? 'green' : ''}">${inside} no interior</span></h2>
+    <div class="roster">${G.hl.map(h => { const d = HOST[h.id], st = hstate(h), plain = st.c.includes('unk') || st.c === 'in'; return `<span class="rp ${st.c}" data-tip="${esc(`${d.nome}, ${d.idade} anos, ${d.papel}${d.nota ? ' (' + d.nota + ')' : ''}: ${st.t}`)}"><b>${d.nome.split(' ')[0]}</b>${plain ? '' : `<small>${st.t}</small>`}</span>`; }).join('')}</div></div>`;
 }
 
 /* ---------- Coluna C: decisões ---------- */
@@ -3135,15 +3132,16 @@ function whyNot(c = {}) {
   if (c.cost && G.credits < c.cost) return [`Faltam ${fmt(c.cost - G.credits)} créditos (reserva ${fmt(G.credits)}).`, true];
   return null;
 }
-/* Opção de decisão. Indisponível = aria-disabled: continua focável, mostra o motivo e explica no clique. */
+/* Opção de decisão. Indisponível = aria-disabled: continua focável, mostra o motivo e explica no clique.
+   o.tip: texto completo da opção, na dica (a descrição visível é a versão curta). */
 function opt(ic, title, desc, cost, act, data, o = {}) {
   const w = o.why || null;
-  return `<button class="opt ${o.danger ? 'danger' : ''}" data-act="${act}" ${data || ''} ${w ? `aria-disabled="true" data-why="${attr(w[0])}"` : ''} aria-pressed="${!!o.pressed}">${icon(ic, 'ico" style="width:24px;height:24px')}<span><b>${title}${o.pressed ? ' <span class="pill amber inplan">no plano</span>' : ''}</b><span class="d">${desc}</span>${w && w[1] ? `<span class="unav">${w[0]}</span>` : ''}</span>${cost ? `<span class="c">${cost}</span>` : '<span></span>'}</button>`;
+  return `<button class="opt ${o.danger ? 'danger' : ''}${o.tip ? ' hastip' : ''}" data-act="${act}" ${data || ''} ${w ? `aria-disabled="true" data-why="${attr(w[0])}"` : ''} aria-pressed="${!!o.pressed}">${icon(ic, 'ico" style="width:22px;height:22px')}<span><b>${title}${o.pressed ? ' <span class="pill amber inplan">no plano</span>' : ''}</b>${desc ? `<span class="d">${desc}</span>` : ''}${w && w[1] ? `<span class="unav">${w[0]}</span>` : ''}</span>${cost ? `<span class="c">${cost}</span>` : '<span></span>'}${o.tip ? `<span class="tipc">${o.tip}</span>` : ''}</button>`;
 }
 function planBanner() {
   const n = D_().slots;
   if (G.queue.some(q => q.kind === 'interv')) return `<div class="planfull bad" role="status">${icon('shield', 'ico', 1.8)}<span>A intervenção ocupa a rodada inteira. Para escolher outras ações, remova-a na barra do plano.</span></div>`;
-  if (slotsLeft() <= 0) return `<div class="planfull" role="status">${icon('check', 'ico', 2)}<span>Plano cheio: ${n} de ${n} decisões. Execute a rodada ou remova uma ação na barra do plano para trocar.</span></div>`;
+  if (slotsLeft() <= 0) return `<div class="planfull" role="status">${icon('check', 'ico', 2)}<span>Plano cheio: execute a rodada ou remova uma ação na barra do plano.</span></div>`;
   return '';
 }
 function tabTatica() {
@@ -3151,49 +3149,48 @@ function tabTatica() {
   const ivq = G.queue.some(q => q.kind === 'interv');
   const zoneOpts = ZONES.map(z => `<option value="${z.id}" ${UI.apoioZone === z.id ? 'selected' : ''}>${z.nome} (${zoneCoverage(z.id)}%)</option>`).join('');
   const ip = intervProb(), band = .16 * (1 - infoFrac()), blind = blindParts();
-  const blindTxt = blind.length ? `<br><span style="color:var(--amber)">Às cegas: ${blind.map(b => `−${Math.round(-b.v * 100)}% porque você ${b.txt}`).join('; ')}.</span>` : '<br><span style="color:var(--green)">Você conhece o interior: sem penalidade por entrar às cegas.</span>';
-  const apostaTxt = ip < APOSTA_P ? `<br><span style="color:var(--amber)">É uma aposta: com menos de ${Math.round(APOSTA_P * 100)}% de chance, mesmo um sucesso não passa da nota A.</span>` : '';
+  const blindTxt = blind.length ? `<br><span style="color:var(--amber)">Às cegas: ${blind.map(b => `−${Math.round(-b.v * 100)}% porque você ${b.txt}`).join('; ')}.</span>` : '';
+  const apostaTxt = ip < APOSTA_P ? `<br><span style="color:var(--amber)">Abaixo de ${Math.round(APOSTA_P * 100)}% de chance, mesmo um sucesso não passa da nota A.</span>` : '';
   const apoioLeft = Math.max(0, APOIO_PRECOS.length - G.supportUsed - G.queue.filter(q => q.kind === 'apoio').length);
   const wRepos = whyNot(), wApoio = whyNot({ cost: apoioCost(), limit: apoioLeft ? null : 'Os 3 apoios externos da operação já foram usados.' });
   const pausaQ = G.queue.some(q => q.kind === 'pausa'), horasQ = G.queue.some(q => q.kind === 'horas');
-  return `<div class="card flat" style="display:grid;gap:8px"><h3>Reposicionar agente</h3>
+  return `<div class="card flat" style="display:grid;gap:8px"><h3>Reposicionar agente ${infoTip('custo', `Deslocar custa: 50% de eficiência na rodada da ordem, 75% na seguinte, meia rodada de fadiga, e a zona de origem fica aberta na hora${hasGear('viatura') ? ' (sua Viatura elimina a perda de eficiência)' : ''}. A reserva descansa e zera a fadiga, mas não cobre nada. Clicar numa zona do mapa também escolhe o destino.`)}</h3>
       <div class="fields2"><label class="field">Agente<select id="repoAgent" data-chg="repoagent"><option value="">escolher…</option>${ags.map(id => `<option value="${id}" ${UI.repoAgent === id ? 'selected' : ''}>${shortName(agentById(id).nome)} · ${ZNAME(G.az[id] || 'reserva')} · fad. ${(G.fat[id] || 0)}</option>`).join('')}</select></label>
       <label class="field">Destino<select id="repoZone" data-chg="repozone"><option value="">escolher…</option>${ZONES.map(z => `<option value="${z.id}" ${UI.repoZone === z.id ? 'selected' : ''}>${z.nome}</option>`).join('')}<option value="reserva" ${UI.repoZone === 'reserva' ? 'selected' : ''}>Reserva (descansa)</option></select></label></div>
       ${reposPreviewHTML()}
-      <div class="row"><button class="btn sm" data-act="addrepos" ${wRepos ? `aria-disabled="true" data-why="${attr(wRepos[0])}"` : ''}>Adicionar ao plano</button></div>
-      <p class="faint" style="font-size:12px">Deslocar custa: 50% de eficiência na rodada da ordem, 75% na seguinte, meia rodada de fadiga, e a zona de origem fica aberta na hora${hasGear('viatura') ? ' (sua Viatura elimina a perda de eficiência)' : ''}. A reserva descansa e zera a fadiga, mas não cobre nada.</p></div>
+      <div class="row"><button class="btn sm" data-act="addrepos" ${wRepos ? `aria-disabled="true" data-why="${attr(wRepos[0])}"` : ''}>Adicionar ao plano</button></div></div>
     <div class="optlist">
-      ${opt('support', 'Apoio externo', `Agências parceiras reforçam uma zona: +25 de cobertura por 2 rodadas. Cada uso encarece (${APOIO_PRECOS.join(' → ')}); ${apoioLeft} ${plural(apoioLeft, 'restante', 'restantes')}.`, apoioCost(), 'addapoio', '', { why: wApoio })}
+      ${opt('support', 'Apoio externo', `+25 de cobertura numa zona por 2 rodadas · restam ${apoioLeft}`, apoioCost(), 'addapoio', '', { why: wApoio, tip: `Agências parceiras reforçam uma zona: +25 de cobertura por 2 rodadas. Cada uso encarece (${APOIO_PRECOS.join(' → ')}).` })}
       <label class="subfield"><span>Zona do apoio</span><select id="apoioZone" data-chg="apoiozone"><option value="">escolher…</option>${zoneOpts}</select></label>
-      ${opt('pause', 'Pausa de Comando', `“Subir à sacada”: ${G.team.includes('diego') ? 'duas pistas' : 'uma pista'} sobre variáveis ocultas, visão sistêmica e −10 de pressão na equipe, nesta rodada e na seguinte. Consome uma decisão; a crise continua andando.`, '', 'addpausa', '', { why: whyNot({ inPlan: pausaQ }), pressed: pausaQ })}
-      ${opt('tired', 'Horas extras', `Recupera 2 rodadas de fadiga em campo e encerra a Fadiga crítica. O preço cresce com o efetivo em campo (${deployed().length} ${plural(deployed().length, 'agente', 'agentes')}).`, horasCost(), 'addhoras', '', { why: whyNot({ inPlan: horasQ, cost: horasCost() }), pressed: horasQ })}
-      ${UI.ivConfirm ? `<div class="insight bad">${icon('alert', '', 1.8)}<span><b>Ordenar a intervenção agora?</b> Prontidão ${Math.round(intervPower())}%, chance estimada ${pLabel(ip)} (${Math.round(clamp(ip - band, 0, 1) * 100)}–${Math.round(clamp(ip + band, 0, 1) * 100)}%). Ocupa todas as decisões e encerra a crise nesta rodada.${blindTxt}${apostaTxt}</span></div><div class="row"><button class="btn danger" data-act="ivyes">Confirmar intervenção</button><button class="btn ghost" data-act="ivno">Cancelar <span class="faint" style="font-weight:400">(Esc)</span></button></div>` :
-        opt('shield', 'Intervenção', `Ação direta, o BATNA da força-tarefa. Prontidão ${Math.round(intervPower())}% · chance estimada <b>${pLabel(ip)}</b> (±${Math.round(band * 100)}%). Depende de inteligência, tática e agitação.${blindTxt}${apostaTxt}`, '', 'iv', '', { danger: true, pressed: ivq })}
+      ${opt('pause', 'Pausa de Comando', `${G.team.includes('diego') ? 'Duas pistas' : 'Uma pista'} e −10 de pressão por 2 rodadas`, '', 'addpausa', '', { why: whyNot({ inPlan: pausaQ }), pressed: pausaQ, tip: `“Subir à sacada”: ${G.team.includes('diego') ? 'duas pistas' : 'uma pista'} sobre variáveis ocultas, visão sistêmica e −10 de pressão na equipe, nesta rodada e na seguinte. Consome uma decisão; a crise continua andando.` })}
+      ${opt('tired', 'Horas extras', 'Recupera 2 rodadas de fadiga da equipe em campo', horasCost(), 'addhoras', '', { why: whyNot({ inPlan: horasQ, cost: horasCost() }), pressed: horasQ, tip: `Recupera 2 rodadas de fadiga em campo e encerra a Fadiga crítica. O preço cresce com o efetivo em campo (${deployed().length} ${plural(deployed().length, 'agente', 'agentes')}).` })}
+      ${UI.ivConfirm ? `<div class="insight bad">${icon('alert', '', 1.8)}<span><b>Ordenar a intervenção agora?</b> Chance estimada ${pLabel(ip)} (${Math.round(clamp(ip - band, 0, 1) * 100)}–${Math.round(clamp(ip + band, 0, 1) * 100)}%). Ocupa todas as decisões e encerra a crise nesta rodada.${blindTxt}${apostaTxt}</span></div><div class="row"><button class="btn danger" data-act="ivyes">Confirmar intervenção</button><button class="btn ghost" data-act="ivno">Cancelar <span class="faint" style="font-weight:400">(Esc)</span></button></div>` :
+        opt('shield', 'Intervenção', `Encerra a crise nesta rodada · chance <b>${pLabel(ip)}</b> (±${Math.round(band * 100)}%)${blind.length ? `<br><span style="color:var(--amber)">−${Math.round(-blind.reduce((s, b) => s + b.v, 0) * 100)} pontos por entrar às cegas</span>` : ''}${ip < APOSTA_P ? `<br><span style="color:var(--amber)">Abaixo de ${Math.round(APOSTA_P * 100)}%: nota máxima A</span>` : ''}`, '', 'iv', '', { danger: true, pressed: ivq, tip: `Ação direta, o BATNA da força-tarefa. Prontidão ${Math.round(intervPower())}%. A chance depende de inteligência, tática e agitação do líder.${blindTxt}${apostaTxt}` })}
     </div>`;
 }
 function tabNego() {
   const n = G.nego, cur = n.step, q = G.queue.find(x => x.kind === 'nego');
   const ags = avail(), negId = getNegotiator();
-  const ladder = STEPS.map(s => `<div class="step ${s.n < cur ? 'done' : s.n === cur ? 'cur' : ''}"><b>${s.n < cur ? '✓' : s.n}</b><span>${s.nome}<br><small>${s.sub}</small></span><small>${s.n === cur ? 'você está aqui' : s.n < cur ? 'concluído' : ''}</small></div>`).join('');
+  /* A escada numa linha só: o nome e o objetivo de cada degrau ficam na dica. */
+  const ladder = STEPS.map(s => `<span class="step ${s.n < cur ? 'done' : s.n === cur ? 'cur' : ''}" data-tip="${esc(`Degrau ${s.n}, ${s.nome}: ${s.sub}`)}"><b>${s.n < cur ? icon('check', 'ico', 2.6) : s.n}</b></span>`).join('');
   const wN = whyNot({ free: !!q });   // trocar a postura não gasta decisão nova
+  const TAG = { compat: ['green', 'compatível', 'Postura do degrau atual: +20% de chance.'], skip: ['red', 'pula etapa', 'Pular etapa: −25%, metade da chance e 20% de risco de regredir.'], cons: ['', 'consolidar', 'Reforça um degrau já vencido.'] };
   const posts = POSTURES.map(p => {
-    const np = negoParts(p.t), tag = np.compat ? '<span class="pill green">compatível</span>' : np.skip ? '<span class="pill red">pula etapa</span>' : '<span class="pill">consolidar</span>';
-    return opt(p.kind === 'emp' ? 'ear' : 'stairs', `${p.t}. ${p.nome} ${tag}`, `${p.d}<br><span class="faint">Chance de avançar: <b style="color:var(--${pCls(np.p) === 'red' ? 'red' : pCls(np.p) === 'amber' ? 'amber' : pCls(np.p) === 'blue' ? 'blue' : 'green'})">${pLabel(np.p)}</b></span>`, '', 'addnego', `data-t="${p.t}"`, { pressed: !!q && q.p.tech === p.t, why: wN });
+    const np = negoParts(p.t), t = TAG[np.compat ? 'compat' : np.skip ? 'skip' : 'cons'];
+    return opt(p.kind === 'emp' ? 'ear' : 'stairs', `${p.t}. ${p.nome} <span class="pill ${t[0]}" data-tip="${t[2]}">${t[1]}</span>`, '', `<b style="color:var(--${pCls(np.p)})">${pLabel(np.p)}</b>`, 'addnego', `data-t="${p.t}"`, { pressed: !!q && q.p.tech === p.t, why: wN, tip: `${p.d} Chance de avançar: ${pLabel(np.p)}.` });
   }).join('');
   const hot = `<div class="hotline"><div class="eyebrow">${icon('phone', 'ico" style="width:15px;height:15px;vertical-align:-3px;margin-right:6px;color:var(--amber)')}Linha direta</div>
     <p class="scene">${n.contact ? STEP_SCENE[cur] : NO_CONTACT}</p>
-    ${n.last ? `<blockquote class="${n.last.tone}">“${n.last.t}”<cite>Líder do grupo · rodada ${n.last.r}${G.K.profile ? '' : ' · como ele fala diz quem ele é'}</cite></blockquote>` : ''}
-    <p class="ask">O que seu negociador deve fazer?</p></div>`;
-  return `${hot}<div class="ladder">${ladder}</div>
-    <label class="field">Negociador
+    ${n.last ? `<blockquote class="${n.last.tone}">“${n.last.t}”<cite>Líder do grupo · rodada ${n.last.r}${G.K.profile ? '' : ' · o jeito de falar diz quem ele é'}</cite></blockquote>` : ''}</div>`;
+  return `${hot}<div class="ladder" aria-label="Escada da negociação: degrau ${cur} de 5">${ladder}</div><p class="ladcap">Degrau ${cur} de 5: <b>${(STEPS[cur - 1] || STEPS[0]).nome}</b></p>
+    <label class="field"><span>Negociador ${infoTip('regras', `Postura compatível com o degrau atual: +20%. Pular etapa: −25% e metade da chance, com 20% de regredir. Pressionar sobe a agitação. Fadiga e pressão alta reduzem a habilidade do negociador (hoje ${dec(negoSkill())}). Com o canal aberto, as famílias contam como atendidas na rodada e cada avanço de degrau dá +3 a elas.`)}</span>
       <select id="negotiator" data-chg="negotiator">${ags.map(id => `<option value="${id}" ${negId === id ? 'selected' : ''}>${shortName(agentById(id).nome)} · Negoc. ${stat(id, 'neg')}${G.az[id] && G.az[id] !== 'reserva' ? ' (em campo)' : ' (comando)'}</option>`).join('') || '<option>Comandante (você)</option>'}</select></label>
-    <p class="faint" style="font-size:12px">Postura compatível com o degrau atual: +20%. Pular etapa: −25% e metade da chance, com 20% de regredir. Pressionar sobe a agitação. Fadiga e pressão alta reduzem a habilidade do negociador (hoje ${dec(negoSkill())}). Com o canal aberto, as famílias contam como atendidas na rodada e cada avanço de degrau dá +3 a elas, um alívio quando as decisões são poucas.</p>
-    <div class="optlist">${posts}${opt('alert', 'Pressionar (ultimato)', `Sobe a agitação em +${PR_().press} (valor real). Pode regredir a negociação.`, '', 'addnego', 'data-t="press"', { danger: true, pressed: !!q && q.p.tech === 'press', why: wN })}</div>`;
+    <div class="optlist">${posts}${opt('alert', 'Pressionar (ultimato)', `Sobe a agitação em +${PR_().press}; pode regredir a negociação`, '', 'addnego', 'data-t="press"', { danger: true, pressed: !!q && q.p.tech === 'press', why: wN })}</div>`;
 }
 function tabIntel() {
   const K = G.K, done = { perfil: K.profile, rota: !!K.route, efetivo: K.count, cofre: K.vault, refens: K.hostages, cumplice: K.accomplice };
   const pr = intelProb(false);
-  return `<p class="faint" style="font-size:12.5px">Confiabilidade estimada com a sua equipe: <b>${pLabel(pr)}</b>. O resultado chega no início da próxima rodada, e você paga mesmo se der inconclusivo.</p>
+  return `<p class="faint" style="font-size:12.5px">Confiabilidade com a sua equipe: <b>${pLabel(pr)}</b>. O resultado chega na próxima rodada ${infoTip('', 'Você paga mesmo se der inconclusivo. Analistas e veteranos na equipe aumentam a confiabilidade.')}</p>
     <div class="optlist">${INTEL.map(i => {
       const queued = G.queue.some(q => q.kind === 'intel' && q.p.id === i.id), pend = G.pendingIntel.some(o => o.id === i.id), c = intelCost(i.id);
       const w = whyNot({ state: done[i.id] ? 'Esta variável já foi revelada.' : pend ? 'Em andamento: o resultado chega no início da próxima rodada.' : null, inPlan: queued, cost: c });
@@ -3208,41 +3205,34 @@ function stkRows(withSub) {
 }
 function tabCom() {
   return `<div class="stk">${stkRows(true)}</div>
-    <p class="faint" style="font-size:12px">Cada stakeholder ignorado perde 3 pontos × rodadas sem atenção (máx. 9 por rodada), além dos efeitos do que acontece na operação. O sinal ! marca quem está há 2 rodadas ou mais sem atenção.</p>
+    <p class="faint" style="font-size:12px">${infoTip('como cai a confiança', 'Cada stakeholder ignorado perde 3 pontos × rodadas sem atenção (máx. 9 por rodada), além dos efeitos do que acontece na operação. O sinal ! marca quem está há 2 rodadas ou mais sem atenção.')}</p>
     <div class="optlist">${COMMS.map(c => { const q = G.queue.some(x => x.kind === 'com' && x.p.cid === c.id), lk = leakChance(c.id);
-      const lkTxt = lk > 0 ? `<br><span class="faint">Risco de vazar ou sair impreciso: <b style="color:var(--${lk >= .2 ? 'red' : lk >= .1 ? 'amber' : 'green'})">${Math.round(lk * 100)}%</b>. Cai com quem comunica bem e com o que você já sabe. Se acontecer, a mídia sobe +10 em vez de ceder e o líder se irrita.</span>` : '';
-      return opt(c.s === 'imprensa' ? 'mic' : c.s === 'prefeito' ? 'mayor' : c.s === 'banco' ? 'bank' : c.s === 'familias' ? 'family' : 'news', c.nome, c.d + lkTxt, c.custo || '', 'addcom', `data-id="${c.id}"`, { why: whyNot({ inPlan: q, cost: c.custo }), pressed: q }); }).join('')}</div>`;
+      const lkTxt = lk > 0 ? ` · risco de vazar <b style="color:var(--${lk >= .2 ? 'red' : lk >= .1 ? 'amber' : 'green'})">${Math.round(lk * 100)}%</b>` : '';
+      return opt(c.s === 'imprensa' ? 'mic' : c.s === 'prefeito' ? 'mayor' : c.s === 'banco' ? 'bank' : c.s === 'familias' ? 'family' : 'news', c.nome, c.ds + lkTxt, c.custo || '', 'addcom', `data-id="${c.id}"`, { why: whyNot({ inPlan: q, cost: c.custo }), pressed: q, tip: c.d + (lk > 0 ? ' O risco de vazar cai com quem comunica bem e com o que você já sabe; se vazar, a mídia sobe +10 em vez de ceder e o líder se irrita.' : '') }); }).join('')}</div>`;
 }
 const TABS = [['tatica', 'Tática'], ['nego', 'Negociação'], ['intel', 'Inteligência'], ['com', 'Comunicação']];
 function colC() {
   const n = D_().slots, used = n - slotsLeft();
   const body = UI.tab === 'tatica' ? tabTatica() : UI.tab === 'nego' ? tabNego() : UI.tab === 'intel' ? tabIntel() : tabCom();
-  const guide = G.round === 1 ? `<div class="card guide"><h2 class="h3">Primeira rodada · como ler esta tela</h2><ol>
-      <li><b>Perceba</b> no centro: alertas, mapa e a aba 1 do painel do comandante (relatos e o que ainda é desconhecido).</li>
-      <li><b>Compreenda e projete</b> nas abas 2 e 3 do painel: o que os dados significam e para onde vão.</li>
-      <li><b>Decida</b> aqui: até ${n} ações nas quatro frentes. Elas entram no plano (barra inferior) e só acontecem quando você executa.</li></ol>
-      <p class="muted" style="font-size:12px">Nesta rodada e na próxima o relógio dá tempo extra para você se orientar.</p></div>` : '';
+  const guide = G.round === 1 ? `<div class="calmbar guide">${icon('light', 'ico', 1.8)}<span>Escolha até ${n} ações nas abas e clique em <b>Executar rodada</b>. Nas duas primeiras rodadas, o relógio dá tempo extra.</span></div>` : '';
   return `<div class="colC">${guide}<div class="card decide"><h2 class="h3">Decisões da rodada <span class="slotc" aria-label="${used} de ${n} decisões no plano">${Array.from({ length: n }, (_, i) => `<i class="slot ${i < used ? 'on' : ''}"></i>`).join('')}<b class="mono">${used}/${n}</b></span></h2>
       <div class="tabs" role="tablist" aria-label="Frentes de decisão">${TABS.map(([k, l]) => `<button class="tab" role="tab" id="tab-${k}" aria-controls="tabp" data-act="tab" data-t="${k}" aria-selected="${UI.tab === k}" tabindex="${UI.tab === k ? 0 : -1}">${icon(FRONT_IC[k], 'ico')}<span>${l}</span>${G.queue.some(d => d.front === k) ? '<i class="tdot" title="Há decisão desta frente no plano"></i>' : ''}</button>`).join('')}</div>
       <div class="grid tabp${UI.tabAnim ? ' swap' : ''}" id="tabp" role="tabpanel" aria-labelledby="tab-${UI.tab}" style="gap:10px;margin-top:12px">${planBanner()}${body}</div></div>
     ${planPreviewHTML()}
     ${UI.tab === 'com' ? '' : `<div class="card"><h2 class="h3">Stakeholders</h2><div class="stk">${stkRows(false)}</div></div>`}</div>`;
 }
-function radioCard() {
-  return `<div class="card"><h2 class="h3">Rádio</h2><div class="radio">${G.radio.slice(0, 6).map(l => `<p class="${l.c || ''}">${l.t}</p>`).join('')}</div></div>`;
-}
 /* Barra do plano: o que vai ser executado, quantas decisões restam e o botão de executar, sempre à vista. */
 function panelBar() {
   const n = D_().slots, used = n - slotsLeft();
   const chips = G.queue.map(d => `<span class="qchip" title="${attr(d.label)}${d.cost ? ' · −' + d.cost + ' créditos' : ''}">${icon(FRONT_IC[d.front], 'ico')}<span class="ql">${d.label}</span>${d.cost ? `<span class="mono qc">−${d.cost}</span>` : ''}<button class="qx" data-act="rmq" data-id="${d.id}" aria-label="Remover ${attr(d.label)} do plano">✕</button></span>`).join('');
   return `<div class="absum"><span class="abk">Plano da rodada</span><span class="slotc">${Array.from({ length: n }, (_, i) => `<i class="slot ${i < used ? 'on' : ''}"></i>`).join('')}<b class="mono">${used}/${n}</b></span></div>
-    <div class="qchips" aria-live="polite">${chips || `<span class="faint">Nenhuma decisão ainda. Escolha até ${n} nas abas; sem decisões, o cofre e a mídia seguem andando.</span>`}</div>
+    <div class="qchips" aria-live="polite">${chips || `<span class="faint">Escolha até ${n} decisões nas abas.</span>`}</div>
     <button class="btn primary lg" data-act="execute">${G.queue.length ? 'Executar rodada →' : 'Aguardar sem decisões'}</button>`;
 }
 function renderPanel() {
-  const mapCard = `<div class="card mapcard"><h2 class="h3">Perímetro <span class="faint sub">clique numa zona para usá-la como destino</span></h2><div class="mapwrap" style="padding:2px">${mapSVG({ interactive: G.stage === 'panel', act: 'zonepick', sel: UI.pickZone })}</div>${legendHTML()}</div>`;
+  const mapCard = `<div class="card mapcard"><h2 class="sr">Perímetro</h2><div class="mapwrap" style="padding:2px">${mapSVG({ interactive: G.stage === 'panel', act: 'zonepick', sel: UI.pickZone })}</div>${legendHTML()}</div>`;
   setBar(panelBar());
-  return `${hudHTML()}<div class="siege screen"><h1 class="sr">Rodada ${G.round} de ${MAX_ROUNDS}: painel de comando</h1>${colA()}<div class="colB">${alertsHTML()}${mapCard}${tocWidget()}${endsleyHTML()}</div>${colC()}</div>`;
+  return `${hudHTML()}<div class="siege screen"><h1 class="sr">Rodada ${G.round} de ${MAX_ROUNDS}: painel de comando</h1>${colA()}<div class="colB">${alertsHTML()}${tocWidget()}${mapCard}${endsleyHTML()}</div>${colC()}</div>`;
 }
 
 /* ---------- Atualização da rodada ---------- */
@@ -3256,37 +3246,34 @@ const STANCE = { esperar: ['green', 'pede paciência'], intervir: ['red', 'quer 
 function councilHTML(list) {
   if (!list || !list.length) return '';
   const conflict = list.some(c => c.stance === 'intervir') && list.some(c => c.stance === 'esperar');
-  return `<div class="card"><h2 class="h3">Mesa de comando <span class="faint sub">cada um vê uma parte do problema</span></h2>
-    <div class="council">${list.map(c => `<div class="adv"><div class="sil">${sil(c.id, 40)}</div><div><b>${shortName(c.nome)}</b> <span class="pill ${STANCE[c.stance][0]}">${STANCE[c.stance][1]}</span><p>“${c.t}”</p></div></div>`).join('')}</div>
-    ${conflict ? ins('warn', 'split', 'Os conselhos se contradizem. Ninguém na mesa tem a informação inteira: integrar as partes é o seu trabalho.') : ''}</div>`;
+  return `<div class="card"><h2 class="h3">Mesa de comando</h2>
+    <div class="council">${list.map(c => `<div class="adv"><div class="sil" data-ag="${c.id}">${sil(c.id, 40)}</div><div><b data-ag="${c.id}">${shortName(c.nome)}</b> <span class="pill ${STANCE[c.stance][0]}">${STANCE[c.stance][1]}</span><p>“${c.t}”</p></div></div>`).join('')}</div>
+    ${conflict ? ins('warn', 'split', 'Os conselhos se contradizem: ninguém tem a informação inteira, e integrar as partes é o seu trabalho.') : ''}</div>`;
 }
 function tocShiftHTML(u) {
   if (!u.toc) return '';
   const X = TOCS[u.toc], shifted = u.tocPrev && u.tocPrev !== u.toc;
-  if (!shifted && G.round === 1) return `<div class="card tocshift"><h2 class="h3">O gargalo agora</h2><div class="tsrow">${icon(X.ic, 'ico')}<div><b>${X.nome}</b><p>${X.por} Em toda operação existe um elo mais fraco que decide o resultado. Ele muda ao longo do cerco: informação no início, pessoal no meio, tempo e fadiga no fim.</p></div></div></div>`;
-  if (!shifted) return `<div class="card tocshift calm"><div class="tsrow">${icon(X.ic, 'ico')}<div><b>O gargalo continua: ${X.nome}.</b> ${X.elevar}</div></div></div>`;
-  const P = TOCS[u.tocPrev];
-  return `<div class="card tocshift"><h2 class="h3">A restrição mudou</h2><div class="tsrow">${icon('split', 'ico')}<div><b>${P.nome} → ${X.nome}</b><p>${X.por}</p><p><b>Pare de:</b> ${X.parar}</p><p><b>Eleve agora:</b> ${X.elevar}</p></div></div></div>`;
+  if (!shifted) return `<div class="card tocshift calm"><div class="tsrow">${icon(X.ic, 'ico')}<div><b>${G.round === 1 ? 'Gargalo' : 'O gargalo continua'}: ${X.nome}.</b> ${G.round === 1 ? X.por : ''}</div></div></div>`;
+  return `<div class="card tocshift"><div class="tsrow">${icon('split', 'ico')}<div><b>A restrição mudou: ${TOCS[u.tocPrev].nome} → ${X.nome}.</b><p>${X.por}</p><p><b>Eleve agora:</b> ${X.elevar}</p></div></div></div>`;
 }
 function renderUpdate() {
   const u = G.update;
-  setBar(`<div class="absum"><span class="abk">Rodada ${G.round} de ${MAX_ROUNDS} · ${u.time}</span><span>${G.noLimit ? 'Sem limite de tempo.' : `Você terá <b class="mono">${roundTimer()}</b> segundos${G.round <= 2 ? ' (tempo extra de orientação)' : ''}`} e <b class="mono">${D_().slots}</b> decisões. O relógio só corre no painel.</span></div><span class="spacer"></span><button class="btn primary lg" data-act="takepanel">Assumir o painel →</button>`);
-  const reps = u.reports.map(r => `<div class="report"><span class="src">${r.ag} · ${ZONE[r.z].curto}</span><span>${r.txt}. <span class="faint">Confiança ${r.conf}.</span></span></div>`).join('');
+  setBar(`<div class="absum"><span class="abk">Rodada ${G.round} de ${MAX_ROUNDS} · ${u.time}</span><span>${G.noLimit ? 'Sem limite de tempo' : `<b class="mono">${roundTimer()}</b> segundos${G.round <= 2 ? ' (tempo extra)' : ''}`} · <b class="mono">${D_().slots}</b> decisões</span></div><span class="spacer"></span><button class="btn primary lg" data-act="takepanel">Assumir o painel →</button>`);
   return `${hudHTML()}<div class="resol screen">
     <div class="skyband r${G.round}">${skyline()}<i class="siren r"></i><i class="siren b"></i>
-      <div class="cap"><div class="eyebrow" style="color:#c9d6ea">Atualização · rodada ${G.round} de ${MAX_ROUNDS}</div>
+      <div class="cap"><div class="eyebrow" style="color:#c9d6ea">Rodada ${G.round} de ${MAX_ROUNDS}</div>
       <h1><span class="mono" style="color:var(--amber)">${u.time}</span> · ${ROUND_TITLE[G.round]}</h1></div></div>
     ${siegeTrack()}
     <p class="serif intro">${u.intro || roundIntro()}</p>
     ${tocShiftHTML(u)}
     ${G.round === 1 && (G.perimLog || []).length ? `<div class="card"><h2 class="h3">Reconhecimento do perímetro</h2><div class="grid" style="gap:6px">${G.perimLog.map(t => ins('good', 'eye', t)).join('')}</div></div>` : ''}
-    ${u.quiet ? ins('good', 'wait', '<b>Calmaria.</b> Por alguns minutos, nada acontece. Pelo rádio, alguém pede café. Depois de uma rodada pesada, este é o momento de pensar, não de reagir: nenhuma carta de evento vai interromper esta rodada.') : ''}
-    <div class="card"><h2 class="h3">Mensagens de rádio</h2><div class="radio live" style="max-height:none">${u.radio.map((l, i) => `<p class="${l.c || ''}" style="--i:${i}">${l.t}</p>`).join('')}</div></div>
+    ${u.quiet ? ins('good', 'wait', '<b>Calmaria.</b> Por alguns minutos, nada acontece: nenhuma carta de evento nesta rodada. É hora de pensar, não de reagir.') : ''}
+    <div class="card"><h2 class="h3">Rádio</h2><div class="radio live" style="max-height:none">${u.radio.map((l, i) => `<p class="${l.c || ''}" style="--i:${i}">${l.t}</p>`).join('')}</div></div>
     ${u.call ? `<div class="call">${icon('call', 'ico')}<div><small>Ligação recebida · ${u.call.who}</small><p>“${u.call.t}”</p></div></div>` : ''}
     ${u.intel.length ? `<div class="card"><h2 class="h3">Resultados da inteligência</h2><div class="dossiers">${u.intel.map(dossierHTML).join('')}</div></div>` : ''}
     ${u.hint ? `<div class="card">${ins('info', 'light', br(u.hint))}</div>` : ''}
     ${councilHTML(u.council)}
-    <div class="card"><h2 class="h3">Relatos de campo</h2>${reps || '<p class="faint" style="font-size:13px">Nenhum relato novo. Zonas sem agentes não geram relatos.</p>'}</div></div>`;
+    <div class="card"><h2 class="h3">Relatos de campo</h2>${u.reports.map(reportHTML).join('') || '<p class="faint" style="font-size:13px">Nenhum relato novo: só há relato onde há agente.</p>'}</div></div>`;
 }
 
 /* ---------- Resolução / feedback ---------- */
@@ -3342,20 +3329,19 @@ function renderResult() {
     deltaCell('Pressão da equipe', a.p, b.p, v => Math.round(v), false, 'v')
   ].join('');
   const last = !!G.end, exactA = G.nego.contact && G.K.profile;
-  const cause = R.agitParts ? `<div class="card"><h2 class="h3">Causa e efeito</h2><div class="grid" style="gap:14px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))">
+  const cause = R.agitParts ? `<div class="grid" style="gap:14px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))">
       ${waterfall('Agitação do líder' + (exactA ? '' : ' (só a direção: sem perfil e canal, você não mede)'), R.agitParts, exactA)}
       ${waterfall('Pressão da mídia', R.mediaParts, true)}</div>
-      <p class="faint" style="font-size:12px;margin-top:8px">Eventos mudam a agitação e a mídia por fora destes fatores.</p></div>` : '';
+      <p class="faint" style="font-size:12px;margin-top:8px">Eventos mudam a agitação e a mídia por fora destes fatores.</p>` : '';
   const sw = stkWhyHTML(R, a, b);
-  setBar(`<div class="absum"><span class="abk">Resolução · rodada ${G.round} de ${MAX_ROUNDS}</span><span>${R.decs.length ? `${R.decs.length} ${plural(R.decs.length, 'decisão executada', 'decisões executadas')}` : 'Rodada sem decisões'}${last ? ' · a crise chegou ao fim' : ''}</span></div><span class="spacer"></span><button class="btn primary lg" data-act="cont">${last ? 'Ver o desfecho →' : G.round >= MAX_ROUNDS ? 'Encerrar →' : `Seguir para a rodada ${G.round + 1} →`}</button>`);
+  setBar(`<div class="absum"><span class="abk">Rodada ${G.round} de ${MAX_ROUNDS}</span><span>${R.decs.length ? `${R.decs.length} ${plural(R.decs.length, 'decisão executada', 'decisões executadas')}` : 'Rodada sem decisões'}${last ? ' · a crise chegou ao fim' : ''}</span></div><span class="spacer"></span><button class="btn primary lg" data-act="cont">${last ? 'Ver o desfecho →' : G.round >= MAX_ROUNDS ? 'Encerrar →' : `Seguir para a rodada ${G.round + 1} →`}</button>`);
   return `${hudHTML()}<div class="resol screen">
-    <div><div class="eyebrow">Resolução · rodada ${G.round} de ${MAX_ROUNDS}</div><h1 class="rtitle">O que as suas decisões provocaram</h1></div>
-    ${R.decs.length ? `<div class="row">${R.decs.map(d => `<span class="pill blue">${icon(FRONT_IC[d.front], 'ico" style="width:14px;height:14px')}${d.label}</span>`).join('')}</div>` : '<p class="muted">Você aguardou sem decisões nesta rodada. A crise não esperou.</p>'}
+    <div><div class="eyebrow">Rodada ${G.round} de ${MAX_ROUNDS}</div><h1 class="rtitle">O que aconteceu</h1></div>
+    ${R.decs.length ? '' : '<p class="muted">Você aguardou sem decisões nesta rodada. A crise não esperou.</p>'}
     <div class="grid" style="gap:14px">${linesBySec(R.lines)}</div>
     ${hchgHTML(R.hchg)}
-    <div class="card"><h2 class="h3">Painel de feedback</h2><div class="delta">${cells}</div></div>
-    ${cause}
-    ${sw ? `<div class="card"><h2 class="h3">Stakeholders: por que mudaram</h2><div class="grid" style="gap:6px">${sw}</div></div>` : ''}
+    <div class="card"><h2 class="h3">Indicadores</h2><div class="delta">${cells}</div>
+      ${cause || sw ? `<details class="more"><summary>Por que mudaram</summary>${cause}${sw ? `<div class="grid" style="gap:6px;margin-top:12px">${sw}</div>` : ''}</details>` : ''}</div>
     </div>`;
 }
 /* Carta de evento: escolha obrigatória. Foco vai para a carta, Tab fica preso nela e as teclas 1–3 escolhem. */
@@ -3365,12 +3351,12 @@ function eventModal() {
     <div class="row" style="flex-wrap:nowrap"><div class="evico">${icon(e.ic)}</div><div><div class="eyebrow">Carta de evento</div><h2 id="evt">${e.titulo}</h2></div></div>
     <p class="radio-q">${e.radio}</p><p class="d" id="evd">${e.desc}</p>
     <div class="optlist">${fx.choices.map((c, i) => { const no = c.cost && G.credits < c.cost, why = no ? `Faltam ${fmt(c.cost - G.credits)} créditos (reserva ${fmt(G.credits)}).` : ''; return `<button class="opt evopt" data-act="evchoice" data-i="${i}" ${no ? `aria-disabled="true" data-why="${attr(why)}"` : ''}><span class="okey" aria-hidden="true">${i + 1}</span><span><b>${c.label}</b><span class="d">${c.hint}</span>${no ? `<span class="unav">${why}</span>` : ''}</span>${c.cost ? `<span class="c">${c.cost}</span>` : '<span></span>'}</button>`; }).join('')}</div>
-    <p class="faint" style="font-size:12px">Uma escolha é obrigatória. Atalho: teclas ${fx.choices.map((_, i) => i + 1).join(', ').replace(/, (\d)$/, ' ou $1')}.</p></div></div>`;
+    <p class="faint" style="font-size:12px">${fx.choices.length > 1 ? `Escolha uma opção (teclas ${fx.choices.map((_, i) => i + 1).join(', ').replace(/, (\d)$/, ' ou $1')}).` : 'Tecla 1 ou clique para seguir.'}</p></div></div>`;
 }
 function renderEventStage() {
   const R = G.R;
   const lines = R.lines.map(l => `<div class="res-line ${l.tone}">${icon(l.ic, '', 1.8)}<span>${br(l.text)}</span></div>`).join('');
-  return `${hudHTML()}<div class="resol screen"><div><div class="eyebrow">Resolução · rodada ${G.round}</div><h1 class="rtitle">Um evento interrompe a rodada</h1></div><div class="grid" style="gap:8px">${lines}</div></div>${eventModal()}`;
+  return `${hudHTML()}<div class="resol screen"><div><div class="eyebrow">Rodada ${G.round}</div><h1 class="rtitle">Um evento interrompe a rodada</h1></div><div class="grid" style="gap:8px">${lines}</div></div>${eventModal()}`;
 }
 /* =====================================================================
    INTERFACE — Desfecho, pós-jogo, ações e inicialização
@@ -3493,7 +3479,7 @@ function nextGradeHint(S, dims) {
 function scoreHTML() {
   const S = G.score, H = G.hostages, E = G.end;
   const dims = [
-    { k: 'Vidas', v: S.vidas, w: .40, why: `${H.dead} ${plural(H.dead, 'morto', 'mortos')} e ${H.hurt} ${plural(H.hurt, 'ferido', 'feridos')} entre ${HOSTAGES} reféns (cada morte tira 14,7 pontos da dimensão e cada ferido 2,9: o −25 e o −5 do documento, proporcionais aos 17 reféns).${G.stats.kitSaves ? ` O kit médico evitou ${G.stats.kitSaves} ${plural(G.stats.kitSaves, 'morte', 'mortes')}.` : ''}` },
+    { k: 'Vidas', v: S.vidas, w: .40, why: `${H.dead} ${plural(H.dead, 'morto', 'mortos')} e ${H.hurt} ${plural(H.hurt, 'ferido', 'feridos')} entre ${HOSTAGES} reféns.${G.stats.kitSaves ? ` O kit médico evitou ${G.stats.kitSaves} ${plural(G.stats.kitSaves, 'morte', 'mortes')}.` : ''}`, tip: 'Cada morte tira 14,7 pontos da dimensão e cada ferido 2,9: o −25 e o −5 do documento, proporcionais aos 17 reféns.' },
     { k: 'Prisões', v: S.captura, w: .20, why: `${outName(E)}: ${Math.round(S.captura * 100)}% dos responsáveis presos.` },
     { k: 'Valores', v: S.valores, w: .15, why: `Cofre em ${Math.round(G.vault)}% no desfecho; fator de perda do desfecho ${String(E.lootF).replace('.', ',')}.` },
     { k: 'Eficiência', v: S.eficiencia, w: .10, why: `${fmt(G.credits)} créditos sobraram e a crise durou ${G.round} ${plural(G.round, 'rodada', 'rodadas')}. O plantão custou ${fmt(G.spent.plantao)} no total${G.deficit ? ` e ${G.deficit} ${plural(G.deficit, 'rodada', 'rodadas')} ficaram no vermelho` : ''}.` },
@@ -3506,7 +3492,7 @@ function scoreHTML() {
     ${S.penal ? `<div class="insight bad">${icon('alert', '', 1.8)}<span>Penalidade: −${S.penal} pontos por ${E.agentsHurt.length} ${plural(E.agentsHurt.length, 'agente ferido', 'agentes feridos')} em ação (${E.agentsHurt.map(id => shortName(agentById(id).nome)).join(', ')}). Quem protege também conta os próprios.</span></div>` : ''}
     <p class="muted" style="max-width:520px">${S.grade === 'S' ? 'Operação exemplar.' : S.grade === 'A' ? 'Excelente condução, com pouco a corrigir.' : S.grade === 'B' ? 'Boa condução, com trade-offs visíveis.' : S.grade === 'C' ? 'Resultado aceitável, mas com perdas evitáveis.' : S.grade === 'D' ? 'Resultado fraco: as decisões se acumularam contra você.' : 'Operação malsucedida. A falha também ensina: veja o debrief.'}</p>
     ${hint ? `<p class="faint" style="max-width:520px;font-size:13px">${hint}</p>` : ''}</div></div>
-    <div class="card" style="margin-top:18px"><h2 class="h3">Composição</h2>${dims.map(d => `<div class="dimrow"><div><b>${d.k}</b><small>peso ${Math.round(d.w * 100)}%</small></div><div><div class="meter tall ${d.v >= .7 ? 'g' : d.v >= .4 ? 'a' : 'r'}"><i style="width:0%" data-to="${Math.round(d.v * 100)}"></i></div><small class="faint">${d.why}</small></div><div class="mono" style="text-align:right">${Math.round(d.v * 100)}% → ${dec(d.v * d.w * 100)} pts</div></div>`).join('')}</div>`;
+    <div class="card" style="margin-top:18px"><h2 class="h3">Composição</h2>${dims.map(d => `<div class="dimrow"><div><b>${d.k}</b><small>peso ${Math.round(d.w * 100)}%</small></div><div><div class="meter tall ${d.v >= .7 ? 'g' : d.v >= .4 ? 'a' : 'r'}"><i style="width:0%" data-to="${Math.round(d.v * 100)}"></i></div><small class="faint">${d.why}${d.tip ? infoTip('', d.tip) : ''}</small></div><div class="mono" style="text-align:right">${Math.round(d.v * 100)}% → ${dec(d.v * d.w * 100)} pts</div></div>`).join('')}</div>`;
 }
 
 /* ---------- Gazeta ---------- */
@@ -3584,10 +3570,10 @@ function prepHTML() {
   const st = G.stats, hires = G.team.filter(id => !agentById(id).generic), p1 = Object.keys(G.p1intel).map(k => INTEL.find(i => i.id === k)).filter(Boolean);
   const reserve = CREDITOS_INICIAIS - G.spent.rec - G.spent.equip - p1.reduce((s, i) => s + intelCost(i.id), 0);
   const sec = (t, body) => `<div class="eyebrow">${t}</div><div class="row" style="margin:6px 0 14px">${body}</div>`;
-  const pill = (t, c) => `<span class="pill ${c}">${t}</span>`;
+  const pill = (t, c, a = '') => `<span class="pill ${c}"${a}>${t}</span>`;
   return `<div class="card"><h2 class="h3">Preparação · 14h12 a ${fmtTime(1)}</h2>
     <p class="muted" style="margin:0 0 14px;font-size:13.5px">Antes do primeiro relógio do cerco: o que você montou com os ${fmt(CREDITOS_INICIAIS)} créditos. Esta fase também decide o resultado.</p>
-    ${sec('Equipe contratada · custo em créditos', hires.length ? hires.map(id => pill(`${shortName(agentById(id).nome)} · ${agentById(id).custo}`, 'blue')).join('') : '<span class="muted">Ninguém contratado: só a guarnição local, dois patrulheiros de nível básico.</span>')}
+    ${sec('Equipe contratada · custo em créditos', hires.length ? hires.map(id => pill(`${shortName(agentById(id).nome)} · ${agentById(id).custo}`, 'blue', ` data-ag="${id}"`)).join('') : '<span class="muted">Ninguém contratado: só a guarnição local, dois patrulheiros de nível básico.</span>')}
     ${sec('Equipamentos', G.gear.length ? G.gear.map(e => pill(`${EQ[e].nome} · ${EQ[e].custo}`, 'blue')).join('') : '<span class="muted">Nenhum equipamento comprado.</span>')}
     ${sec('Investigação antes do cerco', p1.length ? p1.map(i => { const r = G.p1intel[i.id], ok = !!(r && r.ok); return pill(`${i.nome} · ${intelCost(i.id)} · ${ok ? 'confirmado' : 'inconclusivo'}`, ok ? 'green' : 'amber'); }).join('') : '<span class="muted">Nenhuma investigação: o cerco começou às cegas.</span>')}
     ${(G.perimLog || []).length ? `<div class="grid" style="gap:6px;margin-bottom:14px">${G.perimLog.map(t => `<div class="res-line good" style="animation:none">${icon('eye', '', 1.8)}<span>${t}</span></div>`).join('')}</div>` : ''}
@@ -3676,7 +3662,7 @@ function debriefHTML() {
   const qs = ['Qual era a restrição da sua operação em cada fase? Você percebeu quando ela mudou?', 'Quanto você investiu em informação antes de agir? Esse investimento se pagou?', 'Em que momento a negociação avançou ou regrediu? O que você fez para isso acontecer?', 'Que informação um único agente tinha e só foi compartilhada tarde demais, ou nunca foi? Você pediu conselho a quem conhecia a zona?', 'Houve algum momento em que você insistiu num plano que já não funcionava? Por quê?', 'Qual stakeholder dominou a sua atenção? Era o mais saliente ou apenas o mais barulhento?', 'Seus relatórios de reféns vieram em termos de perdas ou de ganhos? Quem recebeu o enquadramento oposto teria decidido de forma diferente?', 'Se os pesos do placar fossem outros, você teria agido de outra forma? O que isso revela sobre os incentivos nas organizações?'];
   const bridge = [['Reféns', 'Clientes, dados de clientes ou colaboradores afetados por uma crise'], ['Assaltantes', 'Um ataque de ransomware, um concorrente agressivo ou uma crise reputacional'], ['Cofre', 'Caixa, ativos estratégicos ou propriedade intelectual'], ['Perímetro e rotas de fuga', 'Controles internos e vulnerabilidades operacionais'], ['Negociação com o líder', 'Negociação com contrapartes hostis: sindicatos, credores, atacantes'], ['Imprensa e prefeito', 'Mídia, redes sociais, conselho de administração e reguladores'], ['Agências parceiras', 'Fornecedores, parceiros e áreas fora da sua hierarquia'], ['Fadiga da equipe', 'Burnout em equipes de resposta a incidentes']];
   return `<h1 class="sr">Debrief</h1><div class="grid" style="gap:16px">${econHTML()}<div><div class="eyebrow">Ciclo de Kolb (1984)</div><div class="kolb" style="margin-top:8px">${kolb.map(([a, b]) => `<div class="concept"><h4>${a}</h4><p class="les">${b}</p></div>`).join('')}</div></div>
-    <div><div class="eyebrow">Suas decisões e os conceitos</div><div class="grid" style="gap:12px;margin-top:8px;grid-template-columns:repeat(auto-fit,minmax(340px,1fr))">${C.map(c => `<div class="concept"><h4>${c.n}</h4><span class="ref">${c.ref}</span><div class="you">${c.you}</div><p class="les">${c.les}</p></div>`).join('')}</div></div>
+    <div><div class="eyebrow">Suas decisões e os conceitos</div><div class="grid" style="gap:12px;margin-top:8px;grid-template-columns:repeat(auto-fit,minmax(340px,1fr))">${C.map(c => `<div class="concept"><h4>${c.n}</h4><span class="ref">${c.ref}</span><div class="you">${c.you}</div><details class="more"><summary>O conceito</summary><p class="les">${c.les}</p></details></div>`).join('')}</div></div>
     <div class="card"><h2 class="h3">Perguntas para a reflexão</h2><ul style="margin:0;padding-left:18px;display:grid;gap:6px">${qs.map(q => `<li>${q}</li>`).join('')}</ul></div>
     <div class="card"><h2 class="h3">Da simulação para a gestão de crises corporativas</h2><div class="scroll-x"><table class="table"><thead><tr><th>Na simulação</th><th>Na empresa</th></tr></thead><tbody>${bridge.map(([a, b]) => `<tr><td><b>${a}</b></td><td>${b}</td></tr>`).join('')}</tbody></table></div></div></div>`;
 }
@@ -3906,6 +3892,7 @@ function draw() {
   const sig = focusSig(document.activeElement);
   const prev = {}; $app.querySelectorAll('[data-k]').forEach(el => { prev[el.dataset.k] = el.dataset.val != null ? el.dataset.val : el.dataset.n; });
   $app.innerHTML = buildScreen();
+  if (tipFor && !tipFor.isConnected) hideTip();   // a dica apontava para um elemento que acabou de ser redesenhado
   document.body.classList.toggle('withbar', !!BAR);
   UI.tabAnim = false;
   const key = G ? G.phase + ':' + (G.stage || '') + ':' + G.round + ':' + UI.post : 'menu', changed = key !== lastKey;

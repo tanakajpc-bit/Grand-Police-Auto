@@ -2,7 +2,7 @@
 
 Simulação de gestão de crise (reféns em uma agência bancária) em um único arquivo HTML, em português do Brasil. O jogador recruta a equipe, fecha o perímetro, conduz até 8 rodadas de cerco (negociação, comunicação com os stakeholders, investigação, tática) e recebe nota, jornal, selos e debrief. A perspectiva é a de quem protege: a violência não rende nota.
 
-Artefato publicado: https://claude.ai/artifact/7yQmLNrrYJrJQpEDKrXH5P (versão 15, fim da L2.5 e do Loop 2). O que se publica é `perimetro.html`, só o conteúdo da página (a publicação o embrulha com doctype, charset e viewport). Para abrir o jogo direto do disco use `perimetro-standalone.html`: o mesmo conteúdo dentro desse esqueleto, que é também o arquivo que os testes de navegador carregam.
+Artefato publicado: https://claude.ai/artifact/7yQmLNrrYJrJQpEDKrXH5P (versão 16: interface enxuta e atributos dos agentes ao passar o mouse). O que se publica é `perimetro.html`, só o conteúdo da página (a publicação o embrulha com doctype, charset e viewport). Para abrir o jogo direto do disco use `perimetro-standalone.html`: o mesmo conteúdo dentro desse esqueleto, que é também o arquivo que os testes de navegador carregam.
 
 ## Estrutura
 
@@ -12,7 +12,7 @@ Artefato publicado: https://claude.ai/artifact/7yQmLNrrYJrJQpEDKrXH5P (versão 1
 | `src/story.js` | Textos narrativos (briefing, manchetes, rádio, jornal) |
 | `src/engine.js` | Estado único `G`, regras, negociação, intervenção, pontuação (`computeScore`, `gradeOf`) e salvamento (`perimetro_save_v2`) |
 | `src/dash.js` | Projeções e alertas do painel |
-| `src/ui1.js` | Peças comuns, mapa, menu, briefing, recrutamento e perímetro |
+| `src/ui1.js` | Peças comuns (inclusive as dicas flutuantes), mapa, menu, briefing, recrutamento e perímetro |
 | `src/ui2.js` | Cerco: HUD, painel do comandante (quatro abas), resultado da rodada e eventos |
 | `src/ui3.js` | Desfecho, pós-jogo (nota, gazeta, conquistas, replay, debrief) e o `render()` principal |
 | `src/style.css`, `src/head.html` | Estilo e cabeçalho |
@@ -20,6 +20,16 @@ Artefato publicado: https://claude.ai/artifact/7yQmLNrrYJrJQpEDKrXH5P (versão 1
 | `tools/` | Simulação sem navegador e testes de navegador; veja `tools/README.md` |
 
 O motor e o `dash.js` não dependem da interface: tudo o que decide, prevê ou alerta roda sem navegador (`tools/sim/`), e a interface só desenha.
+
+## Interface enxuta: o que fica à vista e o que fica na dica
+
+A tela mostra o que decide; o porquê de cada número fica numa dica flutuante (passar o mouse ou focar com o teclado). Três marcações, todas tratadas por `showTip` em `ui1.js`:
+
+- `data-ag="<id do agente>"`: o cartão do agente, com traço e os cinco atributos (tática, negociação, inteligência, resistência e comunicação). Vale para todo lugar onde aparece o nome de um agente: recrutamento, mapa, perímetro, equipe do cerco, relatos de campo, mesa de comando e replay.
+- `data-tip="texto"`: uma dica de texto simples.
+- `class="hastip"` com um filho `<span class="tipc">…</span>`: uma dica com HTML. `infoTip(rótulo, html)` gera o “ⓘ” das regras longas.
+
+O texto da dica continua no HTML da página (o `.tipc` só fica oculto), assim como o que está dentro de `<details>`: as bancadas `verdade.js` e `limites.js`, que leem o HTML, continuam conferindo esses textos.
 
 ## Fluxo de trabalho
 

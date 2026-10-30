@@ -101,23 +101,23 @@ const ZNAME = id => id === 'reserva' ? 'Reserva' : ZONE[id].nome;
 
 /* ---------- AGENTES (12, exatamente como no projeto) ---------- */
 const AGENTS = [
-  { id:'renata',   nome:'Cap. Renata Alves',   s:{tat:9,neg:5,int:6,res:8,com:6},  trait:'Veterana',      tdesc:'Reconhece padrões: +15% de confiabilidade nas investigações e uma intuição na rodada 3.', custo:150 },
-  { id:'marcos',   nome:'Sgt. Marcos Ribeiro', s:{tat:8,neg:3,int:5,res:9,com:4},  trait:'Disciplinado',  tdesc:'Fadiga reduzida: cansa na metade da velocidade e não sofre a perda da Fadiga crítica.', custo:120 },
-  { id:'carla',    nome:'Det. Carla Mendes',   s:{tat:4,neg:8,int:9,res:5,com:7},  trait:'Analítica',     tdesc:'Bônus de investigação (+10% de confiabilidade) e correlaciona os relatos: a convergência aparece no painel com 1 indício ponderado em vez de 1,5.', custo:140 },
-  { id:'paulo',    nome:'Neg. Paulo Duarte',   s:{tat:3,neg:10,int:6,res:4,com:9}, trait:'Empático',      tdesc:'Como negociador: +10% de avanço e efeito calmante ampliado nos degraus 1 a 3.', custo:135 },
-  { id:'lucas',    nome:'Ag. Lucas Ferreira',  s:{tat:7,neg:4,int:7,res:7,com:5},  trait:'Adaptável',     tdesc:'Sem penalidade ao ser reposicionado.', custo:110 },
-  { id:'fernanda', nome:'Ag. Fernanda Costa',  s:{tat:6,neg:6,int:8,res:5,com:8},  trait:'Comunicativa',  tdesc:'Bônus de +30% nas ações com stakeholders, e os comunicados dela vazam menos.', custo:125 },
-  { id:'andre',    nome:'Sgt. André Gomes',    s:{tat:8,neg:2,int:4,res:10,com:3}, trait:'Implacável',    tdesc:'Bônus na intervenção (+8 de prontidão), mas penalidade como negociador (−12%).', custo:115 },
-  { id:'sofia',    nome:'Det. Sofia Takahashi',s:{tat:5,neg:7,int:10,res:4,com:6}, trait:'Metódica',      tdesc:'Investigações custam 20% menos.', custo:145 },
-  { id:'roberto',  nome:'Ag. Roberto Nunes',   s:{tat:7,neg:5,int:5,res:8,com:5},  trait:'Impulsivo',     tdesc:'Sob pressão alta (>65) pode agir sozinho e elevar a agitação.', custo:80 },
-  { id:'camila',   nome:'Ag. Camila Araújo',   s:{tat:6,neg:6,int:6,res:6,com:7},  trait:'Versátil',      tdesc:'Atributos ajustáveis: +1 em um e −1 em outro, à sua escolha.', custo:100 },
-  { id:'diego',    nome:'Cap. Diego Monteiro', s:{tat:9,neg:4,int:7,res:7,com:5},  trait:'Estrategista',  tdesc:'Pausa de Comando revela mais (duas pistas em vez de uma).', custo:155 },
-  { id:'marina',   nome:'Ag. Marina Silva',    s:{tat:5,neg:9,int:5,res:5,com:8},  trait:'Pacificadora',  tdesc:'Reduz passivamente a agitação do líder em 2 por rodada.', custo:130 }
+  { id:'renata',   nome:'Cap. Renata Alves',   s:{tat:9,neg:5,int:6,res:8,com:6},  trait:'Veterana',      tshort:'+15% nas investigações e uma intuição na rodada 3', tdesc:'Reconhece padrões: +15% de confiabilidade nas investigações e uma intuição na rodada 3.', custo:150 },
+  { id:'marcos',   nome:'Sgt. Marcos Ribeiro', s:{tat:8,neg:3,int:5,res:9,com:4},  trait:'Disciplinado',  tshort:'Cansa na metade da velocidade', tdesc:'Fadiga reduzida: cansa na metade da velocidade e não sofre a perda da Fadiga crítica.', custo:120 },
+  { id:'carla',    nome:'Det. Carla Mendes',   s:{tat:4,neg:8,int:9,res:5,com:7},  trait:'Analítica',     tshort:'+10% nas investigações e correlaciona os relatos', tdesc:'Bônus de investigação (+10% de confiabilidade) e correlaciona os relatos: a convergência aparece no painel com 1 indício ponderado em vez de 1,5.', custo:140 },
+  { id:'paulo',    nome:'Neg. Paulo Duarte',   s:{tat:3,neg:10,int:6,res:4,com:9}, trait:'Empático',      tshort:'+10% de avanço quando negocia', tdesc:'Como negociador: +10% de avanço e efeito calmante ampliado nos degraus 1 a 3.', custo:135 },
+  { id:'lucas',    nome:'Ag. Lucas Ferreira',  s:{tat:7,neg:4,int:7,res:7,com:5},  trait:'Adaptável',     tshort:'Reposiciona sem perder eficiência', tdesc:'Sem penalidade ao ser reposicionado.', custo:110 },
+  { id:'fernanda', nome:'Ag. Fernanda Costa',  s:{tat:6,neg:6,int:8,res:5,com:8},  trait:'Comunicativa',  tshort:'+30% nas ações com stakeholders', tdesc:'Bônus de +30% nas ações com stakeholders, e os comunicados dela vazam menos.', custo:125 },
+  { id:'andre',    nome:'Sgt. André Gomes',    s:{tat:8,neg:2,int:4,res:10,com:3}, trait:'Implacável',    tshort:'+8 na intervenção, −12% quando negocia', tdesc:'Bônus na intervenção (+8 de prontidão), mas penalidade como negociador (−12%).', custo:115 },
+  { id:'sofia',    nome:'Det. Sofia Takahashi',s:{tat:5,neg:7,int:10,res:4,com:6}, trait:'Metódica',      tshort:'Investigações 20% mais baratas', tdesc:'Investigações custam 20% menos.', custo:145 },
+  { id:'roberto',  nome:'Ag. Roberto Nunes',   s:{tat:7,neg:5,int:5,res:8,com:5},  trait:'Impulsivo',     tshort:'Sob pressão alta, pode agir sozinho', tdesc:'Sob pressão alta (>65) pode agir sozinho e elevar a agitação.', custo:80 },
+  { id:'camila',   nome:'Ag. Camila Araújo',   s:{tat:6,neg:6,int:6,res:6,com:7},  trait:'Versátil',      tshort:'+1 e −1 nos atributos, à sua escolha', tdesc:'Atributos ajustáveis: +1 em um e −1 em outro, à sua escolha.', custo:100 },
+  { id:'diego',    nome:'Cap. Diego Monteiro', s:{tat:9,neg:4,int:7,res:7,com:5},  trait:'Estrategista',  tshort:'A Pausa de Comando dá duas pistas', tdesc:'Pausa de Comando revela mais (duas pistas em vez de uma).', custo:155 },
+  { id:'marina',   nome:'Ag. Marina Silva',    s:{tat:5,neg:9,int:5,res:5,com:8},  trait:'Pacificadora',  tshort:'Acalma o líder: −2 de agitação por rodada', tdesc:'Reduz passivamente a agitação do líder em 2 por rodada.', custo:130 }
 ];
 /* Guarnição improvisada: só entra se o jogador não recrutar ninguém (evita dead end). */
 const GENERICS = [
-  { id:'g1', nome:'Patrulheiro da guarnição A', s:{tat:3,neg:2,int:2,res:4,com:3}, trait:'Improvisado', tdesc:'Guarnição local convocada às pressas.', custo:0, generic:true },
-  { id:'g2', nome:'Patrulheiro da guarnição B', s:{tat:3,neg:2,int:2,res:4,com:3}, trait:'Improvisado', tdesc:'Guarnição local convocada às pressas.', custo:0, generic:true }
+  { id:'g1', nome:'Patrulheiro da guarnição A', s:{tat:3,neg:2,int:2,res:4,com:3}, trait:'Improvisado', tshort:'Guarnição local convocada às pressas', tdesc:'Guarnição local convocada às pressas.', custo:0, generic:true },
+  { id:'g2', nome:'Patrulheiro da guarnição B', s:{tat:3,neg:2,int:2,res:4,com:3}, trait:'Improvisado', tshort:'Guarnição local convocada às pressas', tdesc:'Guarnição local convocada às pressas.', custo:0, generic:true }
 ];
 const ALL_AGENTS = AGENTS.concat(GENERICS);
 const agentById = id => ALL_AGENTS.find(a => a.id === id);
@@ -125,14 +125,14 @@ const ATTR = { tat:'Tática', neg:'Negociação', int:'Inteligência', res:'Resi
 
 /* ---------- EQUIPAMENTOS (8) ---------- */
 const EQUIP = [
-  { id:'drone',   nome:'Drone de vigilância',   custo:80, ic:'drone',  desc:'+15 de cobertura aérea na zona em que for posicionado. Revela se essa zona é uma das quatro rotas de fuga candidatas. Sobre a Avenida, ainda ajuda a seguir quem fugir (+8 pontos na perseguição).' },
-  { id:'escudo',  nome:'Escudo tático',         custo:50, ic:'shield', desc:'+10 de eficiência na intervenção (em qualquer posição) e metade da chance de um agente se ferir na entrada.' },
-  { id:'termica', nome:'Câmera térmica',        custo:70, ic:'thermal',desc:'Revela o número de pessoas em 1 zona. Em zona vizinha ao banco, revela quantos assaltantes há.' },
-  { id:'negofone',nome:'Negofone seguro',       custo:60, ic:'phone',  desc:'+10% de chance de avanço na negociação.' },
-  { id:'sniper',  nome:'Sniper de precisão',    custo:90, ic:'scope',  desc:'+20 de eficiência na zona posicionada (precisa de ao menos 1 agente lá). Reforça a prontidão de intervenção.' },
-  { id:'kit',     nome:'Kit médico avançado',   custo:40, ic:'med',    desc:'Estabiliza reféns feridos: ninguém piora por falta de atendimento. Reduz à metade o mal-estar do cativeiro longo e os ferimentos em eventos, e atenua as baixas numa intervenção.' },
-  { id:'jammer',  nome:'Jammer de comunicação', custo:75, ic:'jammer', desc:'Bloqueia celulares dos assaltantes: sem cúmplice coordenado e sem lives, e o negociador vira o único canal do líder (+6% de avanço). O isolamento eleva a agitação em +1/rodada, e a mídia sobe 2 pontos a menos por rodada.' },
-  { id:'viatura', nome:'Viatura descaracterizada', custo:55, ic:'car', desc:'Mobilidade rápida: reposicionar agentes não gera perda de eficiência na rodada, e alcançar quem fugir fica mais fácil (+15 pontos na chance de captura numa perseguição).' }
+  { id:'drone',   nome:'Drone de vigilância',   custo:80, ic:'drone',  dshort:'+15 de cobertura na zona e revela se ela é rota candidata', desc:'+15 de cobertura aérea na zona em que for posicionado. Revela se essa zona é uma das quatro rotas de fuga candidatas. Sobre a Avenida, ainda ajuda a seguir quem fugir (+8 pontos na perseguição).' },
+  { id:'escudo',  nome:'Escudo tático',         custo:50, ic:'shield', dshort:'+10 na intervenção e metade do risco de agente ferido', desc:'+10 de eficiência na intervenção (em qualquer posição) e metade da chance de um agente se ferir na entrada.' },
+  { id:'termica', nome:'Câmera térmica',        custo:70, ic:'thermal',dshort:'Conta as pessoas numa zona', desc:'Revela o número de pessoas em 1 zona. Em zona vizinha ao banco, revela quantos assaltantes há.' },
+  { id:'negofone',nome:'Negofone seguro',       custo:60, ic:'phone',  dshort:'+10% de avanço na negociação', desc:'+10% de chance de avanço na negociação.' },
+  { id:'sniper',  nome:'Sniper de precisão',    custo:90, ic:'scope',  dshort:'+20 na zona, se houver agente lá, e reforça a intervenção', desc:'+20 de eficiência na zona posicionada (precisa de ao menos 1 agente lá). Reforça a prontidão de intervenção.' },
+  { id:'kit',     nome:'Kit médico avançado',   custo:40, ic:'med',    dshort:'Feridos não pioram por falta de socorro', desc:'Estabiliza reféns feridos: ninguém piora por falta de atendimento. Reduz à metade o mal-estar do cativeiro longo e os ferimentos em eventos, e atenua as baixas numa intervenção.' },
+  { id:'jammer',  nome:'Jammer de comunicação', custo:75, ic:'jammer', dshort:'Corta o celular dos assaltantes e isola o líder', desc:'Bloqueia celulares dos assaltantes: sem cúmplice coordenado e sem lives, e o negociador vira o único canal do líder (+6% de avanço). O isolamento eleva a agitação em +1/rodada, e a mídia sobe 2 pontos a menos por rodada.' },
+  { id:'viatura', nome:'Viatura descaracterizada', custo:55, ic:'car', dshort:'Reposiciona sem perda e ajuda na perseguição', desc:'Mobilidade rápida: reposicionar agentes não gera perda de eficiência na rodada, e alcançar quem fugir fica mais fácil (+15 pontos na chance de captura numa perseguição).' }
 ];
 const EQ = Object.fromEntries(EQUIP.map(e => [e.id, e]));
 
@@ -159,12 +159,12 @@ const PROFILES = {
 /* ---------- DIFICULDADE ---------- */
 const DIFF = {
   protocolar: { nome:'Protocolar', slots:3, porta:60, ops:.7, timer:150, lev:.30, dist:.24, ivp:-.03, agit:-1, evChance:.35, media:.85, vault:.85, stk:65, desp:.8, pbase:25, intel:.00, fat:.9,  lethal:.7, ret:55, hostile:0, assail:[2,3],
-    blurb:'Para aprender a mecânica: bastante tempo, líder receptivo, eventos raros e plantão mais barato.' },
+    blurb:'Para aprender: tempo folgado e líder receptivo.' },
   complexo:   { nome:'Complexo',   slots:3, porta:60, ops:1,  timer:100, lev:.30, dist:.29, ivp:-.10, agit:0,  evChance:.55, media:1.0,  vault:1.0,  stk:58, desp:1.0, pbase:30, intel:.00, fat:1.0, lethal:1.0, ret:45, hostile:0, assail:[2,4],
-    blurb:'O equilíbrio do documento: tempo apertado, líder reservado e eventos frequentes.' },
+    blurb:'Recomendado: tempo apertado e eventos frequentes.' },
   caotico:    { nome:'Caótico',    slots:2, porta:50, ops:1.3,timer:65,  lev:.275, dist:.36, ivp:-.17, agit:2,  evChance:.80, media:1.2,  vault:1.2,  stk:58, desp:1.25,pbase:38, intel:-.10,fat:1.25,lethal:1.3, ret:45, hostile:1, assail:[3,4],
     ncalm:1.3, negoFloor:.7, adaptAt:50, adaptMin:.4, violent:.75,
-    blurb:'Só duas decisões por rodada, pouco tempo, líder hostil, investigações menos confiáveis, plantão mais caro e eventos quase toda rodada.' }
+    blurb:'Duas decisões por rodada e pressão máxima.' }
 };
 
 /* ---------- INTELIGÊNCIA ---------- */
@@ -203,11 +203,11 @@ const STK = {
 const STK_KEYS = Object.keys(STK);
 
 const COMMS = [
-  { id:'coletiva',  s:'imprensa', nome:'Coletiva transparente',      custo:0,  d:'Informa o que se sabe. Reduz a pressão da mídia (−5) e agrada a imprensa. Fala em público: corre o risco de vazar.' },
-  { id:'prefeito',  s:'prefeito', nome:'Relatório de situação ao prefeito', custo:0, d:'Briefing direto no gabinete. Reduz a ansiedade política. O gabinete também vaza, mas menos que a coletiva.' },
-  { id:'gerente',   s:'banco',    nome:'Reunião com a diretoria do banco', custo:0, d:'Alinha expectativas. A diretoria entrega a planta do cofre (revela o andamento exato).' },
-  { id:'acolhe',    s:'familias', nome:'Sala de acolhimento das famílias', custo:20, d:'Psicólogos e informação. As famílias descrevem os reféns (revela o estado deles).' },
-  { id:'geral',     s:'todos',    nome:'Comunicado geral',           custo:0,  d:'Nota única para os quatro públicos: efeito menor em cada um, mas atende todos. Fala em público: corre o risco de vazar.' }
+  { id:'coletiva',  s:'imprensa', nome:'Coletiva transparente',      custo:0,  ds:'Mídia −5 e agrada a imprensa. Pode vazar.', d:'Informa o que se sabe. Reduz a pressão da mídia (−5) e agrada a imprensa. Fala em público: corre o risco de vazar.' },
+  { id:'prefeito',  s:'prefeito', nome:'Relatório de situação ao prefeito', custo:0, ds:'Acalma o gabinete. Vaza menos que a coletiva.', d:'Briefing direto no gabinete. Reduz a ansiedade política. O gabinete também vaza, mas menos que a coletiva.' },
+  { id:'gerente',   s:'banco',    nome:'Reunião com a diretoria do banco', custo:0, ds:'Agrada o banco e revela o andamento do cofre.', d:'Alinha expectativas. A diretoria entrega a planta do cofre (revela o andamento exato).' },
+  { id:'acolhe',    s:'familias', nome:'Sala de acolhimento das famílias', custo:20, ds:'Agrada as famílias e revela o estado dos reféns.', d:'Psicólogos e informação. As famílias descrevem os reféns (revela o estado deles).' },
+  { id:'geral',     s:'todos',    nome:'Comunicado geral',           custo:0,  ds:'Um pouco para os quatro públicos. Pode vazar.', d:'Nota única para os quatro públicos: efeito menor em cada um, mas atende todos. Fala em público: corre o risco de vazar.' }
 ];
 
 /* ---------- EVENTOS ---------- */
@@ -250,15 +250,15 @@ const EVDEF = Object.fromEntries(EVENT_DEFS.map(e => [e.id, e]));
 /* ---------- TEORIA DAS RESTRIÇÕES: os três elos que migram (Goldratt & Cox, 1984) ----------
    Os cinco passos de foco: identificar a restrição, explorá-la, subordinar o resto a ela, elevá-la, repetir. */
 const TOCS = {
-  info:    { nome:'Informação',    ic:'eye',   tab:'intel',  cor:'violet', fase:'início do cerco',
+  info:    { nome:'Informação',    ic:'eye',   tab:'intel',  cor:'violet', curto:'investigue e abra o canal',  fase:'início do cerco',
              por:'Há variáveis ocultas demais: cada decisão tática é uma aposta no escuro.',
              elevar:'Investigue, abra o canal com o líder, use a Pausa de Comando ou chame a diretoria e as famílias (que revelam o cofre e os reféns).',
              parar:'Não adianta ainda gastar em força tática: sem saber onde atacar, mais gente só cobre mais escuro.' },
-  pessoal: { nome:'Pessoal tático', ic:'user',  tab:'tatica', cor:'blue',   fase:'meio do cerco',
+  pessoal: { nome:'Pessoal tático', ic:'user',  tab:'tatica', cor:'blue',   curto:'cubra as rotas candidatas',  fase:'meio do cerco',
              por:'Há rotas candidatas sem cobertura. Mais informação não vira cobertura sem gente.',
              elevar:'Reposicione quem está em zona improvável, peça apoio externo para a rota provável ou recupere agentes reconvocados.',
              parar:'Mais investigações agora trazem pouco: o que falta já não é saber, é ter quem cubra.' },
-  tempo:   { nome:'Tempo e fadiga', ic:'clock', tab:'tatica', cor:'amber',  fase:'fim do cerco',
+  tempo:   { nome:'Tempo e fadiga', ic:'clock', tab:'tatica', cor:'amber',  curto:'cuide da fadiga e do prazo',  fase:'fim do cerco',
              por:'O relógio e o cansaço viraram o elo mais fraco: rodízio e prazo decidem agora.',
              elevar:'Pague horas extras, faça rodízio pela reserva e use cada rodada para avançar a negociação ou fechar o desfecho.',
              parar:'Reforçar zonas e investigar mais já rendem pouco: o que se esgota é o tempo da equipe e da cidade.' }

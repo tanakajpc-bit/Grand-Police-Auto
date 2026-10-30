@@ -17,7 +17,7 @@ const pega = (src, re, nome) => { const m = src.match(re); if (!m) throw new Err
 const ui1 = ler('ui1.js'), ui2 = ler('ui2.js'), ui3 = ler('ui3.js');
 const marca = ui3.indexOf('/* ===================================================================\n   AÇÕES');
 if (marca < 0) throw new Error('não achei o fim da parte de texto do ui3.js');
-const extra = [pega(ui1, /^const fmt = .*$/m, 'fmt'), pega(ui1, /^const dec = .*$/m, 'dec'), pega(ui1, /^const br = .*$/m, 'br'), pega(ui2, /^const FRONT_IC = .*$/m, 'FRONT_IC'),
+const extra = [pega(ui1, /^const fmt = .*$/m, 'fmt'), pega(ui1, /^const dec = .*$/m, 'dec'), pega(ui1, /^const br = .*$/m, 'br'), pega(ui1, /^const infoTip = .*$/m, 'infoTip'), pega(ui2, /^const FRONT_IC = .*$/m, 'FRONT_IC'),
   "const UI = { post: 'score', replayR: 1 };", ui3.slice(0, marca),
   'Object.assign(globalThis.__api, { UI, newsHTML, outcomeStory, truthHTML, scoreHTML, badgesHTML, replayHTML, debriefHTML, econHTML, chartSVG, renderOutcome });'].join('\n');
 const A = load(1, SRC, extra);
@@ -325,7 +325,7 @@ function debrief(rec, F) {
   const G = A.G, S = G.score, st = G.stats, tag = rec.tag, K = G.K;
   const ck = (ok, id, det) => C(ok, 'debrief: ' + id, tag + ' | ' + det);
   const html = A.debriefHTML(), t = strip(html);
-  const cards = {}; [...html.matchAll(/<div class="concept"><h4>(.*?)<\/h4><span class="ref">(.*?)<\/span><div class="you">([\s\S]*?)<\/div><p class="les">([\s\S]*?)<\/p><\/div>/g)].forEach(x => { cards[strip(x[1])] = { ref: strip(x[2]), you: strip(x[3]), les: strip(x[4]) }; });
+  const cards = {}; [...html.matchAll(/<div class="concept"><h4>(.*?)<\/h4><span class="ref">(.*?)<\/span><div class="you">([\s\S]*?)<\/div>(?:<details class="more"><summary>[^<]*<\/summary>)?<p class="les">([\s\S]*?)<\/p>(?:<\/details>)?<\/div>/g)].forEach(x => { cards[strip(x[1])] = { ref: strip(x[2]), you: strip(x[3]), les: strip(x[4]) }; });
   const card = re => { const e = Object.entries(cards).find(([k]) => re.test(k)); return e ? e[1] : undefined; };
   ck(!/undefined|NaN/.test(t), 'sem texto quebrado', '');
   // ponte da Tabela 12

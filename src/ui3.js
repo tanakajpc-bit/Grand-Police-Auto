@@ -119,7 +119,7 @@ function nextGradeHint(S, dims) {
 function scoreHTML() {
   const S = G.score, H = G.hostages, E = G.end;
   const dims = [
-    { k: 'Vidas', v: S.vidas, w: .40, why: `${H.dead} ${plural(H.dead, 'morto', 'mortos')} e ${H.hurt} ${plural(H.hurt, 'ferido', 'feridos')} entre ${HOSTAGES} reféns (cada morte tira 14,7 pontos da dimensão e cada ferido 2,9: o −25 e o −5 do documento, proporcionais aos 17 reféns).${G.stats.kitSaves ? ` O kit médico evitou ${G.stats.kitSaves} ${plural(G.stats.kitSaves, 'morte', 'mortes')}.` : ''}` },
+    { k: 'Vidas', v: S.vidas, w: .40, why: `${H.dead} ${plural(H.dead, 'morto', 'mortos')} e ${H.hurt} ${plural(H.hurt, 'ferido', 'feridos')} entre ${HOSTAGES} reféns.${G.stats.kitSaves ? ` O kit médico evitou ${G.stats.kitSaves} ${plural(G.stats.kitSaves, 'morte', 'mortes')}.` : ''}`, tip: 'Cada morte tira 14,7 pontos da dimensão e cada ferido 2,9: o −25 e o −5 do documento, proporcionais aos 17 reféns.' },
     { k: 'Prisões', v: S.captura, w: .20, why: `${outName(E)}: ${Math.round(S.captura * 100)}% dos responsáveis presos.` },
     { k: 'Valores', v: S.valores, w: .15, why: `Cofre em ${Math.round(G.vault)}% no desfecho; fator de perda do desfecho ${String(E.lootF).replace('.', ',')}.` },
     { k: 'Eficiência', v: S.eficiencia, w: .10, why: `${fmt(G.credits)} créditos sobraram e a crise durou ${G.round} ${plural(G.round, 'rodada', 'rodadas')}. O plantão custou ${fmt(G.spent.plantao)} no total${G.deficit ? ` e ${G.deficit} ${plural(G.deficit, 'rodada', 'rodadas')} ficaram no vermelho` : ''}.` },
@@ -132,7 +132,7 @@ function scoreHTML() {
     ${S.penal ? `<div class="insight bad">${icon('alert', '', 1.8)}<span>Penalidade: −${S.penal} pontos por ${E.agentsHurt.length} ${plural(E.agentsHurt.length, 'agente ferido', 'agentes feridos')} em ação (${E.agentsHurt.map(id => shortName(agentById(id).nome)).join(', ')}). Quem protege também conta os próprios.</span></div>` : ''}
     <p class="muted" style="max-width:520px">${S.grade === 'S' ? 'Operação exemplar.' : S.grade === 'A' ? 'Excelente condução, com pouco a corrigir.' : S.grade === 'B' ? 'Boa condução, com trade-offs visíveis.' : S.grade === 'C' ? 'Resultado aceitável, mas com perdas evitáveis.' : S.grade === 'D' ? 'Resultado fraco: as decisões se acumularam contra você.' : 'Operação malsucedida. A falha também ensina: veja o debrief.'}</p>
     ${hint ? `<p class="faint" style="max-width:520px;font-size:13px">${hint}</p>` : ''}</div></div>
-    <div class="card" style="margin-top:18px"><h2 class="h3">Composição</h2>${dims.map(d => `<div class="dimrow"><div><b>${d.k}</b><small>peso ${Math.round(d.w * 100)}%</small></div><div><div class="meter tall ${d.v >= .7 ? 'g' : d.v >= .4 ? 'a' : 'r'}"><i style="width:0%" data-to="${Math.round(d.v * 100)}"></i></div><small class="faint">${d.why}</small></div><div class="mono" style="text-align:right">${Math.round(d.v * 100)}% → ${dec(d.v * d.w * 100)} pts</div></div>`).join('')}</div>`;
+    <div class="card" style="margin-top:18px"><h2 class="h3">Composição</h2>${dims.map(d => `<div class="dimrow"><div><b>${d.k}</b><small>peso ${Math.round(d.w * 100)}%</small></div><div><div class="meter tall ${d.v >= .7 ? 'g' : d.v >= .4 ? 'a' : 'r'}"><i style="width:0%" data-to="${Math.round(d.v * 100)}"></i></div><small class="faint">${d.why}${d.tip ? infoTip('', d.tip) : ''}</small></div><div class="mono" style="text-align:right">${Math.round(d.v * 100)}% → ${dec(d.v * d.w * 100)} pts</div></div>`).join('')}</div>`;
 }
 
 /* ---------- Gazeta ---------- */
@@ -210,10 +210,10 @@ function prepHTML() {
   const st = G.stats, hires = G.team.filter(id => !agentById(id).generic), p1 = Object.keys(G.p1intel).map(k => INTEL.find(i => i.id === k)).filter(Boolean);
   const reserve = CREDITOS_INICIAIS - G.spent.rec - G.spent.equip - p1.reduce((s, i) => s + intelCost(i.id), 0);
   const sec = (t, body) => `<div class="eyebrow">${t}</div><div class="row" style="margin:6px 0 14px">${body}</div>`;
-  const pill = (t, c) => `<span class="pill ${c}">${t}</span>`;
+  const pill = (t, c, a = '') => `<span class="pill ${c}"${a}>${t}</span>`;
   return `<div class="card"><h2 class="h3">Preparação · 14h12 a ${fmtTime(1)}</h2>
     <p class="muted" style="margin:0 0 14px;font-size:13.5px">Antes do primeiro relógio do cerco: o que você montou com os ${fmt(CREDITOS_INICIAIS)} créditos. Esta fase também decide o resultado.</p>
-    ${sec('Equipe contratada · custo em créditos', hires.length ? hires.map(id => pill(`${shortName(agentById(id).nome)} · ${agentById(id).custo}`, 'blue')).join('') : '<span class="muted">Ninguém contratado: só a guarnição local, dois patrulheiros de nível básico.</span>')}
+    ${sec('Equipe contratada · custo em créditos', hires.length ? hires.map(id => pill(`${shortName(agentById(id).nome)} · ${agentById(id).custo}`, 'blue', ` data-ag="${id}"`)).join('') : '<span class="muted">Ninguém contratado: só a guarnição local, dois patrulheiros de nível básico.</span>')}
     ${sec('Equipamentos', G.gear.length ? G.gear.map(e => pill(`${EQ[e].nome} · ${EQ[e].custo}`, 'blue')).join('') : '<span class="muted">Nenhum equipamento comprado.</span>')}
     ${sec('Investigação antes do cerco', p1.length ? p1.map(i => { const r = G.p1intel[i.id], ok = !!(r && r.ok); return pill(`${i.nome} · ${intelCost(i.id)} · ${ok ? 'confirmado' : 'inconclusivo'}`, ok ? 'green' : 'amber'); }).join('') : '<span class="muted">Nenhuma investigação: o cerco começou às cegas.</span>')}
     ${(G.perimLog || []).length ? `<div class="grid" style="gap:6px;margin-bottom:14px">${G.perimLog.map(t => `<div class="res-line good" style="animation:none">${icon('eye', '', 1.8)}<span>${t}</span></div>`).join('')}</div>` : ''}
@@ -302,7 +302,7 @@ function debriefHTML() {
   const qs = ['Qual era a restrição da sua operação em cada fase? Você percebeu quando ela mudou?', 'Quanto você investiu em informação antes de agir? Esse investimento se pagou?', 'Em que momento a negociação avançou ou regrediu? O que você fez para isso acontecer?', 'Que informação um único agente tinha e só foi compartilhada tarde demais, ou nunca foi? Você pediu conselho a quem conhecia a zona?', 'Houve algum momento em que você insistiu num plano que já não funcionava? Por quê?', 'Qual stakeholder dominou a sua atenção? Era o mais saliente ou apenas o mais barulhento?', 'Seus relatórios de reféns vieram em termos de perdas ou de ganhos? Quem recebeu o enquadramento oposto teria decidido de forma diferente?', 'Se os pesos do placar fossem outros, você teria agido de outra forma? O que isso revela sobre os incentivos nas organizações?'];
   const bridge = [['Reféns', 'Clientes, dados de clientes ou colaboradores afetados por uma crise'], ['Assaltantes', 'Um ataque de ransomware, um concorrente agressivo ou uma crise reputacional'], ['Cofre', 'Caixa, ativos estratégicos ou propriedade intelectual'], ['Perímetro e rotas de fuga', 'Controles internos e vulnerabilidades operacionais'], ['Negociação com o líder', 'Negociação com contrapartes hostis: sindicatos, credores, atacantes'], ['Imprensa e prefeito', 'Mídia, redes sociais, conselho de administração e reguladores'], ['Agências parceiras', 'Fornecedores, parceiros e áreas fora da sua hierarquia'], ['Fadiga da equipe', 'Burnout em equipes de resposta a incidentes']];
   return `<h1 class="sr">Debrief</h1><div class="grid" style="gap:16px">${econHTML()}<div><div class="eyebrow">Ciclo de Kolb (1984)</div><div class="kolb" style="margin-top:8px">${kolb.map(([a, b]) => `<div class="concept"><h4>${a}</h4><p class="les">${b}</p></div>`).join('')}</div></div>
-    <div><div class="eyebrow">Suas decisões e os conceitos</div><div class="grid" style="gap:12px;margin-top:8px;grid-template-columns:repeat(auto-fit,minmax(340px,1fr))">${C.map(c => `<div class="concept"><h4>${c.n}</h4><span class="ref">${c.ref}</span><div class="you">${c.you}</div><p class="les">${c.les}</p></div>`).join('')}</div></div>
+    <div><div class="eyebrow">Suas decisões e os conceitos</div><div class="grid" style="gap:12px;margin-top:8px;grid-template-columns:repeat(auto-fit,minmax(340px,1fr))">${C.map(c => `<div class="concept"><h4>${c.n}</h4><span class="ref">${c.ref}</span><div class="you">${c.you}</div><details class="more"><summary>O conceito</summary><p class="les">${c.les}</p></details></div>`).join('')}</div></div>
     <div class="card"><h2 class="h3">Perguntas para a reflexão</h2><ul style="margin:0;padding-left:18px;display:grid;gap:6px">${qs.map(q => `<li>${q}</li>`).join('')}</ul></div>
     <div class="card"><h2 class="h3">Da simulação para a gestão de crises corporativas</h2><div class="scroll-x"><table class="table"><thead><tr><th>Na simulação</th><th>Na empresa</th></tr></thead><tbody>${bridge.map(([a, b]) => `<tr><td><b>${a}</b></td><td>${b}</td></tr>`).join('')}</tbody></table></div></div></div>`;
 }
@@ -532,6 +532,7 @@ function draw() {
   const sig = focusSig(document.activeElement);
   const prev = {}; $app.querySelectorAll('[data-k]').forEach(el => { prev[el.dataset.k] = el.dataset.val != null ? el.dataset.val : el.dataset.n; });
   $app.innerHTML = buildScreen();
+  if (tipFor && !tipFor.isConnected) hideTip();   // a dica apontava para um elemento que acabou de ser redesenhado
   document.body.classList.toggle('withbar', !!BAR);
   UI.tabAnim = false;
   const key = G ? G.phase + ':' + (G.stage || '') + ':' + G.round + ':' + UI.post : 'menu', changed = key !== lastKey;
