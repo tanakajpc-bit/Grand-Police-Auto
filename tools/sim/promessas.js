@@ -319,6 +319,8 @@ T('Dificuldades: o que o texto de cada uma diz', () => {
   ok(P.ops < C.ops && C.ops < K.ops, 'plantão: mais barato no Protocolar, mais caro no Caótico');
   ok(P.slots === 3 && C.slots === 3 && K.slots === 2, 'decisões por rodada: 3, 3 e 2');
   ok(K.intel < 0 && P.intel === 0 && C.intel === 0, 'investigações menos confiáveis só no Caótico');
+  ok(P.verba === 1800 && C.verba === 1500 && K.verba === 1250, 'verba: 1.800, 1.500 e 1.250 créditos');
+  ['protocolar', 'complexo', 'caotico'].forEach(d => { A.newGame(d); ok(A.G.credits === A.DIFF[d].verba && A.G.verba === A.DIFF[d].verba, `${A.DIFF[d].nome}: a partida começa com a verba que o cartão do menu mostra`, { credits: A.G.credits, verba: A.G.verba }); });
 });
 T('Eventos: o efeito de cada carta é o descrito', () => {
   const G = fresh('complexo', 1, ['renata', 'diego'], [], 'calculista'); siege(G, { renata: 'beco', diego: 'garagem' }); G.pressure = 50;

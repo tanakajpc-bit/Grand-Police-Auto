@@ -768,11 +768,11 @@ const ADEQ = 60;                  // cobertura "adequada"
 /* ---------- ECONOMIA (L1.3): a verba é um fluxo, não só um estoque ----------
    Custo de plantão: cada rodada o posto de comando paga a operação (base + agentes em campo), escalado pela dificuldade.
    Quem descansa na reserva ou foi reconvocado não custa plantão: rodízio economiza verba, mas abre zonas.
-   Apoio externo encarece a cada uso (urgência tem preço crescente); horas extras custam proporcional ao efetivo em campo. */
+   Apoio externo encarece a cada uso (urgência tem preço crescente); horas extras custam proporcional ao efetivo em campo.
+   A verba inicial depende da dificuldade (DIFF.verba: 1.800 / 1.500 / 1.250 desde a v21; antes, 1.000 em todas) e fica gravada na partida (G.verba). */
 const PLANTAO_BASE = 4, PLANTAO_AGENTE = 2;
 const APOIO_PRECOS = [90, 110, 135];
 const HORAS_BASE = 20, HORAS_AGENTE = 8;
-const CREDITOS_INICIAIS = 1000;
 /* BATNA (L2.3 refeita): a melhor alternativa do líder a um acordo é fugir pela rota que ele planejou. Com ela aberta (cobertura abaixo de 30%)
    ele cede menos, até −6 pontos na chance de avançar; com ela bem fechada ele perde a saída, até +14. O documento pede que o perímetro mude o
    poder de barganha; até a v17 contava a média das quatro rotas candidatas (de 0 a +10) e quem não fechava rota nenhuma quase não sentia. */
@@ -902,11 +902,11 @@ const PROFILES = {
 
 /* ---------- DIFICULDADE ---------- */
 const DIFF = {
-  protocolar: { nome:'Protocolar', slots:3, porta:60, ops:.7, timer:150, lev:.30, dist:.24, ivp:-.03, agit:-1, evChance:.35, media:.85, vault:.85, stk:65, desp:.8, pbase:25, intel:.00, fat:.9,  lethal:.7, ret:55, hostile:0, assail:[2,3],
+  protocolar: { nome:'Protocolar', verba:1800, slots:3, porta:60, ops:.7, timer:150, lev:.30, dist:.24, ivp:-.03, agit:-1, evChance:.35, media:.85, vault:.85, stk:65, desp:.8, pbase:25, intel:.00, fat:.9,  lethal:.7, ret:55, hostile:0, assail:[2,3],
     blurb:'Para aprender: tempo folgado e líder receptivo.' },
-  complexo:   { nome:'Complexo',   slots:3, porta:60, ops:1,  timer:100, lev:.30, dist:.29, ivp:-.10, agit:0,  evChance:.55, media:1.0,  vault:1.0,  stk:58, desp:1.0, pbase:30, intel:.00, fat:1.0, lethal:1.0, ret:45, hostile:0, assail:[2,4],
+  complexo:   { nome:'Complexo',   verba:1500, slots:3, porta:60, ops:1,  timer:100, lev:.30, dist:.29, ivp:-.10, agit:0,  evChance:.55, media:1.0,  vault:1.0,  stk:58, desp:1.0, pbase:30, intel:.00, fat:1.0, lethal:1.0, ret:45, hostile:0, assail:[2,4],
     blurb:'Recomendado: tempo apertado e eventos frequentes.' },
-  caotico:    { nome:'Caótico',    slots:2, porta:50, ops:1.3,timer:65,  lev:.275, dist:.36, ivp:-.17, agit:2,  evChance:.80, media:1.2,  vault:1.2,  stk:58, desp:1.25,pbase:38, intel:-.10,fat:1.25,lethal:1.3, ret:45, hostile:1, assail:[3,4],
+  caotico:    { nome:'Caótico',    verba:1250, slots:2, porta:50, ops:1.3,timer:65,  lev:.275, dist:.36, ivp:-.17, agit:2,  evChance:.80, media:1.2,  vault:1.2,  stk:58, desp:1.25,pbase:38, intel:-.10,fat:1.25,lethal:1.3, ret:45, hostile:1, assail:[3,4],
     ncalm:1.3, negoFloor:.7, adaptAt:50, adaptMin:.4, violent:.75,
     blurb:'Duas decisões por rodada e pressão máxima.' }
 };
@@ -1016,7 +1016,7 @@ const BADGES = [
   { id:'aposta',   nome:'Aposta certa',           ic:'scope', d:'A rota de fuga real estava com cobertura adequada desde o perímetro, antes de ser revelada.' },
   { id:'olhos',    nome:'Olhos abertos',          ic:'eye',   d:'Terminou com 5 das 6 variáveis ocultas reveladas.' },
   { id:'cofre',    nome:'Cofre intacto',          ic:'bank',  d:'Encerrou com o cofre abaixo de 40% de progresso.' },
-  { id:'economia', nome:'Cofre da corporação',    ic:'coin',  d:'Terminou com 400 créditos ou mais de reserva.' },
+  { id:'economia', nome:'Cofre da corporação',    ic:'coin',  d:'Terminou com 40% da verba inicial ou mais de reserva.' },
   { id:'porta',    nome:'Porta-voz',              ic:'mic',   d:'Falou com os stakeholders pelo menos 3 vezes e terminou com os quatro em 60 ou mais (50 ou mais no Caótico, que tem só duas decisões por rodada).' },
   { id:'degraus',  nome:'Um degrau por vez',      ic:'stairs',d:'Chegou ao degrau 4 ou mais sem nunca pular etapa.' },
   { id:'rodizio',  nome:'Equipe descansada',      ic:'tired', d:'Nenhum agente chegou a fator de fadiga abaixo de 0,7.' },
@@ -1249,7 +1249,7 @@ function newGame(diffKey, opts = {}) {
   const route = wpick(routes, wf);
   G = {
     ver: 2, diff: diffKey, code, rng: G.rng, noLimit: !!opts.noLimit, phase: 'briefing', stage: null, round: 0,
-    credits: CREDITOS_INICIAIS, spent: { rec: 0, equip: 0, intel: 0, ops: 0, plantao: 0 }, deficit: 0, tocLog: [], spendLog: [], creditsHist: [],
+    credits: D.verba, verba: D.verba, spent: { rec: 0, equip: 0, intel: 0, ops: 0, plantao: 0 }, deficit: 0, tocLog: [], spendLog: [], creditsHist: [],
     team: [], gear: [], az: {}, gz: {}, fat: {}, transit: {}, away: {}, camAdj: { plus: 'tat', minus: 'com' },
     profile: prof, agit: PROFILES[prof].start + (diffKey === 'caotico' ? 5 : diffKey === 'protocolar' ? -5 : 0),
     routes, route, routeNow: route, assail: ri(D.assail[0], D.assail[1]), accomplice: rnd() < .3,
@@ -1298,6 +1298,7 @@ function migrateSave(s) {
   s.deficit = s.deficit || 0; s.tocLog = s.tocLog || []; s.spendLog = s.spendLog || []; s.creditsHist = s.creditsHist || [];
   Object.keys(s.transit || {}).forEach(id => { const t = s.transit[id]; s.transit[id] = t === true ? 2 : t === false || t == null ? 0 : +t || 0; });
   if (s.tleft === undefined) s.tleft = null;   // L2.2: tempo que sobrava no cronômetro da rodada
+  if (s.verba === undefined) s.verba = 1000;   // até a v20, todas as dificuldades começavam com 1.000 créditos
   if (s.code === undefined) s.code = null; if (s.rng === undefined) s.rng = null;   // L2.5 refeita: partidas de antes do código da turma
   /* campos que só entraram depois: o que faltar ganha o valor neutro (a validação depois exige o tipo certo) */
   SAVE_NUMS.forEach(k => { if (s[k] === undefined) s[k] = 0; }); SAVE_BOOLS.forEach(k => { if (s[k] === undefined) s[k] = false; });
@@ -1361,7 +1362,7 @@ function validSave(s) {
   if (!isObj(s) || s.ver !== 2 || !has(DIFF, s.diff) || !has(PROFILES, s.profile) || !SAVE_PHASES.includes(s.phase)) return false;
   const late = s.phase === 'siege' || s.phase === 'outcome' || s.phase === 'post';
   if (!isInt(s.round, late ? 1 : 0, late ? MAX_ROUNDS : 0)) return false;
-  if (!isNum(s.credits, -1e5, 1e6) || ![s.agit, s.media, s.vault, s.pressure].every(v => isNum(v, 0, 100))) return false;
+  if (!isNum(s.credits, -1e5, 1e6) || !isNum(s.verba, 1, 1e6) || ![s.agit, s.media, s.vault, s.pressure].every(v => isNum(v, 0, 100))) return false;
   if (![s.team, s.gear, s.routes, s.queue, s.log, s.hist, s.tocLog, s.spendLog, s.hl, s.pendingIntel, s.hints, s.radio, s.usedEvents].every(Array.isArray)) return false;
   if (![s.hostages, s.nego, s.stk, s.K, s.az, s.gz, s.fat, s.transit, s.away, s.support, s.spent, s.stats, s.ev, s.p1intel, s.camAdj].every(isObj)) return false;
   // números e marcas que as fórmulas leem (um texto aqui viraria NaN na tela)
@@ -1708,7 +1709,7 @@ function stakeWeights() {
 }
 function confidence() { const w = stakeWeights(); return clamp(STK_KEYS.reduce((s, k) => s + G.stk[k].sat * w[k], 0) / 100, 0, 1); }
 /* Eficiência de custo (0–1): verba que sobrou ÷ verba inicial (60%) e rapidez do desfecho (40%). O HUD projeta o mesmo valor "se acabasse agora". */
-function eficienciaCusto() { return clamp(.6 * Math.min(1, Math.max(0, G.credits) / CREDITOS_INICIAIS) + .4 * (1 - (G.round - 1) / MAX_ROUNDS * .8), 0, 1); }
+function eficienciaCusto() { return clamp(.6 * Math.min(1, Math.max(0, G.credits) / G.verba) + .4 * (1 - (G.round - 1) / MAX_ROUNDS * .8), 0, 1); }
 function gradeOf(s) { return s >= 90 ? 'S' : s >= 80 ? 'A' : s >= 65 ? 'B' : s >= 50 ? 'C' : s >= 35 ? 'D' : 'F'; }
 function computeScore() {
   const E = G.end, H = G.hostages;
@@ -2434,7 +2435,7 @@ function budgetForecast(ids = G.team) {
   const intelAvg = Math.round(INTEL.reduce((s, i) => s + i.custo, 0) / INTEL.length);
   return { nField, per, total, free, intels: Math.max(0, Math.floor(free / intelAvg)), apoios: Math.max(0, Math.floor(free / APOIO_PRECOS[0])) };
 }
-/* Para onde foi o dinheiro: categorias do estoque inicial de 1.000 créditos */
+/* Para onde foi o dinheiro: categorias da verba inicial (a da dificuldade, G.verba) */
 function spendBreakdown() {
   const sp = G.spent, cut = sp.corte || 0;
   const cats = [
@@ -2584,7 +2585,7 @@ function badgeEarned(id) {
     case 'aposta': return (st.initCov[G.route] || 0) >= ADEQ && !st.routeKnownAtStart;
     case 'olhos': return knownCount() >= 5;
     case 'cofre': return G.vault < 40;
-    case 'economia': return G.credits >= 400;
+    case 'economia': return G.credits >= .4 * G.verba;   // 40% da verba inicial (até a v20, 400 de 1.000)
     case 'porta': return st.comms >= 3 && STK_KEYS.every(k => G.stk[k].sat >= DIFF[G.diff].porta);
     case 'degraus': return G.nego.maxStep >= 4 && G.nego.skips === 0;
     case 'rodizio': return st.minFF >= .7;
@@ -2771,7 +2772,7 @@ function renderMenu() {
     <button class="diffcard" role="radio" data-act="diff" data-v="${k}" aria-checked="${UI.diffSel === k}" tabindex="${UI.diffSel === k ? 0 : -1}" data-tip="${d.slots} decisões e ${d.timer} segundos por rodada · eventos em ${Math.round(d.evChance * 100)}% das rodadas · ${d.ops === 1 ? 'plantão padrão' : 'plantão ' + (d.ops < 1 ? '−' : '+') + Math.round(Math.abs(1 - d.ops) * 100) + '%'}">
       <span class="dot" aria-hidden="true"></span>
       <span><b class="dname">${d.nome}</b><span class="dblurb">${d.blurb}</span></span>
-      <span class="dparams">${d.slots} decisões<br>${d.timer} s</span>
+      <span class="dparams">${fmt(d.verba)} créditos<br>${d.slots} decisões<br>${d.timer} s</span>
     </button>`).join('');
   return `<div class="screen menu">
     <div class="sky">${skyline()}<i class="siren r"></i><i class="siren b"></i><i class="siren r2"></i><i class="siren b2"></i>
@@ -2814,7 +2815,7 @@ const menuBtn = () => '<button class="btn sm ghost hudmenu" type="button" data-a
 function tutorModal() {
   return `<div class="modalback"><div class="tutor" role="dialog" aria-modal="true" aria-labelledby="tutt">
     <h2 class="h3" id="tutt">Como funciona</h2>
-    <p class="muted"><b>1. Recrute</b> a equipe com 1.000 créditos. O que sobrar paga o <b>plantão</b> de cada rodada e as ações do cerco.</p>
+    <p class="muted"><b>1. Recrute</b> a equipe com a verba da dificuldade: ${Object.values(DIFF).map((d, i, a) => `${fmt(d.verba)}${i ? '' : ' créditos'} no ${d.nome}${i < a.length - 2 ? ', ' : i === a.length - 2 ? ' e ' : ''}`).join('')}. O que sobrar paga o <b>plantão</b> de cada rodada e as ações do cerco.</p>
     <p class="muted"><b>2. Posicione</b> agentes e equipamentos nas 7 zonas. Quatro podem ser rotas de fuga, e você não sabe quais.</p>
     <p class="muted"><b>3. Comande</b> 8 rodadas: leia o painel e escolha 2 ou 3 ações em <b>Tática, Negociação, Inteligência e Comunicação</b>.</p>
     <p class="muted"><b>4. A crise termina</b> em rendição, intervenção, fuga ou ultimato. A nota pesa vidas (40%), prisões (20%), valores (15%), custo (10%) e confiança (15%). Mortes, intervenção fracassada ou entrada com menos de 50% de chance limitam a nota.</p>
@@ -2884,12 +2885,12 @@ function renderRecruit() {
     <div class="hud"><div class="hudrow"><span class="brand">PERÍMETRO</span>${menuBtn()}<span class="pill">Recrutamento</span><span class="spacer"></span><div class="stat"><small>Créditos</small><b style="color:var(--amber)" data-k="cred" data-n="${Math.round(G.credits)}">${fmt(G.credits)}</b></div></div></div>
     <div class="recr">
       <div class="grid" style="gap:18px">
-        <div><h1 class="ptitle">Monte sua força-tarefa</h1><p class="muted" style="margin-bottom:12px"><span class="mono">14h12</span>. Mil créditos para a equipe e os equipamentos; quem você chamar chega em 15 minutos. O que sobrar paga o cerco.</p><div class="agents">${agents}</div></div>
+        <div><h1 class="ptitle">Monte sua força-tarefa</h1><p class="muted" style="margin-bottom:12px"><span class="mono">14h12</span>. ${fmt(G.verba)} créditos para a equipe e os equipamentos; quem você chamar chega em 15 minutos. O que sobrar paga o cerco.</p><div class="agents">${agents}</div></div>
         <div id="equip" class="anchor"><h2 class="eyebrow">Equipamentos</h2><div class="gear" style="margin-top:8px;grid-template-columns:repeat(auto-fill,minmax(280px,1fr))">${EQUIPMENT_HTML()}</div></div>
       </div>
       <aside class="side">
         <div class="card"><h3>Orçamento</h3><div class="credits num" data-k="cred2" data-n="${Math.round(G.credits)}">${fmt(G.credits)}</div>
-          <div class="stack" style="margin-top:10px" role="img" aria-label="Equipe ${G.spent.rec}, equipamento ${G.spent.equip}, reserva ${G.credits}"><i style="width:${G.spent.rec / 10}%;background:var(--blue)"></i><i style="width:${G.spent.equip / 10}%;background:var(--violet)"></i><i style="width:${G.credits / 10}%;background:${resCol}"></i></div>
+          <div class="stack" style="margin-top:10px" role="img" aria-label="Equipe ${G.spent.rec}, equipamento ${G.spent.equip}, reserva ${G.credits}"><i style="width:${G.spent.rec / G.verba * 100}%;background:var(--blue)"></i><i style="width:${G.spent.equip / G.verba * 100}%;background:var(--violet)"></i><i style="width:${G.credits / G.verba * 100}%;background:${resCol}"></i></div>
           <div class="stackleg"><span><i style="background:var(--blue)"></i>Equipe <b class="mono">${G.spent.rec}</b></span><span><i style="background:var(--violet)"></i>Equipamento <b class="mono">${G.spent.equip}</b></span><span><i style="background:${resCol}"></i>Reserva <b class="mono">${fmt(G.credits)}</b></span></div>
           ${G.team.length ? `<div style="margin-top:10px"><div class="fc"><span>Plantão</span><b class="mono">~${F.per}/rodada</b></div>
           <div class="fc ${F.free < 0 ? 'bad' : F.free < 60 ? 'warn' : 'ok'}"><span>Sobra para o cerco</span><b class="mono">${F.free < 0 ? '−' + Math.round(-F.free) : Math.round(F.free)}</b></div>
@@ -3077,7 +3078,7 @@ function endsleyHTML() {
       <div><div class="eyebrow">Agitação aparente</div>${spark(agNow, '#ff5468', true)}</div>
       <div><div class="eyebrow">Pressão da mídia</div>${spark(mdNow, '#f6a623', true)}</div>
       <div><div class="eyebrow">Atividade no cofre</div>${spark(vlNow.map(v => perceivedVault(v).exact ? v : perceivedVault(v).v), '#4da6ff', true)}</div>
-      <div><div class="eyebrow">Reserva de créditos (÷10)</div>${spark(creditSeries(), '#41d08f', true)}</div>
+      <div><div class="eyebrow">Reserva de créditos (% da verba)</div>${spark(creditSeries(), '#41d08f', true)}</div>
     </div>
     ${milestonesHTML()}
     ${ins(G.credits >= burnToEnd() ? 'good' : 'warn', 'coin', G.credits >= burnToEnd() ? `Reserva ${Math.round(G.credits)}: cobre o plantão até o fim e sobram ${Math.round(G.credits - burnToEnd())}.` : `Reserva ${Math.round(G.credits)}: faltam ${Math.round(burnToEnd() - G.credits)} para o plantão até o fim.`)}
@@ -3094,7 +3095,7 @@ function endsleyHTML() {
 /* ===================================================================
    OPERAÇÃO: gargalo, alertas, prévias
    =================================================================== */
-const creditSeries = () => { const h = Array.from({ length: G.round }, (_, i) => G.creditsHist[i + 1]).filter(Number.isFinite).map(v => v / 10); return h.length ? h : [G.credits / 10]; };   // L2.4: sem buracos nem nulos (save antigo, sem histórico de verba)
+const creditSeries = () => { const h = Array.from({ length: G.round }, (_, i) => G.creditsHist[i + 1]).filter(Number.isFinite).map(v => v / G.verba * 100); return h.length ? h : [G.credits / G.verba * 100]; };   // L2.4: sem buracos nem nulos (save antigo, sem histórico de verba)
 
 function gearNote(e) {
   const z = G.gz[e] || 'reserva', placed = z !== 'reserva', has = placed && agentsIn(z).length;
@@ -3377,7 +3378,7 @@ function renderResult() {
     deltaCell('Pressão da mídia', a.media, b.media, v => Math.round(v), false, 'a'),
     deltaCell('Cofre' + (pv1.exact ? '' : ' (estimado)'), pv0.v, pv1.v, v => Math.round(v) + '%', false, 'b'),
     deltaCell('Degrau da negociação', a.step * 20, b.step * 20, v => Math.round(v / 20) + '/5', true, 'g'),
-    deltaCell('Créditos', clamp(a.credits / 10, 0, 100), clamp(b.credits / 10, 0, 100), v => fmt(v * 10), true, 'a'),
+    deltaCell('Créditos', clamp(a.credits / G.verba * 100, 0, 100), clamp(b.credits / G.verba * 100, 0, 100), v => fmt(v * G.verba / 100), true, 'a'),
     deltaCell('Pressão da equipe', a.p, b.p, v => Math.round(v), false, 'v')
   ].join('');
   const last = !!G.end, exactA = G.nego.contact && G.K.profile;
@@ -3588,7 +3589,7 @@ function newsHTML() {
     <div class="cols">
       <p>PORTO ALTO — A crise que paralisou o centro da cidade na tarde desta sexta-feira terminou às ${t}, depois de ${hrs} ${plural(hrs, 'hora', 'horas')} de cerco à Agência Central do Banco Meridiano. Dos ${HOSTAGES} reféns, ${safe} ${plural(safe, 'saiu ileso', 'saíram ilesos')}${H.hurt ? `, ${H.hurt} ${plural(H.hurt, 'ficou ferido', 'ficaram feridos')}` : ''}${H.dead ? ` e ${H.dead} ${plural(H.dead, 'morreu', 'morreram')}` : ''}.${deadIds.length ? ` A polícia confirmou ${plural(deadIds.length, 'a morte de', 'as mortes de')} ${deadIds.map(id => `${HOST[id].nome}, ${HOST[id].idade} anos`).join('; ')}.` : ''}</p>
       <p>${E.type === 'rendicao' ? `Segundo a polícia, a negociação foi decisiva. A conversa com o líder do grupo chegou ao degrau ${nsteps} de um processo de cinco etapas, da escuta ativa ao acordo sobre a saída, e a rendição foi acertada sem disparos.` : E.type === 'fuga' ? `Os assaltantes tentaram deixar o local por ${z}${E.adapted ? ' depois de mudarem o plano inicial' : ''}. ${E.variant === 'barrada' ? `A cobertura da zona, de ${E.cov}%, impediu a saída.` : E.variant === 'perseguicao' ? 'A perseguição foi encerrada na Avenida Principal.' : `A cobertura da zona era de ${E.cov}% e não impediu a fuga.`}` : E.type === 'prazo' ? `Ao fim do prazo estipulado pelos assaltantes, ${E.variant === 'cedeu' ? 'o líder do grupo aceitou se render' + (G.nego.tries ? ', depois de uma negociação que chegou ao degrau ' + nsteps : ', sem que tivesse havido conversa com o comando') : 'o comando autorizou a entrada na agência'}.` : `A operação foi autorizada na rodada ${G.round}${E.forced ? ', sob determinação do gabinete do prefeito' : ''}. ${v === 'limpa' ? (knownCount() >= 3 ? 'Segundo fontes, a informação reunida antes da entrada foi decisiva para o resultado.' : 'Segundo fontes, a entrada foi rápida e encontrou pouca resistência.') : v === 'fracasso' ? (knownCount() >= 4 ? 'Fontes do isolamento afirmam que o interior reagiu com mais força do que o previsto.' : 'Fontes do isolamento afirmam que faltou informação sobre o interior.') : 'Houve resistência no interior e a situação levou alguns minutos para ser contida.'}`}</p>
-      <p>${vaultSentence()} A operação consumiu ${Math.round((1000 - G.credits) / 10)}% da verba disponível${G.credits < 100 ? ', deixando o comando praticamente sem margem' : ''}.${(E.agentsHurt || []).length ? ` ${E.agentsHurt.length} ${plural(E.agentsHurt.length, 'agente da força-tarefa ficou ferido', 'agentes da força-tarefa ficaram feridos')} na entrada.` : ''}${(G.stats.leaks || 0) ? ` Durante o cerco, ${G.stats.leaks > 1 ? G.stats.leaks + ' comunicados do comando vazaram ou foram desmentidos' : 'um comunicado do comando vazou ou foi desmentido'}, o que alimentou a cobertura.` : ''}</p>
+      <p>${vaultSentence()} A operação consumiu ${Math.round((G.verba - G.credits) / G.verba * 100)}% da verba disponível${G.credits < 100 ? ', deixando o comando praticamente sem margem' : ''}.${(E.agentsHurt || []).length ? ` ${E.agentsHurt.length} ${plural(E.agentsHurt.length, 'agente da força-tarefa ficou ferido', 'agentes da força-tarefa ficaram feridos')} na entrada.` : ''}${(G.stats.leaks || 0) ? ` Durante o cerco, ${G.stats.leaks > 1 ? G.stats.leaks + ' comunicados do comando vazaram ou foram desmentidos' : 'um comunicado do comando vazou ou foi desmentido'}, o que alimentou a cobertura.` : ''}</p>
       ${quotes.join('')}
       <div class="box"><b>Perfil do líder</b>Segundo investigadores, o líder do grupo agia com perfil <i>${PR_().nome.toLowerCase()}</i>. ${PR_().desc} A polícia não divulgou nomes.</div>
       <h3>${edit[0]}</h3><p>${edit[1]}</p>
@@ -3620,11 +3621,11 @@ function chartSVG() {
 const hasPrep = () => !!G.stats && isObj(G.stats.initCov) && ZONES.every(z => typeof G.stats.initCov[z.id] === 'number');
 function prepHTML() {
   const st = G.stats, hires = G.team.filter(id => !agentById(id).generic), p1 = Object.keys(G.p1intel).map(k => INTEL.find(i => i.id === k)).filter(Boolean);
-  const reserve = CREDITOS_INICIAIS - G.spent.rec - G.spent.equip - p1.reduce((s, i) => s + intelCost(i.id), 0);
+  const reserve = G.verba - G.spent.rec - G.spent.equip - p1.reduce((s, i) => s + intelCost(i.id), 0);
   const sec = (t, body) => `<div class="eyebrow">${t}</div><div class="row" style="margin:6px 0 14px">${body}</div>`;
   const pill = (t, c, a = '') => `<span class="pill ${c}"${a}>${t}</span>`;
   return `<div class="card"><h2 class="h3">Preparação · 14h12 a ${fmtTime(1)}</h2>
-    <p class="muted" style="margin:0 0 14px;font-size:13.5px">Antes do primeiro relógio do cerco: o que você montou com os ${fmt(CREDITOS_INICIAIS)} créditos. Esta fase também decide o resultado.</p>
+    <p class="muted" style="margin:0 0 14px;font-size:13.5px">Antes do primeiro relógio do cerco: o que você montou com os ${fmt(G.verba)} créditos. Esta fase também decide o resultado.</p>
     ${sec('Equipe contratada · custo em créditos', hires.length ? hires.map(id => pill(`${shortName(agentById(id).nome)} · ${agentById(id).custo}`, 'blue', ` data-ag="${id}"`)).join('') : '<span class="muted">Ninguém contratado: só a guarnição local, dois patrulheiros de nível básico.</span>')}
     ${sec('Equipamentos', G.gear.length ? G.gear.map(e => pill(`${EQ[e].nome} · ${EQ[e].custo}`, 'blue')).join('') : '<span class="muted">Nenhum equipamento comprado.</span>')}
     ${sec('Investigação antes do cerco', p1.length ? p1.map(i => { const r = G.p1intel[i.id], ok = !!(r && r.ok); return pill(`${i.nome} · ${intelCost(i.id)} · ${ok ? 'confirmado' : 'inconclusivo'}`, ok ? 'green' : 'amber'); }).join('') : '<span class="muted">Nenhuma investigação: o cerco começou às cegas.</span>')}
@@ -3665,7 +3666,7 @@ function econHTML() {
     : `Só ${al.hit} de ${al.n} ordens miraram o gargalo do momento. Muito esforço foi para onde a corrente já era forte.`;
   return `<div class="card econ"><h2 class="h3">Dinheiro e gargalos: o que a operação custou</h2>
     <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:20px">
-      <div><div class="eyebrow">Para onde foram os 1.000 créditos</div>
+      <div><div class="eyebrow">Para onde foram os ${fmt(G.verba)} créditos</div>
         <div class="stack" style="margin-top:8px" role="img" aria-label="Distribuição dos gastos">${cats.filter(c => c.v > 0).map(c => `<i style="width:${c.v / tot * 100}%;background:${c.c}" title="${c.k}: ${Math.round(c.v)}"></i>`).join('')}</div>
         <div class="stackleg">${cats.filter(c => c.v > 0).map(c => `<span><i style="background:${c.c}"></i>${c.k} <b class="mono">${Math.round(c.v)}</b></span>`).join('')}</div>
         <div class="kv" style="margin-top:12px"><div><small>Plantão pago</small><b>${fmt(sp.plantao)}</b></div><div><small>Decisões pagas</small><b>${fmt(decis)}</b></div><div><small>Rodadas no vermelho</small><b>${G.deficit}</b></div><div><small>Reserva final</small><b>${fmt(G.credits)}</b></div></div>

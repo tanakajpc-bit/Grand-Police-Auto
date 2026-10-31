@@ -369,7 +369,7 @@ function auditPontuacao() {
   for (const nAg of [0, 1, 2, 3]) for (const raw of [100, 80, 40]) {
     const G = fresh('complexo', 3, ['renata', 'diego', 'marcos'], []); startSiege();
     G.end = { type: 'intervencao', variant: 'limpa', captured: 1, lootF: .3, P: .8, forced: false, agentsHurt: G.team.slice(0, nAg) };
-    G.hostages.dead = 0; G.hostages.hurt = 0; G.vault = 0; G.credits = 1000; G.round = 1; A.STK_KEYS.forEach(k => G.stk[k].sat = raw);
+    G.hostages.dead = 0; G.hostages.hurt = 0; G.vault = 0; G.credits = A.DIFF[G.diff].verba; G.round = 1; A.STK_KEYS.forEach(k => G.stk[k].sat = raw);
     const S = A.computeScore(); const exp = Math.max(0, Math.round((Math.min(S.raw, S.cap) - 10 * nAg) * 10) / 10);
     if (Math.abs(S.total - exp) > 1e-9 || S.penal !== 10 * nAg) pBad++;
   }

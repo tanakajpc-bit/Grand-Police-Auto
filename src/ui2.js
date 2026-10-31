@@ -99,7 +99,7 @@ function endsleyHTML() {
       <div><div class="eyebrow">Agitação aparente</div>${spark(agNow, '#ff5468', true)}</div>
       <div><div class="eyebrow">Pressão da mídia</div>${spark(mdNow, '#f6a623', true)}</div>
       <div><div class="eyebrow">Atividade no cofre</div>${spark(vlNow.map(v => perceivedVault(v).exact ? v : perceivedVault(v).v), '#4da6ff', true)}</div>
-      <div><div class="eyebrow">Reserva de créditos (÷10)</div>${spark(creditSeries(), '#41d08f', true)}</div>
+      <div><div class="eyebrow">Reserva de créditos (% da verba)</div>${spark(creditSeries(), '#41d08f', true)}</div>
     </div>
     ${milestonesHTML()}
     ${ins(G.credits >= burnToEnd() ? 'good' : 'warn', 'coin', G.credits >= burnToEnd() ? `Reserva ${Math.round(G.credits)}: cobre o plantão até o fim e sobram ${Math.round(G.credits - burnToEnd())}.` : `Reserva ${Math.round(G.credits)}: faltam ${Math.round(burnToEnd() - G.credits)} para o plantão até o fim.`)}
@@ -116,7 +116,7 @@ function endsleyHTML() {
 /* ===================================================================
    OPERAÇÃO: gargalo, alertas, prévias
    =================================================================== */
-const creditSeries = () => { const h = Array.from({ length: G.round }, (_, i) => G.creditsHist[i + 1]).filter(Number.isFinite).map(v => v / 10); return h.length ? h : [G.credits / 10]; };   // L2.4: sem buracos nem nulos (save antigo, sem histórico de verba)
+const creditSeries = () => { const h = Array.from({ length: G.round }, (_, i) => G.creditsHist[i + 1]).filter(Number.isFinite).map(v => v / G.verba * 100); return h.length ? h : [G.credits / G.verba * 100]; };   // L2.4: sem buracos nem nulos (save antigo, sem histórico de verba)
 
 function gearNote(e) {
   const z = G.gz[e] || 'reserva', placed = z !== 'reserva', has = placed && agentsIn(z).length;
@@ -399,7 +399,7 @@ function renderResult() {
     deltaCell('Pressão da mídia', a.media, b.media, v => Math.round(v), false, 'a'),
     deltaCell('Cofre' + (pv1.exact ? '' : ' (estimado)'), pv0.v, pv1.v, v => Math.round(v) + '%', false, 'b'),
     deltaCell('Degrau da negociação', a.step * 20, b.step * 20, v => Math.round(v / 20) + '/5', true, 'g'),
-    deltaCell('Créditos', clamp(a.credits / 10, 0, 100), clamp(b.credits / 10, 0, 100), v => fmt(v * 10), true, 'a'),
+    deltaCell('Créditos', clamp(a.credits / G.verba * 100, 0, 100), clamp(b.credits / G.verba * 100, 0, 100), v => fmt(v * G.verba / 100), true, 'a'),
     deltaCell('Pressão da equipe', a.p, b.p, v => Math.round(v), false, 'v')
   ].join('');
   const last = !!G.end, exactA = G.nego.contact && G.K.profile;

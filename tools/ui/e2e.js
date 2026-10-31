@@ -71,7 +71,7 @@ async function main() {
   if ((await S()).cut) { const t = await checkText('cut-2'); cut2 = (t.match(/\b\d{2}h\d{2}\b/) || [])[0]; await clickAct('[data-act=cutgo]'); }
   // o relógio nunca volta no tempo: verba (recrutamento) → chegada da equipe (15 min depois) → perímetro fechado → rodada 1
   await page.waitForTimeout(100);
-  const verba = (recT.match(/(\d{2}h\d{2})\. Mil créditos/) || [])[1], hud1 = await page.evaluate(() => { const e = [...document.querySelectorAll('.stat')].find(x => /hora/i.test(x.innerText)); return e ? (e.innerText.match(/\d{2}h\d{2}/) || [])[0] : null; });
+  const verba = (recT.match(/(\d{2}h\d{2})\. [\d.]+ créditos/) || [])[1], hud1 = await page.evaluate(() => { const e = [...document.querySelectorAll('.stat')].find(x => /hora/i.test(x.innerText)); return e ? (e.innerText.match(/\d{2}h\d{2}/) || [])[0] : null; });
   log.push(`relógio: verba ${verba} · equipe chega ${cut1} · perímetro fechado ${cut2} · rodada 1 ${hud1}`);
   if (minDe(verba) == null || minDe(cut1) == null || minDe(cut2) == null || minDe(hud1) == null) problems.push(`relógio ausente: ${verba}/${cut1}/${cut2}/${hud1}`);
   else {

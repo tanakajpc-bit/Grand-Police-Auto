@@ -139,8 +139,8 @@ function gazeta(rec, F) {
   if (H.dead && (Ed.type === 'rendicao' || (interv && v !== 'fracasso'))) ck(/MORT/.test(hl), 'manchete cita os mortos', hl);
   // cofre, verba, agentes, vazamentos
   ck(t.includes(cofreFrase(G.vault)), 'frase do cofre pela faixa real', `${G.vault}`);
-  const usado = Math.round((1000 - G.credits) / 10);
-  ck(t.includes(`A operação consumiu ${usado}% da verba disponível`) && t.includes('praticamente sem margem') === (G.credits < 100), 'verba consumida = (1.000 − créditos) ÷ 10', `${usado}% com ${G.credits}`);
+  const verba = A.DIFF[G.diff].verba, usado = Math.round((verba - G.credits) / verba * 100);
+  ck(t.includes(`A operação consumiu ${usado}% da verba disponível`) && t.includes('praticamente sem margem') === (G.credits < 100), 'verba consumida = (verba da dificuldade − créditos) ÷ verba', `${usado}% com ${G.credits} de ${verba}`);
   const ah = (Ed.agentsHurt || []).length, ma = t.match(/(\d+) (agente da força-tarefa ficou ferido|agentes da força-tarefa ficaram feridos) na entrada/);
   ck(ah ? !!ma && +ma[1] === ah && (ah === 1) === /ficou ferido/.test(ma[2]) : !ma, 'agentes feridos na entrada', `${ah} × ${ma ? ma[0] : 'nada'}`);
   const lk = G.stats.leaks || 0;
@@ -271,7 +271,7 @@ function selos(rec, F) {
     aposta: rec.prep.covRoute >= 60 && !rec.prep.rotaConhecida,
     olhos: knownFlags(G.K).filter(Boolean).length >= 5,
     cofre: G.vault < 40,
-    economia: G.credits >= 400,
+    economia: G.credits >= .4 * A.DIFF[G.diff].verba,
     porta: F.comms >= 3 && A.STK_KEYS.every(k => G.stk[k].sat >= (diff === 'caotico' ? 50 : 60)),
     degraus: F.maxStep >= 4 && F.skips === 0,
     rodizio: G.stats.minFF >= .7,
@@ -322,8 +322,8 @@ function replay(rec, F) {
   ck(/Preparação/.test(t0) && nomes.every(n => t0.includes(n)) && rec.prep.gear.every(e => t0.includes(A.EQUIP.find(x => x.id === e).nome)), 'preparação (R0) mostra equipe e equipamentos escolhidos', t0.slice(0, 120));
   ck(Object.keys(rec.prep.p1).every(k => t0.includes(A.INTEL.find(i => i.id === k).nome)), 'preparação (R0) mostra a investigação prévia', Object.keys(rec.prep.p1).join(','));
   ck(A.ZONES.every(z => t0.includes(`${z.curto} ${G.stats.initCov[z.id]}%`)), 'preparação (R0) mostra a cobertura inicial de cada zona', '');
-  const reserva = 1000 - rec.prep.spent.rec - rec.prep.spent.equip - sum(Object.keys(rec.prep.p1).map(k => Math.round(A.INTEL.find(i => i.id === k).custo * (rec.prep.team.includes('sofia') ? .8 : 1))));
-  ck(inc(t0, `Reserva ao iniciar o cerco: ${reserva.toLocaleString('pt-BR')} créditos`), 'preparação (R0) mostra a reserva com que o cerco começa (1.000 − equipe − equipamentos − investigação prévia)', `${reserva}`);
+  const reserva = A.DIFF[G.diff].verba - rec.prep.spent.rec - rec.prep.spent.equip - sum(Object.keys(rec.prep.p1).map(k => Math.round(A.INTEL.find(i => i.id === k).custo * (rec.prep.team.includes('sofia') ? .8 : 1))));
+  ck(inc(t0, `Reserva ao iniciar o cerco: ${reserva.toLocaleString('pt-BR')} créditos`), 'preparação (R0) mostra a reserva com que o cerco começa (verba da dificuldade − equipe − equipamentos − investigação prévia)', `${reserva}`);
   function nodeR0() { return /data-r="0"/.test(A.replayHTML()); }
 }
 
@@ -394,8 +394,8 @@ function debrief(rec, F) {
     const dica = { vidas: 'abrir a negociação já na rodada 1', 'prisões': 'cobrir mais as rotas candidatas', valores: 'reduzir o ritmo do cofre', 'eficiência': 'enxugar o que se contrata', 'confiança': 'falar com os stakeholders mais cedo' }[pior[0]];
     ck(t.includes('Na próxima partida, tente ' + dica), 'sugestão da próxima partida pela dimensão mais fraca', pior[0]);
   }
-  // dinheiro: a verba fecha em 1.000 e o debrief mostra as mesmas parcelas
-  const cats = A.spendBreakdown(); ck(Math.abs(sum(cats.map(x => x.v)) - 1000) < 1e-6, 'a verba fecha: equipe + equipamento + inteligência + plantão + extras + corte + reserva = 1.000', `${sum(cats.map(x => x.v))} ${JSON.stringify(cats.map(x => [x.k, x.v]))}`);
+  // dinheiro: a verba fecha na da dificuldade e o debrief mostra as mesmas parcelas
+  const cats = A.spendBreakdown(); ck(Math.abs(sum(cats.map(x => x.v)) - A.DIFF[G.diff].verba) < 1e-6 && G.verba === A.DIFF[G.diff].verba, 'a verba fecha: equipe + equipamento + inteligência + plantão + extras + corte + reserva = verba da dificuldade', `${sum(cats.map(x => x.v))} ${JSON.stringify(cats.map(x => [x.k, x.v]))}`);
   ck(G.spent.rec === sum(rec.prep.team.map(id => A.agentById(id).custo)) && G.spent.equip === sum(rec.prep.gear.map(e => A.EQUIP.find(x => x.id === e).custo)), 'gasto com equipe e equipamentos = preços dos escolhidos', `${G.spent.rec}/${G.spent.equip}`);
 }
 
@@ -426,8 +426,8 @@ function selosNasBordas() {
   [[4, false], [5, true], [6, true]].forEach(([n, esp]) => tenta('olhos', G => { G.K.profile = G.K.count = G.K.vault = G.K.hostages = G.K.accomplice = false; G.K.route = null; ['profile', 'route', 'count', 'vault', 'hostages', 'accomplice'].slice(0, n).forEach(k => { G.K[k] = k === 'route' ? G.routeNow : true; }); }, esp, `${n} variáveis`));
   // Cofre intacto: abaixo de 40
   [[39.9, true], [40, false]].forEach(([v, esp]) => tenta('cofre', G => { G.vault = v; }, esp, `cofre ${v}`));
-  // Economia: 400 ou mais
-  [[399, false], [400, true]].forEach(([c, esp]) => tenta('economia', G => { G.credits = c; }, esp, `${c} créditos`));
+  // Economia: 40% da verba da dificuldade ou mais (720 / 600 / 500)
+  [['protocolar', 719, false], ['protocolar', 720, true], ['complexo', 599, false], ['complexo', 600, true], ['caotico', 499, false], ['caotico', 500, true]].forEach(([d, c, esp]) => tenta('economia', G => { G.diff = d; G.verba = A.DIFF[d].verba; G.credits = c; }, esp, `${c} créditos no ${d}`));
   // Porta-voz: 3 falas e os quatro em 60 (50 no Caótico)
   [['complexo', 2, 70, false], ['complexo', 3, 59.9, false], ['complexo', 3, 60, true], ['caotico', 3, 50, true], ['caotico', 3, 49.9, false], ['protocolar', 3, 60, true]].forEach(([d, n, s, esp]) => tenta('porta', G => { G.diff = d; G.stats.comms = n; A.STK_KEYS.forEach(k => { G.stk[k].sat = s; }); }, esp, `${d}, ${n} falas, todos em ${s}`));
   // Um degrau por vez: degrau 4+ sem pular

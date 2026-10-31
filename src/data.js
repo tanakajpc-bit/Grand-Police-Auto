@@ -27,11 +27,11 @@ const ADEQ = 60;                  // cobertura "adequada"
 /* ---------- ECONOMIA (L1.3): a verba é um fluxo, não só um estoque ----------
    Custo de plantão: cada rodada o posto de comando paga a operação (base + agentes em campo), escalado pela dificuldade.
    Quem descansa na reserva ou foi reconvocado não custa plantão: rodízio economiza verba, mas abre zonas.
-   Apoio externo encarece a cada uso (urgência tem preço crescente); horas extras custam proporcional ao efetivo em campo. */
+   Apoio externo encarece a cada uso (urgência tem preço crescente); horas extras custam proporcional ao efetivo em campo.
+   A verba inicial depende da dificuldade (DIFF.verba: 1.800 / 1.500 / 1.250 desde a v21; antes, 1.000 em todas) e fica gravada na partida (G.verba). */
 const PLANTAO_BASE = 4, PLANTAO_AGENTE = 2;
 const APOIO_PRECOS = [90, 110, 135];
 const HORAS_BASE = 20, HORAS_AGENTE = 8;
-const CREDITOS_INICIAIS = 1000;
 /* BATNA (L2.3 refeita): a melhor alternativa do líder a um acordo é fugir pela rota que ele planejou. Com ela aberta (cobertura abaixo de 30%)
    ele cede menos, até −6 pontos na chance de avançar; com ela bem fechada ele perde a saída, até +14. O documento pede que o perímetro mude o
    poder de barganha; até a v17 contava a média das quatro rotas candidatas (de 0 a +10) e quem não fechava rota nenhuma quase não sentia. */
@@ -161,11 +161,11 @@ const PROFILES = {
 
 /* ---------- DIFICULDADE ---------- */
 const DIFF = {
-  protocolar: { nome:'Protocolar', slots:3, porta:60, ops:.7, timer:150, lev:.30, dist:.24, ivp:-.03, agit:-1, evChance:.35, media:.85, vault:.85, stk:65, desp:.8, pbase:25, intel:.00, fat:.9,  lethal:.7, ret:55, hostile:0, assail:[2,3],
+  protocolar: { nome:'Protocolar', verba:1800, slots:3, porta:60, ops:.7, timer:150, lev:.30, dist:.24, ivp:-.03, agit:-1, evChance:.35, media:.85, vault:.85, stk:65, desp:.8, pbase:25, intel:.00, fat:.9,  lethal:.7, ret:55, hostile:0, assail:[2,3],
     blurb:'Para aprender: tempo folgado e líder receptivo.' },
-  complexo:   { nome:'Complexo',   slots:3, porta:60, ops:1,  timer:100, lev:.30, dist:.29, ivp:-.10, agit:0,  evChance:.55, media:1.0,  vault:1.0,  stk:58, desp:1.0, pbase:30, intel:.00, fat:1.0, lethal:1.0, ret:45, hostile:0, assail:[2,4],
+  complexo:   { nome:'Complexo',   verba:1500, slots:3, porta:60, ops:1,  timer:100, lev:.30, dist:.29, ivp:-.10, agit:0,  evChance:.55, media:1.0,  vault:1.0,  stk:58, desp:1.0, pbase:30, intel:.00, fat:1.0, lethal:1.0, ret:45, hostile:0, assail:[2,4],
     blurb:'Recomendado: tempo apertado e eventos frequentes.' },
-  caotico:    { nome:'Caótico',    slots:2, porta:50, ops:1.3,timer:65,  lev:.275, dist:.36, ivp:-.17, agit:2,  evChance:.80, media:1.2,  vault:1.2,  stk:58, desp:1.25,pbase:38, intel:-.10,fat:1.25,lethal:1.3, ret:45, hostile:1, assail:[3,4],
+  caotico:    { nome:'Caótico',    verba:1250, slots:2, porta:50, ops:1.3,timer:65,  lev:.275, dist:.36, ivp:-.17, agit:2,  evChance:.80, media:1.2,  vault:1.2,  stk:58, desp:1.25,pbase:38, intel:-.10,fat:1.25,lethal:1.3, ret:45, hostile:1, assail:[3,4],
     ncalm:1.3, negoFloor:.7, adaptAt:50, adaptMin:.4, violent:.75,
     blurb:'Duas decisões por rodada e pressão máxima.' }
 };
@@ -275,7 +275,7 @@ const BADGES = [
   { id:'aposta',   nome:'Aposta certa',           ic:'scope', d:'A rota de fuga real estava com cobertura adequada desde o perímetro, antes de ser revelada.' },
   { id:'olhos',    nome:'Olhos abertos',          ic:'eye',   d:'Terminou com 5 das 6 variáveis ocultas reveladas.' },
   { id:'cofre',    nome:'Cofre intacto',          ic:'bank',  d:'Encerrou com o cofre abaixo de 40% de progresso.' },
-  { id:'economia', nome:'Cofre da corporação',    ic:'coin',  d:'Terminou com 400 créditos ou mais de reserva.' },
+  { id:'economia', nome:'Cofre da corporação',    ic:'coin',  d:'Terminou com 40% da verba inicial ou mais de reserva.' },
   { id:'porta',    nome:'Porta-voz',              ic:'mic',   d:'Falou com os stakeholders pelo menos 3 vezes e terminou com os quatro em 60 ou mais (50 ou mais no Caótico, que tem só duas decisões por rodada).' },
   { id:'degraus',  nome:'Um degrau por vez',      ic:'stairs',d:'Chegou ao degrau 4 ou mais sem nunca pular etapa.' },
   { id:'rodizio',  nome:'Equipe descansada',      ic:'tired', d:'Nenhum agente chegou a fator de fadiga abaixo de 0,7.' },

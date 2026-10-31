@@ -41,7 +41,7 @@ function newGame(diffKey, opts = {}) {
   const route = wpick(routes, wf);
   G = {
     ver: 2, diff: diffKey, code, rng: G.rng, noLimit: !!opts.noLimit, phase: 'briefing', stage: null, round: 0,
-    credits: CREDITOS_INICIAIS, spent: { rec: 0, equip: 0, intel: 0, ops: 0, plantao: 0 }, deficit: 0, tocLog: [], spendLog: [], creditsHist: [],
+    credits: D.verba, verba: D.verba, spent: { rec: 0, equip: 0, intel: 0, ops: 0, plantao: 0 }, deficit: 0, tocLog: [], spendLog: [], creditsHist: [],
     team: [], gear: [], az: {}, gz: {}, fat: {}, transit: {}, away: {}, camAdj: { plus: 'tat', minus: 'com' },
     profile: prof, agit: PROFILES[prof].start + (diffKey === 'caotico' ? 5 : diffKey === 'protocolar' ? -5 : 0),
     routes, route, routeNow: route, assail: ri(D.assail[0], D.assail[1]), accomplice: rnd() < .3,
@@ -90,6 +90,7 @@ function migrateSave(s) {
   s.deficit = s.deficit || 0; s.tocLog = s.tocLog || []; s.spendLog = s.spendLog || []; s.creditsHist = s.creditsHist || [];
   Object.keys(s.transit || {}).forEach(id => { const t = s.transit[id]; s.transit[id] = t === true ? 2 : t === false || t == null ? 0 : +t || 0; });
   if (s.tleft === undefined) s.tleft = null;   // L2.2: tempo que sobrava no cronômetro da rodada
+  if (s.verba === undefined) s.verba = 1000;   // até a v20, todas as dificuldades começavam com 1.000 créditos
   if (s.code === undefined) s.code = null; if (s.rng === undefined) s.rng = null;   // L2.5 refeita: partidas de antes do código da turma
   /* campos que só entraram depois: o que faltar ganha o valor neutro (a validação depois exige o tipo certo) */
   SAVE_NUMS.forEach(k => { if (s[k] === undefined) s[k] = 0; }); SAVE_BOOLS.forEach(k => { if (s[k] === undefined) s[k] = false; });
@@ -153,7 +154,7 @@ function validSave(s) {
   if (!isObj(s) || s.ver !== 2 || !has(DIFF, s.diff) || !has(PROFILES, s.profile) || !SAVE_PHASES.includes(s.phase)) return false;
   const late = s.phase === 'siege' || s.phase === 'outcome' || s.phase === 'post';
   if (!isInt(s.round, late ? 1 : 0, late ? MAX_ROUNDS : 0)) return false;
-  if (!isNum(s.credits, -1e5, 1e6) || ![s.agit, s.media, s.vault, s.pressure].every(v => isNum(v, 0, 100))) return false;
+  if (!isNum(s.credits, -1e5, 1e6) || !isNum(s.verba, 1, 1e6) || ![s.agit, s.media, s.vault, s.pressure].every(v => isNum(v, 0, 100))) return false;
   if (![s.team, s.gear, s.routes, s.queue, s.log, s.hist, s.tocLog, s.spendLog, s.hl, s.pendingIntel, s.hints, s.radio, s.usedEvents].every(Array.isArray)) return false;
   if (![s.hostages, s.nego, s.stk, s.K, s.az, s.gz, s.fat, s.transit, s.away, s.support, s.spent, s.stats, s.ev, s.p1intel, s.camAdj].every(isObj)) return false;
   // números e marcas que as fórmulas leem (um texto aqui viraria NaN na tela)
@@ -500,7 +501,7 @@ function stakeWeights() {
 }
 function confidence() { const w = stakeWeights(); return clamp(STK_KEYS.reduce((s, k) => s + G.stk[k].sat * w[k], 0) / 100, 0, 1); }
 /* Eficiência de custo (0–1): verba que sobrou ÷ verba inicial (60%) e rapidez do desfecho (40%). O HUD projeta o mesmo valor "se acabasse agora". */
-function eficienciaCusto() { return clamp(.6 * Math.min(1, Math.max(0, G.credits) / CREDITOS_INICIAIS) + .4 * (1 - (G.round - 1) / MAX_ROUNDS * .8), 0, 1); }
+function eficienciaCusto() { return clamp(.6 * Math.min(1, Math.max(0, G.credits) / G.verba) + .4 * (1 - (G.round - 1) / MAX_ROUNDS * .8), 0, 1); }
 function gradeOf(s) { return s >= 90 ? 'S' : s >= 80 ? 'A' : s >= 65 ? 'B' : s >= 50 ? 'C' : s >= 35 ? 'D' : 'F'; }
 function computeScore() {
   const E = G.end, H = G.hostages;

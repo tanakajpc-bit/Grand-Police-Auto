@@ -38,7 +38,7 @@ function budgetForecast(ids = G.team) {
   const intelAvg = Math.round(INTEL.reduce((s, i) => s + i.custo, 0) / INTEL.length);
   return { nField, per, total, free, intels: Math.max(0, Math.floor(free / intelAvg)), apoios: Math.max(0, Math.floor(free / APOIO_PRECOS[0])) };
 }
-/* Para onde foi o dinheiro: categorias do estoque inicial de 1.000 créditos */
+/* Para onde foi o dinheiro: categorias da verba inicial (a da dificuldade, G.verba) */
 function spendBreakdown() {
   const sp = G.spent, cut = sp.corte || 0;
   const cats = [
@@ -188,7 +188,7 @@ function badgeEarned(id) {
     case 'aposta': return (st.initCov[G.route] || 0) >= ADEQ && !st.routeKnownAtStart;
     case 'olhos': return knownCount() >= 5;
     case 'cofre': return G.vault < 40;
-    case 'economia': return G.credits >= 400;
+    case 'economia': return G.credits >= .4 * G.verba;   // 40% da verba inicial (até a v20, 400 de 1.000)
     case 'porta': return st.comms >= 3 && STK_KEYS.every(k => G.stk[k].sat >= DIFF[G.diff].porta);
     case 'degraus': return G.nego.maxStep >= 4 && G.nego.skips === 0;
     case 'rodizio': return st.minFF >= .7;

@@ -77,7 +77,7 @@ function pontuacao(G) {
   if (G.round >= 6) w.prefeito += .08;
   const t = sum(Object.values(w)); Object.keys(w).forEach(k => { w[k] /= t; });
   const vidas = clamp(1 - (2.5 * H.dead + .5 * H.hurt) / 17, 0, 1), captura = clamp(E.captured, 0, 1), valores = clamp(1 - E.lootF * G.vault / 100, 0, 1);
-  const efic = clamp(.6 * Math.min(1, Math.max(0, G.credits) / 1000) + .4 * (1 - (G.round - 1) / 8 * .8), 0, 1);
+  const efic = clamp(.6 * Math.min(1, Math.max(0, G.credits) / A.DIFF[G.diff].verba) + .4 * (1 - (G.round - 1) / 8 * .8), 0, 1);
   const conf = clamp(sum(Object.keys(w).map(k => G.stk[k].sat * w[k])) / 100, 0, 1);
   const raw = Math.min(100, (vidas * .40 + captura * .20 + valores * .15 + efic * .10 + conf * .15) * 100);
   const penal = 10 * (E.agentsHurt ? E.agentsHurt.length : 0);
@@ -120,8 +120,9 @@ function joga(titulo, diff, perfil, mkPol, estrategia, minRodadas, tipo) {
   P(`- Equipe: ${G.team.map(id => `${NM(id)} (${A.agentById(id).custo})`).join(', ') || '—'} = ${custoAg} créditos.`);
   P(`- Equipamento: ${G.gear.map(e => `${A.EQUIP.find(x => x.id === e).nome} (${A.EQUIP.find(x => x.id === e).custo})`).join(', ') || '—'} = ${custoEq} créditos.`);
   P(`- Inteligência antes do cerco: ${p1.length ? p1.map(k => `${A.INTEL.find(i => i.id === k).nome} (${typeof G.p1intel[k] === 'object' ? (G.p1intel[k].ok ? 'confirmada' : 'inconclusiva') : '?'})`).join(', ') + ' = ' + custoP1 + ' créditos' : 'nenhuma'}.`);
-  P(`- Conta: 1.000 − ${custoAg} − ${custoEq} − ${custoP1} = ${1000 - custoAg - custoEq - custoP1}; o motor tem ${G.credits}.`);
-  ck(G.credits === 1000 - custoAg - custoEq - custoP1, 'créditos após o recrutamento = 1.000 − equipe − equipamento − inteligência');
+  const verba = A.DIFF[G.diff].verba;
+  P(`- Conta: ${verba.toLocaleString('pt-BR')} (verba do ${A.DIFF[G.diff].nome}) − ${custoAg} − ${custoEq} − ${custoP1} = ${verba - custoAg - custoEq - custoP1}; o motor tem ${G.credits}.`);
+  ck(G.verba === verba && G.credits === verba - custoAg - custoEq - custoP1, 'créditos após o recrutamento = verba da dificuldade − equipe − equipamento − inteligência');
   ck(G.spent.rec === custoAg && G.spent.equip === custoEq, 'gastos registrados por categoria batem');
   A.G.pressure = A.calcPressure();
   A.confirmPerimeter(); G.phase = 'siege';
@@ -308,7 +309,7 @@ function desfecho(G) {
   P(`| Vidas | 1 − (2,5 × ${H.dead} + 0,5 × ${H.hurt}) ÷ 17 | ${f(y.vidas * 100)}% | 40% | ${f(y.vidas * 40, 2)} |`);
   P(`| Prisões | fator do desfecho | ${f(y.captura * 100)}% | 20% | ${f(y.captura * 20, 2)} |`);
   P(`| Valores | 1 − ${f(E.lootF, 2)} × ${f(G.vault)}% | ${f(y.valores * 100)}% | 15% | ${f(y.valores * 15, 2)} |`);
-  P(`| Eficiência | 0,6 × ${Math.round(G.credits)}/1000 + 0,4 × (1 − (${G.round} − 1)/8 × 0,8) | ${f(y.efic * 100)}% | 10% | ${f(y.efic * 10, 2)} |`);
+  P(`| Eficiência | 0,6 × ${Math.round(G.credits)}/${A.DIFF[G.diff].verba} + 0,4 × (1 − (${G.round} − 1)/8 × 0,8) | ${f(y.efic * 100)}% | 10% | ${f(y.efic * 10, 2)} |`);
   P(`| Confiança | ${A.STK_KEYS.map(k => `${A.STK[k].nome} ${Math.round(G.stk[k].sat)}×${f(y.w[k] * 100, 0)}%`).join(' + ')} | ${f(y.conf * 100)}% | 15% | ${f(y.conf * 15, 2)} |`);
   P(''); P(`Bruta ${f(y.raw, 2)}${y.capWhy ? `; teto ${y.cap} (${y.capWhy})` : ''}${y.penal ? `; penalidade −${y.penal}` : ''} → **${f(y.total)} (${y.nota})**. O motor entregou ${f(S.total)} (${S.grade}).`);
   ck(near(S.total, y.total, 1e-9) && S.grade === y.nota, 'nota final refeita = nota do motor', `${S.total} ${S.grade} × ${y.total} ${y.nota}`);

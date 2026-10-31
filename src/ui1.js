@@ -176,7 +176,7 @@ function renderMenu() {
     <button class="diffcard" role="radio" data-act="diff" data-v="${k}" aria-checked="${UI.diffSel === k}" tabindex="${UI.diffSel === k ? 0 : -1}" data-tip="${d.slots} decisões e ${d.timer} segundos por rodada · eventos em ${Math.round(d.evChance * 100)}% das rodadas · ${d.ops === 1 ? 'plantão padrão' : 'plantão ' + (d.ops < 1 ? '−' : '+') + Math.round(Math.abs(1 - d.ops) * 100) + '%'}">
       <span class="dot" aria-hidden="true"></span>
       <span><b class="dname">${d.nome}</b><span class="dblurb">${d.blurb}</span></span>
-      <span class="dparams">${d.slots} decisões<br>${d.timer} s</span>
+      <span class="dparams">${fmt(d.verba)} créditos<br>${d.slots} decisões<br>${d.timer} s</span>
     </button>`).join('');
   return `<div class="screen menu">
     <div class="sky">${skyline()}<i class="siren r"></i><i class="siren b"></i><i class="siren r2"></i><i class="siren b2"></i>
@@ -219,7 +219,7 @@ const menuBtn = () => '<button class="btn sm ghost hudmenu" type="button" data-a
 function tutorModal() {
   return `<div class="modalback"><div class="tutor" role="dialog" aria-modal="true" aria-labelledby="tutt">
     <h2 class="h3" id="tutt">Como funciona</h2>
-    <p class="muted"><b>1. Recrute</b> a equipe com 1.000 créditos. O que sobrar paga o <b>plantão</b> de cada rodada e as ações do cerco.</p>
+    <p class="muted"><b>1. Recrute</b> a equipe com a verba da dificuldade: ${Object.values(DIFF).map((d, i, a) => `${fmt(d.verba)}${i ? '' : ' créditos'} no ${d.nome}${i < a.length - 2 ? ', ' : i === a.length - 2 ? ' e ' : ''}`).join('')}. O que sobrar paga o <b>plantão</b> de cada rodada e as ações do cerco.</p>
     <p class="muted"><b>2. Posicione</b> agentes e equipamentos nas 7 zonas. Quatro podem ser rotas de fuga, e você não sabe quais.</p>
     <p class="muted"><b>3. Comande</b> 8 rodadas: leia o painel e escolha 2 ou 3 ações em <b>Tática, Negociação, Inteligência e Comunicação</b>.</p>
     <p class="muted"><b>4. A crise termina</b> em rendição, intervenção, fuga ou ultimato. A nota pesa vidas (40%), prisões (20%), valores (15%), custo (10%) e confiança (15%). Mortes, intervenção fracassada ou entrada com menos de 50% de chance limitam a nota.</p>
@@ -289,12 +289,12 @@ function renderRecruit() {
     <div class="hud"><div class="hudrow"><span class="brand">PERÍMETRO</span>${menuBtn()}<span class="pill">Recrutamento</span><span class="spacer"></span><div class="stat"><small>Créditos</small><b style="color:var(--amber)" data-k="cred" data-n="${Math.round(G.credits)}">${fmt(G.credits)}</b></div></div></div>
     <div class="recr">
       <div class="grid" style="gap:18px">
-        <div><h1 class="ptitle">Monte sua força-tarefa</h1><p class="muted" style="margin-bottom:12px"><span class="mono">14h12</span>. Mil créditos para a equipe e os equipamentos; quem você chamar chega em 15 minutos. O que sobrar paga o cerco.</p><div class="agents">${agents}</div></div>
+        <div><h1 class="ptitle">Monte sua força-tarefa</h1><p class="muted" style="margin-bottom:12px"><span class="mono">14h12</span>. ${fmt(G.verba)} créditos para a equipe e os equipamentos; quem você chamar chega em 15 minutos. O que sobrar paga o cerco.</p><div class="agents">${agents}</div></div>
         <div id="equip" class="anchor"><h2 class="eyebrow">Equipamentos</h2><div class="gear" style="margin-top:8px;grid-template-columns:repeat(auto-fill,minmax(280px,1fr))">${EQUIPMENT_HTML()}</div></div>
       </div>
       <aside class="side">
         <div class="card"><h3>Orçamento</h3><div class="credits num" data-k="cred2" data-n="${Math.round(G.credits)}">${fmt(G.credits)}</div>
-          <div class="stack" style="margin-top:10px" role="img" aria-label="Equipe ${G.spent.rec}, equipamento ${G.spent.equip}, reserva ${G.credits}"><i style="width:${G.spent.rec / 10}%;background:var(--blue)"></i><i style="width:${G.spent.equip / 10}%;background:var(--violet)"></i><i style="width:${G.credits / 10}%;background:${resCol}"></i></div>
+          <div class="stack" style="margin-top:10px" role="img" aria-label="Equipe ${G.spent.rec}, equipamento ${G.spent.equip}, reserva ${G.credits}"><i style="width:${G.spent.rec / G.verba * 100}%;background:var(--blue)"></i><i style="width:${G.spent.equip / G.verba * 100}%;background:var(--violet)"></i><i style="width:${G.credits / G.verba * 100}%;background:${resCol}"></i></div>
           <div class="stackleg"><span><i style="background:var(--blue)"></i>Equipe <b class="mono">${G.spent.rec}</b></span><span><i style="background:var(--violet)"></i>Equipamento <b class="mono">${G.spent.equip}</b></span><span><i style="background:${resCol}"></i>Reserva <b class="mono">${fmt(G.credits)}</b></span></div>
           ${G.team.length ? `<div style="margin-top:10px"><div class="fc"><span>Plantão</span><b class="mono">~${F.per}/rodada</b></div>
           <div class="fc ${F.free < 0 ? 'bad' : F.free < 60 ? 'warn' : 'ok'}"><span>Sobra para o cerco</span><b class="mono">${F.free < 0 ? '−' + Math.round(-F.free) : Math.round(F.free)}</b></div>
